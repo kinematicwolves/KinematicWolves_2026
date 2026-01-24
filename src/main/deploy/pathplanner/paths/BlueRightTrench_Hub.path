@@ -3,29 +3,45 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.797,
-        "y": 4.015452586206896
+        "x": 4.24323275862069,
+        "y": 0.5848814655172418
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.637262931034483,
-        "y": 4.015452586206896
+        "x": 3.295183189655173,
+        "y": 0.5751077586206896
       },
       "isLocked": false,
-      "linkedName": "Blue Center"
+      "linkedName": "Blue Right Trench"
     },
     {
       "anchor": {
-        "x": 0.5585452586206905,
-        "y": 0.6728448275862069
+        "x": 2.581702586206897,
+        "y": 1.2103987068965523
       },
       "prevControl": {
-        "x": 1.4968211206896556,
-        "y": 0.6923922413793104
+        "x": 3.288809367393445,
+        "y": 0.5032919257100058
+      },
+      "nextControl": {
+        "x": 2.1418857758620695,
+        "y": 1.650215517241379
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 3.0019719827586213,
+        "y": 3.947036637931035
+      },
+      "prevControl": {
+        "x": 2.4937392241379315,
+        "y": 3.956810344827587
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Blue Outpost"
+      "linkedName": "Blue Backout"
     }
   ],
   "rotationTargets": [],
@@ -45,7 +61,7 @@
     "rotation": 180.0
   },
   "reversed": false,
-  "folder": "Blue Center",
+  "folder": "Blue Right ",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 180.0

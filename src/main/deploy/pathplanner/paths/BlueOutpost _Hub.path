@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.31,
-        "y": 5.882230603448277
+        "x": 0.5585452586206905,
+        "y": 0.6728448275862069
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.309999999999998,
-        "y": 5.882230603448277
+        "x": 1.5585452586206905,
+        "y": 0.6728448275862067
       },
       "isLocked": false,
-      "linkedName": "Blue Depot"
+      "linkedName": "Blue Outpost"
     },
     {
       "anchor": {
-        "x": 2.796724137931035,
-        "y": 4.015452586206896
+        "x": 3.0019719827586213,
+        "y": 3.947036637931035
       },
       "prevControl": {
-        "x": 1.7967241379310348,
-        "y": 4.015452586206896
+        "x": 2.0019719827586213,
+        "y": 3.947036637931035
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Blue Center"
+      "linkedName": "Blue Backout"
     }
   ],
   "rotationTargets": [],
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -2.7927023657132306
+    "rotation": 180.0
   },
   "reversed": false,
-  "folder": "Blue Depot",
+  "folder": "Blue Outpost",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.5256346064575799
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

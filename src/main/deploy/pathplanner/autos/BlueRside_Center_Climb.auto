@@ -7,13 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "right side"
+            "pathName": "BlueTrenchRight_CenterLeft"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Centerend_BLUEBackout"
+            "pathName": "CenterLeft_BlueBackout"
           }
         },
         {

@@ -12,7 +12,7 @@
         "y": 0.5848814655172418
       },
       "isLocked": false,
-      "linkedName": "blue right start"
+      "linkedName": "Blue Right Trench"
     },
     {
       "anchor": {
@@ -48,19 +48,24 @@
     },
     {
       "anchor": {
-        "x": 6.266390086206896,
-        "y": 7.240775862068965
+        "x": 6.325032327586207,
+        "y": 7.260323275862069
       },
       "prevControl": {
-        "x": 6.784396551724138,
-        "y": 7.240775862068965
+        "x": 6.843038793103449,
+        "y": 7.260323275862069
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "1"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.7,
+      "rotationDegrees": 33.612026656647146
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -77,10 +82,10 @@
     "rotation": 178.9583733239901
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Blue Right ",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }
