@@ -40,13 +40,14 @@ public class Robot extends TimedRobot {
          * This example is sufficient to show that vision integration is possible, though exact implementation
          * of how to use vision should be tuned per-robot and to the team's specification.
          */
-        if (kUseLimelight) {
+        if (true) {
             var driveState = m_robotContainer.drivetrain.getState();
             double headingDeg = driveState.Pose.getRotation().getDegrees();
             double omegaRps = Units.radiansToRotations(driveState.Speeds.omegaRadiansPerSecond);
 
             LimelightHelpers.SetRobotOrientation("limelight", headingDeg, 0, 0, 0, 0, 0);
-            var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
+            // var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
+            var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
             if (llMeasurement != null && llMeasurement.tagCount > 0 && Math.abs(omegaRps) < 2.0) {
                 m_robotContainer.drivetrain.addVisionMeasurement(llMeasurement.pose, llMeasurement.timestampSeconds);
             }
