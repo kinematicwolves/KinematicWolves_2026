@@ -44,11 +44,12 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     /* Path follower */
-    // private final SendableChooser<Command> autoChooser;
+     private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {
-        // autoChooser = AutoBuilder.buildAutoChooser("Tests");
-        // SmartDashboard.putData("Auto Mode", autoChooser);
+         autoChooser = AutoBuilder.buildAutoChooser("New Auto");
+         SmartDashboard.putData("Auto Mode", autoChooser);
+
 
         configureBindings();
 
@@ -100,7 +101,7 @@ public class RobotContainer {
 
     public Command getAutonomousCommand() {
        /* Run the path selected from the auto chooser */
-    //    return autoChooser.getSelected();
-       return new InstantCommand();
+        return autoChooser.getSelected();
+    //   return new InstantCommand();
     }
 }
