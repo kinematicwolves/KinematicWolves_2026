@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Intake;
 // import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Launcher;
 
@@ -45,6 +46,7 @@ public class RobotContainer {
 
     // subsystems
     private final Launcher launcher = new Launcher();
+    private final Intake intake = new Intake();
 
 
 
@@ -93,6 +95,10 @@ public class RobotContainer {
         driverController.rightTrigger(0.5)
             .onTrue(new InstantCommand(() -> launcher.setFlywheelPercent(0.2)))
             .onFalse(new InstantCommand(() -> launcher.setFlywheelPercent(0.0)));
+
+        driverController.rightBumper()
+            .onTrue(new InstantCommand(() -> intake.setPosition(10)))
+            .onFalse(new InstantCommand(() -> intake.setPosition(0)));
         
     }
 
