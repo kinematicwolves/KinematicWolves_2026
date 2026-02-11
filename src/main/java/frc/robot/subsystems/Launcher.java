@@ -20,6 +20,9 @@ public class Launcher extends SubsystemBase {
     // Step one, create all the objects we need
     private final TalonFX launcherMotor1 = new TalonFX(41); 
     private final TalonFX launcherMotor2 = new TalonFX(42); 
+    private final TalonFX kickerMotor = new TalonFX(43);      // for now let's assume kicker motor is # 43
+    
+
 
 
     public Launcher() {
@@ -32,6 +35,8 @@ public class Launcher extends SubsystemBase {
 
         // Configure LauncherMotorB
         configureLauncherMotor2();
+
+        configureKickerMotor();
 
     }
 
@@ -91,10 +96,35 @@ public class Launcher extends SubsystemBase {
     }
 
 
+    private void configureKickerMotor()
+    {
+        TalonFXConfiguration config = new TalonFXConfiguration();
+
+        // Current Limits
+        config.CurrentLimits.SupplyCurrentLimit = 20.0;
+        config.CurrentLimits.SupplyCurrentLimitEnable = true;
+        config.CurrentLimits.StatorCurrentLimit = 20.0;
+        config.CurrentLimits.StatorCurrentLimitEnable = true;
+
+        // Neutral Mode
+        // We typically set flywheels to coast mode
+        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+
+        // Setting the motor direction
+        // I suggest this be set such that a positive number launcher the game piece
+        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+
+        // applying the config
+        this.kickerMotor.getConfigurator().apply(config);
+
+       
+    }
+
     @Override
     public void periodic() {
         // This method will be called once per scheduler run
         SmartDashboard.putNumber("Launcher/Velocity RPS", launcherMotor1.getVelocity().getValueAsDouble());
+         SmartDashboard.putNumber("Kicker/Velocity RPS", kickerMotor.getVelocity().getValueAsDouble());
     }
 
     /* Public functions for commands */
@@ -104,5 +134,6 @@ public class Launcher extends SubsystemBase {
      */
     public void setFlywheelPercent(double speedFraction) {
         this.launcherMotor1.set(speedFraction);
+        this.kickerMotor.set(speedFraction);
     }
 }

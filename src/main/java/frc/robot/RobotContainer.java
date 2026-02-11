@@ -99,6 +99,12 @@ public class RobotContainer {
         driverController.rightBumper()
             .onTrue(new InstantCommand(() -> intake.setPosition(10)))
             .onFalse(new InstantCommand(() -> intake.setPosition(0)));
+
+
+        // kicker code
+        // kicker motor should operate when we have fuel, and not when we don't
+        
+
         
     }
 
