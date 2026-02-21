@@ -17,7 +17,10 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Launcher;
+import frc.robot.subsystems.Lighting;
 
 public class RobotContainer {
     /* Swerve drive nonsense */
@@ -49,6 +52,7 @@ public class RobotContainer {
     private final CommandXboxController driverController = new CommandXboxController(0);
     private final CommandXboxController opController     = new CommandXboxController(1);
     private final CommandXboxController techController   = new CommandXboxController(2);
+    public final Lighting leds = new Lighting();
 
     public RobotContainer() {
         configureBindings();

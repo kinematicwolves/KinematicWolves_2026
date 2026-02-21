@@ -9,6 +9,7 @@ import com.ctre.phoenix6.HootAutoReplay;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.Constants.LEDProfile;
 
 public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
@@ -31,7 +32,9 @@ public class Robot extends TimedRobot {
     }
 
     @Override
-    public void disabledInit() {}
+    public void disabledInit() {
+        m_robotContainer.leds.setSegmentColor(LEDProfile.CANdleSegments.get("candle"),  LEDProfile.green);
+    }
 
     @Override
     public void disabledPeriodic() {}
@@ -59,6 +62,7 @@ public class Robot extends TimedRobot {
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().cancel(m_autonomousCommand);
         }
+        m_robotContainer.leds.setSegmentStrobeAnimation(LEDProfile.CANdleSegments.get("Candle"),  LEDProfile.orange, 2);
     }
 
     @Override
