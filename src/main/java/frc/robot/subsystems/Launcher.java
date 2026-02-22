@@ -10,29 +10,30 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.sim.TalonFXSimState.MotorType;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.generated.TunerConstants;
 
 public class Launcher extends SubsystemBase {
     /** Creates a new Launcher. */
 
     // Step one, create all the objects we need
-    private final TalonFX launcherMotor1 = new TalonFX(41); 
-    private final TalonFX launcherMotor2 = new TalonFX(42); 
-    // private final TalonFX kickerMotor = new TalonFX(43);      // for now let's assume kicker motor is # 43
-    private SparkMax kickerMotor = new SparkMax(43, SparkLowLevel.MotorType.kBrushless);
-    private RelativeEncoder kickerEncoder = kickerMotor.getEncoder();
-    
+    private final TalonFX launcherMotor1 = new TalonFX(41, TunerConstants.kCANBus); 
+    private final TalonFX launcherMotor2 = new TalonFX(42, TunerConstants.kCANBus); 
 
-
+    // hood motor and controller objects
+    private final SparkMax hoodMotor = new SparkMax(44, SparkLowLevel.MotorType.kBrushless);
+    private final SparkClosedLoopController hoodPIDController = hoodMotor.getClosedLoopController();
 
     public Launcher() {
         // Step 2, apply whatever configs we need
@@ -45,8 +46,7 @@ public class Launcher extends SubsystemBase {
         // Configure LauncherMotorB
         configureLauncherMotor2();
 
-        configureKickerMotor();
-
+        configureHoodMotor();
     }
 
     /* Private, internal functions */
@@ -95,49 +95,60 @@ public class Launcher extends SubsystemBase {
 
         // Setting the motor direction
         // I suggest this be set such that a positive number launcher the game piece
-        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        // config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
         // applying the config
         this.launcherMotor2.getConfigurator().apply(config);
 
         // set motorB to follow motorA
-        this.launcherMotor2.setControl(new Follower(this.launcherMotor1.getDeviceID(), MotorAlignmentValue.Opposed ));
+        this.launcherMotor2.setControl(new Follower(this.launcherMotor1.getDeviceID(), MotorAlignmentValue.Opposed));
     }
 
-
-    private void configureKickerMotor() {
+    private void configureHoodMotor() {
         // https://docs.revrobotics.com/brushless/spark-max/parameters
         // the spark max is configured differently than talon fx motors
         SparkMaxConfig config = new SparkMaxConfig();
 
         // first, we clear the current parameters
-        this.kickerMotor.configure(config, ResetMode.kResetSafeParameters, null);
+        this.hoodMotor.configure(config, ResetMode.kResetSafeParameters, null);
 
         // Current Limits
         config.smartCurrentLimit(20);
 
-        //Neutral Mode    
-        // config.idleMode(IdleMode.kBrake); 
-        config.idleMode(IdleMode.kCoast); 
-        
+        //Neutral Mode
+        // Set to coast fist so we can move the hood by hand.
+        // After we determine the range, we can change it back to brake mode
+        // we typically set hoods to break mode so key keep their position
+        config.idleMode(IdleMode.kBrake); 
+                
         // Setting the motor direction
-        // TODO: confirm if this should be true of false. 
-        // I recommend setting this such that a positive number rotates the hood away from its resting position.
         config.inverted(false);
 
-       
-        // configuring the pid controller for the hood angle
-       
-        // finally, we apply our config to as persistent parameters
-        this.kickerMotor.configure(config, null, PersistMode.kPersistParameters);
-    }
+        // setting the forward / reverse position limits so the hood doesn't rip itself apart... hopefully :)
+        // config.softLimit.forwardSoftLimit(0); //TODO: Change limits to based on real hardware
+        // config.softLimit.forwardSoftLimitEnabled(false); //TODO: Change to true to enable
+        // config.softLimit.reverseSoftLimit(0); //TODO: Change limits to based on real hardware (this one will probably stay at 0)
+        // config.softLimit.reverseSoftLimitEnabled(false); //TODO: Change to true to enable
 
+        // configuring the pid controller for the hood angle
+        config.closedLoop
+        .p(0.1)
+        .i(0.0)
+        .d(0.0);
+
+        // finally, we apply our config to as persistent parameters
+        this.hoodMotor.configure(config, null, PersistMode.kPersistParameters);
+
+        this.hoodMotor.getEncoder().setPosition(0);
+    }
 
     @Override
     public void periodic() {
         // This method will be called once per scheduler run
+        SmartDashboard.putNumber("HoodPose", hoodMotor.getEncoder().getPosition());
+        SmartDashboard.putBoolean("HoodAtSetPoint", hoodIsAtSetpoint());
+        SmartDashboard.putNumber("HoodTarget", hoodPIDController.getSetpoint());
         SmartDashboard.putNumber("Launcher/Velocity RPS", launcherMotor1.getVelocity().getValueAsDouble());
-         SmartDashboard.putNumber("Kicker/Velocity RPS", kickerEncoder.getVelocity());
     }
 
     /* Public functions for commands */
@@ -147,14 +158,28 @@ public class Launcher extends SubsystemBase {
      */
     public void setFlywheelPercent(double speedFraction) {
         this.launcherMotor1.set(speedFraction);
-        this.kickerMotor.set(speedFraction);
     }
 
     /**
-     * talks to the kicker motor and sets its speed
-     * @param percentage a value between -1 and 1
+     * Sets the hood's target position
+     * @param rotations the position in the hood in rotations
      */
-    public void setKickerPercent(double percentage){ 
-        kickerMotor.set(percentage);
+    public void setHoodPosition(double rotations) {
+        this.hoodPIDController.setReference(rotations, SparkMax.ControlType.kPosition);
     }
+
+    /**
+     * Returns if the hood is at its set point or not.
+     * @return True if the hood is at its setpoint, false otherwise.
+     */
+    public boolean hoodIsAtSetpoint() {
+        // Unlike the TalonFX, the spark max doesn't have a function call for how close it is.
+        // Therefore, we will look at the the current position, and compare it to the stored setpoint
+        return Math.abs(this.hoodMotor.getEncoder().getPosition() - this.hoodPIDController.getSetpoint()) <= 0.1; // TODO: Determine reasonable tolerance and move to constants file
+    }
+
+    public void setHoodSpeed(double speed) {
+        this.hoodMotor.set(speed);
+    }
+    
 }

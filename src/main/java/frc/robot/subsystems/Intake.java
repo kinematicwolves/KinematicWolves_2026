@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionVoltage;
@@ -14,13 +16,15 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.generated.TunerConstants;
 
 public class Intake extends SubsystemBase {
     /** Creates a new Intake. */
     // Here, we declare all the motors, sensors, and other objects that this subsystem needs
     // Declaring all the motors for the intake
-    private final TalonFX intakeMotor1 = new TalonFX(31); //TODO: Replace with actual CAN ID
-    private final TalonFX intakeMotor2 = new TalonFX(32); //TODO: Replace with actual CAN ID
+    private final TalonFX  intakeMotor1 = new TalonFX(31, TunerConstants.kCANBus); //TODO: Move to constants file
+    private final TalonFX  intakeMotor2 = new TalonFX(32, TunerConstants.kCANBus); //TODO: Move to constants file
+    private final TalonSRX roller       = new TalonSRX(33); // TODO: Move to constants file
     
     public Intake() {
         // Here, we will configure all the motors, and to whatever other setup we need.
@@ -38,9 +42,13 @@ public class Intake extends SubsystemBase {
     private void configureIntakeMotor1() {
         TalonFXConfiguration config = new TalonFXConfiguration();
         // PID
-        config.Slot0.kP = 0.3; // TODO: Replace with 1/(max motor range from smart dashboard)
+        config.Slot0.kP = 1; // TODO: Replace with 1/(max motor range from smart dashboard)
         config.Slot0.kI = 0.0;
         config.Slot0.kD = 0.0;
+
+        config.Slot1.kP = 0.3; // TODO: Replace with 1/(max motor range from smart dashboard)
+        config.Slot1.kI = 0.0;
+        config.Slot1.kD = 0.0;
 
         // Current Limits
         config.CurrentLimits.SupplyCurrentLimit = 40.0;
@@ -106,7 +114,12 @@ public class Intake extends SubsystemBase {
      * @param rotations the position of the intake in motor rotations
      */
     public void setPosition(double rotations) {
-        this.intakeMotor1.setControl(new PositionVoltage(rotations));
+        if (rotations == 0) {
+            this.intakeMotor1.setControl(new PositionVoltage(rotations).withSlot(0));
+        }
+        else {
+            this.intakeMotor1.setControl(new PositionVoltage(rotations).withSlot(1));
+        }
     }
      
     /**
@@ -115,5 +128,9 @@ public class Intake extends SubsystemBase {
      */
     public boolean atSetpoint() {
         return Math.abs(this.intakeMotor1.getClosedLoopError().getValue()) < 0.2; // TODO: Configure tolerance, move to constants file
+    }
+
+    public void setRollerSpeed(double percet) {
+        roller.set(TalonSRXControlMode.PercentOutput, percet);
     }
 }

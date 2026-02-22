@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Launcher;
 
 public class RobotContainer {
@@ -46,7 +47,8 @@ public class RobotContainer {
 
     // subsystems
     private final Launcher launcher = new Launcher();
-    private final Intake intake = new Intake();
+    private final Intake   intake   = new Intake();
+    private final Indexer  indexer  = new Indexer();
 
 
 
@@ -93,18 +95,30 @@ public class RobotContainer {
 
         // launcher stuff
         driverController.rightTrigger(0.5)
-            .onTrue(new InstantCommand(() -> launcher.setFlywheelPercent(0.2)))
-            .onFalse(new InstantCommand(() -> launcher.setFlywheelPercent(0.0)));
-    
-        driverController.x()
-            .onTrue(new InstantCommand(() -> launcher.setKickerPercent(0.2)))
-            .onFalse(new InstantCommand(() -> launcher.setKickerPercent(0.0)));
+            .whileTrue(
+                new InstantCommand(() -> indexer.setRollerSpeed(0.6))
+                .andThen(new InstantCommand(() -> indexer.setKickerspeed(-0.3)))
+            )
+            .onFalse(
+                // new InstantCommand(() -> launcher.setFlywheelPercent(0.0))
+                new InstantCommand(() -> indexer.setRollerSpeed(0.0))
+                .andThen(new InstantCommand(() -> indexer.setKickerspeed(0.0)))
+            );
+        
+        driverController.a().onTrue(new InstantCommand(() -> launcher.setFlywheelPercent(0.5)));
+        driverController.b().onTrue(new InstantCommand(() -> launcher.setFlywheelPercent(0)));
 
+        // intake stuff
         driverController.rightBumper()
-            .onTrue(new InstantCommand(() -> intake.setPosition(10)))
+            .onTrue(new InstantCommand(() -> intake.setPosition(3.9)))
             .onFalse(new InstantCommand(() -> intake.setPosition(0)));
 
+        driverController.leftTrigger(0.5)
+            .onTrue(new InstantCommand(() -> intake.setRollerSpeed(0.6)))
+            .onFalse(new InstantCommand(() -> intake.setRollerSpeed(0)));
 
+        driverController.povUp().onTrue(new InstantCommand(()   -> launcher.setHoodPosition(3)));
+        driverController.povDown().onTrue(new InstantCommand(() -> launcher.setHoodPosition(0)));
         // kicker code
         // kicker motor should operate when we have fuel, and not when we don't
         
