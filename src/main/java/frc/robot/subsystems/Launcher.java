@@ -6,66 +6,66 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.sim.TalonFXSimState.MotorType;
 import com.revrobotics.PersistMode;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.SparkClosedLoopController;
+import com.revrobotics.spark.SparkLowLevel;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.generated.TunerConstants;
 
 public class Launcher extends SubsystemBase {
     /** Creates a new Launcher. */
-    // Here, we declare all the motors, sensors, and other objects that this subsystem needs
 
-    // Creating launcher Motor objects
-    private final TalonFX launcherMotorA = new TalonFX(53); //TODO: Replace with actual CAN ID
-    private final TalonFX launcherMotorB = new TalonFX(54); //TODO: Replace with actual CAN ID
-    
+    // Step one, create all the objects we need
+    private final TalonFX launcherMotor1 = new TalonFX(41, TunerConstants.kCANBus); 
+    private final TalonFX launcherMotor2 = new TalonFX(42, TunerConstants.kCANBus); 
+
     // hood motor and controller objects
-    private final SparkMax hoodMotor = new SparkMax(55, MotorType.kBrushless);
+    private final SparkMax hoodMotor = new SparkMax(44, SparkLowLevel.MotorType.kBrushless);
     private final SparkClosedLoopController hoodPIDController = hoodMotor.getClosedLoopController();
-    private double hoodSetpoint = 0.0;
 
     public Launcher() {
+        // Step 2, apply whatever configs we need
         // Here, we will configure all the motors, and to whatever other setup we need.
         // I split this up into separate functions for readability
 
         // Configure LauncherMotorA
-        configureLauncherMotorA();
+        configureLauncherMotor1();
 
         // Configure LauncherMotorB
-        configureLauncherMotorB();
+        configureLauncherMotor2();
 
-        // Configure hood motor and controller
         configureHoodMotor();
     }
 
     /* Private, internal functions */
-    private void configureLauncherMotorA() {
+    private void configureLauncherMotor1() {
         TalonFXConfiguration config = new TalonFXConfiguration();
 
         // PID (Velocity)
         // https://v6.docs.ctr-electronics.com/en/latest/docs/api-reference/device-specific/talonfx/basic-pid-control.html#velocity-control
-        config.Slot0.kS = 0.0; // TODO: increase until the motors overcome friction in the launcher
-        config.Slot0.kV = 0.0; // TODO: set to 0.12
-        config.Slot0.kP = 0.0; // TODO: set to 1/(max speed)
-        config.Slot0.kI = 0.0;
-        config.Slot0.kD = 0.0;
+        // config.Slot0.kS = 0.0; // TODO: increase until the motors overcome friction in the launcher
+        // config.Slot0.kV = 0.0; // TODO: set to 0.12
+        // config.Slot0.kP = 0.0; // TODO: set to 1/(max speed)
+        // config.Slot0.kI = 0.0;
+        // config.Slot0.kD = 0.0;
 
         // Current Limits
-        config.CurrentLimits.SupplyCurrentLimit = 40.0;
+        config.CurrentLimits.SupplyCurrentLimit = 20.0;
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-        config.CurrentLimits.StatorCurrentLimit = 60.0;
+        config.CurrentLimits.StatorCurrentLimit = 20.0;
         config.CurrentLimits.StatorCurrentLimitEnable = true;
 
         // Neutral Mode
@@ -73,22 +73,20 @@ public class Launcher extends SubsystemBase {
         config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         // Setting the motor direction
-        // TODO: Enable which ever is correct for this motor
         // I suggest this be set such that a positive number launcher the game piece
-        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        // config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
         // applying the config
-        this.launcherMotorA.getConfigurator().apply(config);
+        this.launcherMotor1.getConfigurator().apply(config);
     }
 
-    private void configureLauncherMotorB() {
+    private void configureLauncherMotor2() {
         TalonFXConfiguration config = new TalonFXConfiguration();
 
         // Current Limits
-        config.CurrentLimits.SupplyCurrentLimit = 40.0;
+        config.CurrentLimits.SupplyCurrentLimit = 20.0;
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
-        config.CurrentLimits.StatorCurrentLimit = 60.0;
+        config.CurrentLimits.StatorCurrentLimit = 20.0;
         config.CurrentLimits.StatorCurrentLimitEnable = true;
 
         // Neutral Mode
@@ -96,16 +94,14 @@ public class Launcher extends SubsystemBase {
         config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         // Setting the motor direction
-        // TODO: Enable which ever is correct for this motor
         // I suggest this be set such that a positive number launcher the game piece
-        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         // config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
         // applying the config
-        this.launcherMotorB.getConfigurator().apply(config);
+        this.launcherMotor2.getConfigurator().apply(config);
 
         // set motorB to follow motorA
-        this.launcherMotorB.setControl(new Follower(this.launcherMotorA.getDeviceID(), MotorAlignmentValue.Aligned));
+        this.launcherMotor2.setControl(new Follower(this.launcherMotor1.getDeviceID(), MotorAlignmentValue.Opposed));
     }
 
     private void configureHoodMotor() {
@@ -123,74 +119,45 @@ public class Launcher extends SubsystemBase {
         // Set to coast fist so we can move the hood by hand.
         // After we determine the range, we can change it back to brake mode
         // we typically set hoods to break mode so key keep their position
-        // TODO: Change to break mode after configuring PID
-        // config.idleMode(IdleMode.kBrake); 
-        config.idleMode(IdleMode.kCoast); 
-        
+        config.idleMode(IdleMode.kBrake); 
+                
         // Setting the motor direction
-        // TODO: confirm if this should be true of false. 
-        // I recommend setting this such that a positive number rotates the hood away from its resting position.
         config.inverted(false);
 
         // setting the forward / reverse position limits so the hood doesn't rip itself apart... hopefully :)
-        config.softLimit.forwardSoftLimit(0); //TODO: Change limits to based on real hardware
-        config.softLimit.forwardSoftLimitEnabled(false); //TODO: Change to true to enable
-        config.softLimit.reverseSoftLimit(0); //TODO: Change limits to based on real hardware (this one will probably stay at 0)
-        config.softLimit.reverseSoftLimitEnabled(false); //TODO: Change to true to enable
+        // config.softLimit.forwardSoftLimit(0); //TODO: Change limits to based on real hardware
+        // config.softLimit.forwardSoftLimitEnabled(false); //TODO: Change to true to enable
+        // config.softLimit.reverseSoftLimit(0); //TODO: Change limits to based on real hardware (this one will probably stay at 0)
+        // config.softLimit.reverseSoftLimitEnabled(false); //TODO: Change to true to enable
 
         // configuring the pid controller for the hood angle
         config.closedLoop
-        .p(0.0) // TODO: Set p to 1/(hood range)
+        .p(0.1)
         .i(0.0)
         .d(0.0);
 
         // finally, we apply our config to as persistent parameters
         this.hoodMotor.configure(config, null, PersistMode.kPersistParameters);
+
+        this.hoodMotor.getEncoder().setPosition(0);
     }
 
     @Override
     public void periodic() {
         // This method will be called once per scheduler run
-
-        // This is a good spot to put any state-monitoring, smart dashboard outputs, logging, etc
-        SmartDashboard.putNumber("Launcher/Velocity RPS", launcherMotorA.getVelocity().getValueAsDouble());
-        SmartDashboard.putBoolean("Launcher/At Speed", flywheelIsAtVelocity());
-
-        SmartDashboard.putNumber("HoodPose", this.hoodMotor.getEncoder().getPosition());
-        SmartDashboard.putBoolean("Launcher/At Speed", hoodIsAtSetpoint());
+        SmartDashboard.putNumber("HoodPose", hoodMotor.getEncoder().getPosition());
+        SmartDashboard.putBoolean("HoodAtSetPoint", hoodIsAtSetpoint());
+        SmartDashboard.putNumber("HoodTarget", hoodPIDController.getSetpoint());
+        SmartDashboard.putNumber("Launcher/Velocity RPS", launcherMotor1.getVelocity().getValueAsDouble());
     }
 
     /* Public functions for commands */
-    /**
-     * Sets the velocity of the launcher motors
-     * @param velocityRps
-     */
-    public void setFlywheelVelocity(double velocityRps) {
-        launcherMotorA.setControl(new VelocityVoltage(velocityRps));
-    }
-
     /**
      * Sets the flywheel percentage in open-loop mode. Do not use for launching game pieces. This is to help with setup and testing.
      * @param speedFraction between -1 and 1. -1 is full speed in reverse, 1 is full speed forward.
      */
     public void setFlywheelPercent(double speedFraction) {
-        this.launcherMotorA.set(speedFraction);
-
-    }
-
-    /**
-     * Stops the Launcher motors.
-     */
-    public void stop() {
-        launcherMotorA.stopMotor();
-    }
-
-    /**
-     * Returns if the launcher is at its target velocity.
-     * @return True if the intake is at its set velocity, otherwise false
-     */
-    public boolean flywheelIsAtVelocity() {
-        return Math.abs(launcherMotorA.getClosedLoopError().getValue()) <= 10; // TODO: Configure velocity tolerance, move to constants file
+        this.launcherMotor1.set(speedFraction);
     }
 
     /**
@@ -198,8 +165,7 @@ public class Launcher extends SubsystemBase {
      * @param rotations the position in the hood in rotations
      */
     public void setHoodPosition(double rotations) {
-        this.hoodSetpoint = rotations;
-        this.hoodPIDController.setSetpoint(rotations, SparkMax.ControlType.kPosition);
+        this.hoodPIDController.setReference(rotations, SparkMax.ControlType.kPosition);
     }
 
     /**
@@ -209,6 +175,11 @@ public class Launcher extends SubsystemBase {
     public boolean hoodIsAtSetpoint() {
         // Unlike the TalonFX, the spark max doesn't have a function call for how close it is.
         // Therefore, we will look at the the current position, and compare it to the stored setpoint
-        return Math.abs(this.hoodMotor.getEncoder().getPosition() - this.hoodSetpoint) <= 0.5; // TODO: Determine reasonable tolerance and move to constants file
+        return Math.abs(this.hoodMotor.getEncoder().getPosition() - this.hoodPIDController.getSetpoint()) <= 0.1; // TODO: Determine reasonable tolerance and move to constants file
     }
+
+    public void setHoodSpeed(double speed) {
+        this.hoodMotor.set(speed);
+    }
+    
 }

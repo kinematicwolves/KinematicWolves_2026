@@ -4,107 +4,71 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.revrobotics.PersistMode;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkLowLevel;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Indexer extends SubsystemBase {
     /** Creates a new Indexer. */
-    // Here, we declare all the motors, sensors, and other objects that this subsystem needs
-    // Declaring all the motors for the Indexer
-    private final TalonFX rollerMotor = new TalonFX(56); //TODO: Replace with actual CAN ID
-    private final TalonFX feederMotor = new TalonFX(57); //TODO: Replace with actual CAN ID
+    // Step one, create all the objects we need
+    private final SparkMax kickerMotor = new SparkMax(43, SparkLowLevel.MotorType.kBrushless);
+    private final TalonSRX roller      = new TalonSRX(34); // TODO: Move to constants file
 
+    private RelativeEncoder kickerEncoder = kickerMotor.getEncoder();
     
     public Indexer() {
-        // Here, we will configure all the motors, and to whatever other setup we need.
-        // I split this up into separate functions for readability
-
-        // Configure rollerMotor
-        configureRollerMotor();
-
-        // Configure feederMotor
-        configureFeederMotor();
+        configureKickerMotor();
     }
 
-    /* Private, internal functions */
-    private void configureRollerMotor() {
-        TalonFXConfiguration config = new TalonFXConfiguration();
 
-        // Inversion
-        // TODO: Determine which one of these is correct
-        // I recommend setting this such that a positive number moves the game piece toward the launcher
-        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        // config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        private void configureKickerMotor() {
+        // https://docs.revrobotics.com/brushless/spark-max/parameters
+        // the spark max is configured differently than talon fx motors
+        SparkMaxConfig config = new SparkMaxConfig();
 
-        // Neutral Mode
-        // we typically set rollers to coast mode
-        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        // first, we clear the current parameters
+        this.kickerMotor.configure(config, ResetMode.kResetSafeParameters, null);
 
         // Current Limits
-        // TODO: Adjust Current Limits as nessesssary
-        config.CurrentLimits.SupplyCurrentLimit = 30.0;
-        config.CurrentLimits.SupplyCurrentLimitEnable = true;
-        config.CurrentLimits.StatorCurrentLimit = 40.0;
-        config.CurrentLimits.StatorCurrentLimitEnable = true;
+        config.smartCurrentLimit(20);
 
-        this.rollerMotor.getConfigurator().apply(config);
-    }
+        //Neutral Mode    
+        // config.idleMode(IdleMode.kBrake); 
+        config.idleMode(IdleMode.kCoast); 
+        
+        // Setting the motor direction
+        // TODO: confirm if this should be true of false. 
+        // I recommend setting this such that a positive number rotates the hood away from its resting position.
+        config.inverted(false);
 
-    private void configureFeederMotor() {
-        TalonFXConfiguration config = new TalonFXConfiguration();
-
-        // Inversion
-        // TODO: Determine which one of these is correct
-        // I recommend setting this such that a positive number moves a game piece into the launcher
-        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        // config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-
-        // Neutral Mode
-        // we typically set rollers to coast mode
-        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-
-        // Current Limits
-        // TODO: Adjust Current Limits as nessesssary
-        config.CurrentLimits.SupplyCurrentLimit = 30.0;
-        config.CurrentLimits.SupplyCurrentLimitEnable = true;
-        config.CurrentLimits.StatorCurrentLimit = 40.0;
-        config.CurrentLimits.StatorCurrentLimitEnable = true;
-
-        this.feederMotor.getConfigurator().apply(config);
+        
+        // configuring the pid controller for the hood angle
+        
+        // finally, we apply our config to as persistent parameters
+        this.kickerMotor.configure(config, null, PersistMode.kPersistParameters);
     }
 
     @Override
     public void periodic() {
         // This method will be called once per scheduler run
+        SmartDashboard.putNumber("Kicker/Velocity RPS", kickerEncoder.getVelocity());
+
     }
 
-    /* Public functions for commands */
-    /**
-     * Stops the indexer and feeder motors.
-     */
-    public void stop() {
-        this.rollerMotor.stopMotor();
-    }
+    public void setKickerspeed(double percent) {
+        kickerMotor.set(percent);
+    }  
 
-    /**
-     * Sets the speed of the roller motor.
-     * 0 is off, 1 is full speed one direction, -1 is full speed the other direction
-     * @param speedFraction between -1 and 1
-     */
-    public void setRollerSpeed(double speedFraction) {
-        this.rollerMotor.set(speedFraction);
-    }
-
-    /**
-     * Sets the speed of the feeder motor.
-     * 0 is off, 1 is full speed one direction, -1 is full speed the other direction
-     * @param speedFraction between -1 and 1
-     */
-    public void setFeederSpeed(double speedFraction) {
-        this.feederMotor.set(speedFraction);
+    public void setRollerSpeed(double percent) {
+        roller.set(TalonSRXControlMode.PercentOutput, percent);
     }
 }
