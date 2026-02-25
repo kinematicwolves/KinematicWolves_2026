@@ -7,7 +7,6 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.revrobotics.PersistMode;
-import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel;
 import com.revrobotics.spark.SparkMax;
@@ -20,17 +19,14 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Indexer extends SubsystemBase {
     /** Creates a new Indexer. */
     // Step one, create all the objects we need
-    private final SparkMax kickerMotor = new SparkMax(43, SparkLowLevel.MotorType.kBrushless);
-    private final TalonSRX roller      = new TalonSRX(34); // TODO: Move to constants file
+    private final SparkMax kickerMotor = new SparkMax(43, SparkLowLevel.MotorType.kBrushless); //TODO: Move to constants file
+    private final TalonSRX roller      = new TalonSRX(34); //TODO: Move to constants file
 
-    private RelativeEncoder kickerEncoder = kickerMotor.getEncoder();
-    
     public Indexer() {
         configureKickerMotor();
     }
 
-
-        private void configureKickerMotor() {
+    private void configureKickerMotor() {
         // https://docs.revrobotics.com/brushless/spark-max/parameters
         // the spark max is configured differently than talon fx motors
         SparkMaxConfig config = new SparkMaxConfig();
@@ -41,16 +37,12 @@ public class Indexer extends SubsystemBase {
         // Current Limits
         config.smartCurrentLimit(20);
 
-        //Neutral Mode    
-        // config.idleMode(IdleMode.kBrake); 
+        //Neutral Mode
         config.idleMode(IdleMode.kCoast); 
         
         // Setting the motor direction
-        // TODO: confirm if this should be true of false. 
-        // I recommend setting this such that a positive number rotates the hood away from its resting position.
-        config.inverted(false);
+        config.inverted(true);
 
-        
         // configuring the pid controller for the hood angle
         
         // finally, we apply our config to as persistent parameters
@@ -60,15 +52,22 @@ public class Indexer extends SubsystemBase {
     @Override
     public void periodic() {
         // This method will be called once per scheduler run
-        SmartDashboard.putNumber("Kicker/Velocity RPS", kickerEncoder.getVelocity());
-
+        SmartDashboard.putNumber("KickerSpeed [RPM]", this.kickerMotor.getEncoder().getVelocity());
     }
 
-    public void setKickerspeed(double percent) {
-        kickerMotor.set(percent);
-    }  
+    /**
+     * Sets the roller speed percentage in open-loop mode
+     * @param percent between -1 and 1. -1 is full speed in reverse, 1 is full speed forward.
+     */
+    public void setKickerPercent(double percent) {
+        this.kickerMotor.set(percent);
+    }
 
-    public void setRollerSpeed(double percent) {
-        roller.set(TalonSRXControlMode.PercentOutput, percent);
+    /**
+     * Sets the roller speed percentage in open-loop mode
+     * @param percent between -1 and 1. -1 is full speed in reverse, 1 is full speed forward.
+     */
+    public void setRollerPercent(double percent) {
+        this.roller.set(TalonSRXControlMode.PercentOutput, percent);
     }
 }

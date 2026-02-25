@@ -112,14 +112,10 @@ public class Intake extends SubsystemBase {
     /**
      * Sets the target position of the intake in motor rotations
      * @param rotations the position of the intake in motor rotations
+     * @param slot the pid slot to use. 0 for high pid, 1 for low kp
      */
-    public void setPosition(double rotations) {
-        if (rotations == 0) {
-            this.intakeMotor1.setControl(new PositionVoltage(rotations).withSlot(0));
-        }
-        else {
-            this.intakeMotor1.setControl(new PositionVoltage(rotations).withSlot(1));
-        }
+    public void setPosition(double rotations, int slot) {
+        this.intakeMotor1.setControl(new PositionVoltage(rotations).withSlot(slot));
     }
      
     /**
@@ -127,10 +123,14 @@ public class Intake extends SubsystemBase {
      * @return True if the intake is at its set position, otherwise false
      */
     public boolean atSetpoint() {
-        return Math.abs(this.intakeMotor1.getClosedLoopError().getValue()) < 0.2; // TODO: Configure tolerance, move to constants file
+        return Math.abs(this.intakeMotor1.getClosedLoopError().getValue()) < 0.1; // TODO: Move tolerance, move to constants file
     }
 
-    public void setRollerSpeed(double percet) {
-        roller.set(TalonSRXControlMode.PercentOutput, percet);
+    /**
+     * Sets the roller percentage in open-loop mode.
+     * @param speedFraction between -1 and 1. -1 is full speed in reverse, 1 is full speed forward.
+     */
+    public void setRollerPercent(double percet) {
+        this.roller.set(TalonSRXControlMode.PercentOutput, percet);
     }
 }

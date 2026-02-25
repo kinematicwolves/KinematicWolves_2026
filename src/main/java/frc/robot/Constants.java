@@ -8,6 +8,8 @@ import java.util.Map;
 
 import com.ctre.phoenix6.signals.RGBWColor;
 
+import edu.wpi.first.math.geometry.Pose2d;
+
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
  * constants. This class should not be used for any other purpose. All constants should be declared
@@ -31,4 +33,10 @@ public final class Constants {
             "candle", new CANdleSegment( 0,  7, 1)
         );
     }
+    public final class LauncherProfile {
+        public static final Pose2d blueHub = new Pose2d( 4.642, 4.075, null); // in wpiblue coordinates, from pathplanner gui
+        public static final Pose2d redHub  = new Pose2d(11.981, 4.075, null); // in wpiblue coordintaes, from pathplanner gui
+    }
+    public final class IntakeProfile {}
+    public final class IndexerProfile {}
 }

@@ -19,6 +19,11 @@ import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Launcher;
+import frc.robot.commands.FeedWithSpeeds;
+import frc.robot.commands.IntakeWithSpeeds;
+import frc.robot.commands.LaunchFromPose;
+import frc.robot.commands.SetLaunchParameters;
+import frc.robot.commands.IntakeToPose;
 
 public class RobotContainer {
     // this is swerve stuff
@@ -45,7 +50,6 @@ public class RobotContainer {
 
 
     public RobotContainer() {
-
         configureBindings();
     }
 
@@ -90,52 +94,23 @@ public class RobotContainer {
 
         drivetrain.registerTelemetry(logger::telemeterize);
 
-        // Intake control
+        /* Intake control */
+        // deploy the intake, and intake game ieces
         driverController.leftTrigger(0.5)
-            .onTrue(// deploy intake
-                new InstantCommand(() -> intake.setPosition(3.9))
-            )
-            .whileTrue(// run intake
-                new InstantCommand(() -> intake.setRollerSpeed(0.6)).andThen(
-                )
-            )
-            .onFalse(// turn off intake
-                new InstantCommand(() -> intake.setRollerSpeed(0.0)).andThen(
-                new InstantCommand(() -> indexer.setRollerSpeed(0.3))
-            )
-        );
+            .onTrue(new IntakeToPose(intake, 3.9, 1))
+            .whileTrue(new IntakeWithSpeeds(intake, indexer, 0.6, 0.3));
 
-        driverController.leftBumper().onTrue(new InstantCommand(() -> intake.setPosition(0)));
+        // retract intake
+        driverController.leftBumper().onTrue(new IntakeToPose(intake, 0, 0));
         
-        // launcher control
-        // tap trigger past 50% to turn on launcher
-        driverController.rightTrigger(0.5).debounce(0.1)
-        .onTrue(// turn on launcher, hood to angle
-            new InstantCommand(() -> launcher.setHoodPosition(3)).andThen(
-            new InstantCommand(() -> launcher.setFlywheelPercent(0.6))
-            )
-        );
-
+        /* launcher control */
         // hold trigger all the way for 0.5 seconds to launch stuff
-        driverController.leftTrigger(1).debounce(0.5)
-            .whileTrue(// turn on feeder
-                new InstantCommand(() -> indexer.setKickerspeed(-0.3)).andThen(
-                new InstantCommand(() -> indexer.setRollerSpeed(0.6))
-                )
-            )
-            .onFalse(// turn off feeder
-                new InstantCommand(() -> indexer.setKickerspeed(0)).andThen(
-                new InstantCommand(() -> indexer.setRollerSpeed(0))
-                )
-            );
+        // advanced control for later
+        // driverController.leftTrigger(1).debounce(0.5)
+        //     .whileTrue(new LaunchFromPose(drivetrain, launcher, indexer, 0.6, 0.3));
 
-        // right bumber turns off launcher
-        driverController.rightBumper()
-            .onTrue(// turn off launcher, move hood back
-                new InstantCommand(() -> launcher.setHoodPosition(0)).andThen(
-                new InstantCommand(() -> launcher.setFlywheelPercent(0))
-                )
-            );
+        driverController.a().onTrue(drivetrain.applyRequest(() -> brake).andThen(new SetLaunchParameters(launcher, 3, 0.5)));
+        driverController.b().whileTrue(new FeedWithSpeeds(indexer, 0.6, 0.3));
     }
 
     public Command getAutonomousCommand() {
