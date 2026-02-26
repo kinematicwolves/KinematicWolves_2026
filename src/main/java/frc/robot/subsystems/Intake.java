@@ -64,8 +64,8 @@ public class Intake extends SubsystemBase {
 
         // Neutral mode
         // TODO: I've set this to coast for now, maybe change to break later
-        // config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        // config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         // Setting the motor direction
         // TODO: Enable which ever is correct for this motor
@@ -85,8 +85,8 @@ public class Intake extends SubsystemBase {
 
         // Neutral mode
         // TODO: I've set this to coast for now, maybe change to break later. This should match intakeMotor1
-        // config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        // config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         // Setting the motor direction
         // TODO: Enable which ever is correct for this motor
@@ -113,13 +113,8 @@ public class Intake extends SubsystemBase {
      * Sets the target position of the intake in motor rotations
      * @param rotations the position of the intake in motor rotations
      */
-    public void setPosition(double rotations) {
-        if (rotations == 0) {
-            this.intakeMotor1.setControl(new PositionVoltage(rotations).withSlot(0));
-        }
-        else {
-            this.intakeMotor1.setControl(new PositionVoltage(rotations).withSlot(1));
-        }
+    public void setPosition(double rotations, int slot) {
+        this.intakeMotor1.setControl(new PositionVoltage(rotations).withSlot(slot));
     }
      
     /**

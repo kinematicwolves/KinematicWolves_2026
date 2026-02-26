@@ -10,6 +10,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.pathplanner.lib.auto.NamedCommands;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -20,7 +21,10 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-
+import frc.robot.commands.FeedWithSpeeds;
+import frc.robot.commands.IntakeToPose;
+import frc.robot.commands.IntakeWithSpeeds;
+import frc.robot.commands.LaunchwithParams;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -89,36 +93,26 @@ public class RobotContainer {
         // driverController.start().and(driverController.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // Reset the field-centric heading on left bumper press.
-        driverController.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        driverController.y().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         drivetrain.registerTelemetry(logger::telemeterize);
 
         // launcher stuff
         driverController.rightTrigger(0.5)
-            .onTrue(new InstantCommand(()->launcher.setFlywheelPercent(0.5))
-                .andThen(new InstantCommand(()->launcher.setHoodPosition(3))));
+            .whileTrue(new LaunchwithParams(launcher, 0.6, 4));
 
         driverController.b()
-            .onTrue(new InstantCommand(()->launcher.setFlywheelPercent(0))
-                .andThen(new InstantCommand(()->launcher.setHoodPosition(0))));
+            .onFalse(new LaunchwithParams(launcher, 0, 0));
         
         driverController.rightBumper()
-            .onTrue(new InstantCommand(()->indexer.setRollerSpeed(0.6))
-                .andThen(new InstantCommand(()->indexer.setKickerspeed(-1))))
-            .onFalse(new InstantCommand(()->indexer.setRollerSpeed(0))
-                .andThen(new InstantCommand(()->indexer.setKickerspeed(0))));
+            .whileTrue(new FeedWithSpeeds(indexer, 0.6, 1));
 
         // intake stuff
         driverController.leftTrigger(0.5)
-            // .onTrue(new InstantCommand(() -> intake.setPosition(3.9)))
-            .whileTrue(new InstantCommand(()->intake.setRollerSpeed(0.7)))
-            .onFalse(new InstantCommand(()->intake.setRollerSpeed(0)));
+            .onTrue(new IntakeToPose(intake, 3.9, 0))
+            .whileTrue(new IntakeWithSpeeds(intake, indexer, 0.6, 0));
         
-        // driverController.leftBumper().onTrue(new InstantCommand(()->intake.setPosition(0)));
-        
-        
-
-        
+        driverController.leftBumper().onTrue(new IntakeToPose(intake, 0, 0));        
     }
 
     public Command getAutonomousCommand() {

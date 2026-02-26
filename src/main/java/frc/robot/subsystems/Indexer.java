@@ -46,9 +46,7 @@ public class Indexer extends SubsystemBase {
         config.idleMode(IdleMode.kCoast); 
         
         // Setting the motor direction
-        // TODO: confirm if this should be true of false. 
-        // I recommend setting this such that a positive number rotates the hood away from its resting position.
-        config.inverted(false);
+        config.inverted(true);
 
         
         // configuring the pid controller for the hood angle
