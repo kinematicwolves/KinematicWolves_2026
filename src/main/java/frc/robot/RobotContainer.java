@@ -9,10 +9,15 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.FollowPathCommand;
 
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Intake;
@@ -31,7 +36,7 @@ public class RobotContainer {
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
-    private final SwerveRequest.FieldCentric fieldCentriceDrive = new SwerveRequest.FieldCentric()
+    private final SwerveRequest.FieldCentric fieldCentricDrive = new SwerveRequest.FieldCentric()
         .withDeadband(MaxSpeed * 0.1)
         .withRotationalDeadband(MaxAngularRate * 0.1)
         .withDriveRequestType(DriveRequestType.Velocity);
@@ -48,9 +53,18 @@ public class RobotContainer {
     private final Intake   intake   = new Intake();
     private final Indexer  indexer  = new Indexer();
 
+    /* Path follower */
+     private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {
+         autoChooser = AutoBuilder.buildAutoChooser("New Auto");
+         SmartDashboard.putData("Auto Mode", autoChooser);
+
+
         configureBindings();
+
+        // Warmup PathPlanner to avoid Java pauses
+        FollowPathCommand.warmupCommand().schedule();
     }
 
     private void configureBindings() {
@@ -66,7 +80,7 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                fieldCentriceDrive
+                fieldCentricDrive
                     .withVelocityX(-driverController.getLeftY() * MaxSpeed)
                     .withVelocityY(-driverController.getLeftX() * MaxSpeed)
                     .withRotationalRate(-driverController.getRightX() * MaxAngularRate)
@@ -79,8 +93,6 @@ public class RobotContainer {
         RobotModeTriggers.disabled().whileTrue(
             drivetrain.applyRequest(() -> idle).ignoringDisable(true)
         );
-
-        driverController.a().whileTrue(drivetrain.applyRequest(() -> brake));
 
         // // Run SysId routines when holding back/start and X/Y.
         // // Note that each routine should be run exactly once in a single log.
@@ -95,7 +107,7 @@ public class RobotContainer {
         drivetrain.registerTelemetry(logger::telemeterize);
 
         /* Intake control */
-        // deploy the intake, and intake game ieces
+        // deploy the intake, and intake game pieces
         driverController.leftTrigger(0.5)
             .onTrue(new IntakeToPose(intake, 3.9, 1))
             .whileTrue(new IntakeWithSpeeds(intake, indexer, 0.6, 0.3));
@@ -114,6 +126,8 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        return new InstantCommand();
+       /* Run the path selected from the auto chooser */
+        return autoChooser.getSelected();
+    //   return new InstantCommand();
     }
 }
