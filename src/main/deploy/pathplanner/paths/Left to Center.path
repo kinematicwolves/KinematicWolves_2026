@@ -36,28 +36,28 @@
         "y": 7.240775862068965
       },
       "prevControl": {
-        "x": 5.025129310344828,
-        "y": 7.387381465517242
+        "x": 5.123131338339775,
+        "y": 7.7515869921970975
       },
       "nextControl": {
-        "x": 7.5662931034482765,
-        "y": 7.094170258620688
+        "x": 7.388791469194314,
+        "y": 6.7645971563981036
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.791088362068967,
-        "y": 0.8096767241379315
+        "x": 7.313566350710902,
+        "y": 0.9722630331753532
       },
       "prevControl": {
-        "x": 7.5956142241379325,
-        "y": 1.6990840517241408
+        "x": 7.118092212779867,
+        "y": 1.8616703607615626
       },
       "nextControl": {
-        "x": 7.986562500000002,
-        "y": -0.07973060344827787
+        "x": 7.509040488641936,
+        "y": 0.0828557055891439
       },
       "isLocked": false,
       "linkedName": null
@@ -95,7 +95,20 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "Kicker",
+      "waypointRelativePos": 2.2178374112075847,
+      "endWaypointRelativePos": 2.9676400947119124,
+      "command": null
+    },
+    {
+      "name": "outake",
+      "waypointRelativePos": 3.827940015785326,
+      "endWaypointRelativePos": 5.0,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,
