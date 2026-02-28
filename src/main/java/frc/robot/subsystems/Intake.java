@@ -42,11 +42,11 @@ public class Intake extends SubsystemBase {
     private void configureIntakeMotor1() {
         TalonFXConfiguration config = new TalonFXConfiguration();
         // PID
-        config.Slot0.kP = 1; // TODO: Replace with 1/(max motor range from smart dashboard)
+        config.Slot0.kP = 1;
         config.Slot0.kI = 0.0;
         config.Slot0.kD = 0.0;
 
-        config.Slot1.kP = 0.3; // TODO: Replace with 1/(max motor range from smart dashboard)
+        config.Slot1.kP = 0.3;
         config.Slot1.kI = 0.0;
         config.Slot1.kD = 0.0;
 
@@ -63,15 +63,12 @@ public class Intake extends SubsystemBase {
         config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.0; // rotations //TODO: Determine the range for the motor, then change this value
 
         // Neutral mode
-        // TODO: I've set this to coast for now, maybe change to break later
-        // config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        // config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         // Setting the motor direction
-        // TODO: Enable which ever is correct for this motor
         // I suggest this be set such that when the intake moves outside the robot, that is positive
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        // config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         
         // apply the config
         this.intakeMotor1.getConfigurator().apply(config);
@@ -84,12 +81,10 @@ public class Intake extends SubsystemBase {
         TalonFXConfiguration config = new TalonFXConfiguration();
 
         // Neutral mode
-        // TODO: I've set this to coast for now, maybe change to break later. This should match intakeMotor1
-        // config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        // config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         // Setting the motor direction
-        // TODO: Enable which ever is correct for this motor
         // I suggest this be set such that when the intake moves outside the robot, that is positive
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
@@ -130,7 +125,7 @@ public class Intake extends SubsystemBase {
      * Sets the roller percentage in open-loop mode.
      * @param speedFraction between -1 and 1. -1 is full speed in reverse, 1 is full speed forward.
      */
-    public void setRollerPercent(double percet) {
-        this.roller.set(TalonSRXControlMode.PercentOutput, percet);
+    public void setRollerPercent(double percent) {
+        this.roller.set(TalonSRXControlMode.PercentOutput, percent);
     }
 }
