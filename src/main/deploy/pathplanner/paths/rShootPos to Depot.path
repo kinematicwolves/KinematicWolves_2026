@@ -3,45 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.761897983392646,
-        "y": 7.386488730723606
+        "x": 2.43468009478673,
+        "y": 1.7782464454976288
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.761897983392646,
-        "y": 7.386488730723606
+        "x": 2.6603554502369673,
+        "y": 3.143045023696681
       },
       "isLocked": false,
-      "linkedName": "ramp"
+      "linkedName": "RIght Corner"
     },
     {
       "anchor": {
-        "x": 4.994722222222221,
-        "y": 7.386488730723606
+        "x": 0.7259952606635067,
+        "y": 5.915627962085307
       },
       "prevControl": {
-        "x": 3.9947222222222214,
-        "y": 7.386488730723606
-      },
-      "nextControl": {
-        "x": 5.994722222222221,
-        "y": 7.386488730723606
-      },
-      "isLocked": false,
-      "linkedName": null
-    },
-    {
-      "anchor": {
-        "x": 6.607166666666667,
-        "y": 7.2296555555555555
-      },
-      "prevControl": {
-        "x": 7.070744444444445,
-        "y": 6.725766666666667
+        "x": 1.5964573459715639,
+        "y": 6.033838862559241
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "blue depot"
     }
   ],
   "rotationTargets": [],
@@ -58,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -48.179830119864036
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -179.41072686024845
+    "rotation": -131.5317707410829
   },
   "useDefaultConstraints": true
 }

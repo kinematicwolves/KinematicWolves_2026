@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.5585452586206905,
-        "y": 0.6728448275862069
+        "x": 3.55907327586207,
+        "y": 5.960420258620689
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.5585452586206905,
-        "y": 0.6728448275862067
+        "x": 2.6892133620689664,
+        "y": 5.931099137931033
       },
       "isLocked": false,
-      "linkedName": "Blue Outpost"
+      "linkedName": "ramp"
     },
     {
       "anchor": {
-        "x": 3.0019719827586213,
-        "y": 3.947036637931035
+        "x": 0.7246982758620697,
+        "y": 5.960420258620689
       },
       "prevControl": {
-        "x": 2.0019719827586213,
-        "y": 3.947036637931035
+        "x": 1.5945581896551733,
+        "y": 5.970193965517242
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Blue Backout"
+      "linkedName": "Blue Depot"
     }
   ],
   "rotationTargets": [],
@@ -45,7 +45,7 @@
     "rotation": 180.0
   },
   "reversed": false,
-  "folder": "Blue Outpost",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
     "rotation": 180.0

@@ -3,16 +3,32 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.659800469483569,
-        "y": 2.3849413145539917
+        "x": 0.7246982758620697,
+        "y": 5.960420258620689
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.212687793421907,
-        "y": 1.7249178403755887
+        "x": 1.7246982758620697,
+        "y": 5.960420258620689
       },
       "isLocked": false,
-      "linkedName": "RIght Corner"
+      "linkedName": "Blue Depot"
+    },
+    {
+      "anchor": {
+        "x": 2.0441487068965523,
+        "y": 3.389935344827586
+      },
+      "prevControl": {
+        "x": 2.2680744881465524,
+        "y": 4.711829202586207
+      },
+      "nextControl": {
+        "x": 1.8202229256465523,
+        "y": 2.068041487068965
+      },
+      "isLocked": false,
+      "linkedName": null
     },
     {
       "anchor": {
@@ -20,8 +36,8 @@
         "y": 0.6728448275862069
       },
       "prevControl": {
-        "x": 1.5952464788732401,
-        "y": 0.6497183098591552
+        "x": 1.2524784482758629,
+        "y": 0.6728448275862069
       },
       "nextControl": null,
       "isLocked": false,
@@ -45,10 +61,10 @@
     "rotation": 180.0
   },
   "reversed": false,
-  "folder": "Blue Right ",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -144.5829447238333
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

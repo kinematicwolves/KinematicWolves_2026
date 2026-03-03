@@ -3,44 +3,42 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.105587188612101,
-        "y": 4.005
+        "x": 0.7246982758620697,
+        "y": 5.960420258620689
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.5138315539739033,
-        "y": 3.9942408066429413
+        "x": 1.5456896551724144,
+        "y": 5.813814655172414
       },
       "isLocked": false,
-      "linkedName": "center backup"
+      "linkedName": "Blue Depot"
     },
     {
       "anchor": {
-        "x": 1.534744958481614,
-        "y": 3.7068446026097277
+        "x": 2.4253232758620697,
+        "y": 5.16875
       },
       "prevControl": {
-        "x": 1.9758718861209972,
-        "y": 3.513179122182681
+        "x": 2.3862284482758627,
+        "y": 5.432640086206897
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Climb"
+      "linkedName": "Middle Left Shoot"
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 0.3151595744680852,
-      "rotationDegrees": 90.0
-    },
-    {
-      "waypointRelativePos": 0.7792553191489382,
-      "rotationDegrees": 180.0
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "outtake",
+      "waypointRelativePos": 0.2593457943925248,
+      "endWaypointRelativePos": 0.9789719626168257,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,
@@ -51,13 +49,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": -52.125016348901866
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

@@ -5,69 +5,39 @@
     "data": {
       "commands": [
         {
-          "type": "wait",
+          "type": "path",
           "data": {
-            "waitTime": 5.0
+            "pathName": "Middle to Blue Depot"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "center to blue depot"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 3.0
+            "pathName": "Blue depot to Outpost"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "depot to center blue"
+            "pathName": "Blue Oupost to Right ShootPos"
           }
         },
         {
-          "type": "wait",
+          "type": "named",
           "data": {
-            "waitTime": 5.0
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "center to right depot"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 3.0
+            "name": "outtake"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "right depot to center "
+            "pathName": "Right ShootPos to Blue Climb"
           }
         },
         {
-          "type": "wait",
+          "type": "named",
           "data": {
-            "waitTime": 5.0
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "center to climb"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 5.0
+            "name": "Climb"
           }
         }
       ]

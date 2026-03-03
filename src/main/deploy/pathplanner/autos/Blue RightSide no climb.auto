@@ -7,13 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Blue Right Trench to Shoot Pos"
+            "pathName": "Blue Right Trench to Oupost"
           }
         },
         {
-          "type": "path",
+          "type": "wait",
           "data": {
-            "pathName": "rShootPos to Blue Outpost"
+            "waitTime": 2.0
           }
         },
         {
@@ -25,13 +25,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Center Right to rShootPos"
+            "pathName": "rShootPos to Depot"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "rShootPos to Center RIght"
+            "pathName": "Blue Depot Through Center to rShootPos"
           }
         }
       ]

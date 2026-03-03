@@ -3,35 +3,42 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.797,
-        "y": 4.015452586206896
+        "x": 0.5585452586206905,
+        "y": 0.6728448275862069
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.6794396551724144,
-        "y": 4.8950862068965515
+        "x": 1.5585452586206905,
+        "y": 0.6728448275862071
       },
       "isLocked": false,
-      "linkedName": "Blue Center"
+      "linkedName": "Blue Outpost"
     },
     {
       "anchor": {
-        "x": 0.8126616379310352,
-        "y": 5.960420258620689
+        "x": 2.43468009478673,
+        "y": 1.7782464454976288
       },
       "prevControl": {
-        "x": 1.5456896551724144,
-        "y": 5.872456896551724
+        "x": 2.3471336206896556,
+        "y": 1.0540193965517244
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Blue Depot"
+      "linkedName": "RIght Corner"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "outtake",
+      "waypointRelativePos": 0.2336227308602956,
+      "endWaypointRelativePos": 0.9660615627466467,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,
@@ -42,10 +49,10 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": -131.5317707410829
   },
   "reversed": false,
-  "folder": "Blue Center",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
     "rotation": 180.0

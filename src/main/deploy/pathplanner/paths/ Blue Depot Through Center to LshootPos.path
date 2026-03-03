@@ -1,0 +1,163 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 0.7246982758620697,
+        "y": 5.960420258620689
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 1.7246982758620697,
+        "y": 5.960420258620689
+      },
+      "isLocked": false,
+      "linkedName": "Blue Depot"
+    },
+    {
+      "anchor": {
+        "x": 2.43468009478673,
+        "y": 7.0225118483412325
+      },
+      "prevControl": {
+        "x": 2.2221140177542447,
+        "y": 6.890922856039371
+      },
+      "nextControl": {
+        "x": 2.6472461718192157,
+        "y": 7.154100840643094
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 4.624407327586207,
+        "y": 7.475344827586207
+      },
+      "prevControl": {
+        "x": 3.7585935910272172,
+        "y": 7.387790629507207
+      },
+      "nextControl": {
+        "x": 5.580840976875306,
+        "y": 7.572062837064881
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.706206896551724,
+        "y": 6.908469827586207
+      },
+      "prevControl": {
+        "x": 6.302363287102005,
+        "y": 7.097771519515762
+      },
+      "nextControl": {
+        "x": 7.331724137931035,
+        "y": 6.615258620689656
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.30240301724138,
+        "y": 5.686756465517242
+      },
+      "prevControl": {
+        "x": 7.289547623669484,
+        "y": 6.194544511607152
+      },
+      "nextControl": {
+        "x": 7.321950431034483,
+        "y": 4.9146336206896555
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.706206896551724,
+        "y": 4.934181034482759
+      },
+      "prevControl": {
+        "x": 7.0173066856807464,
+        "y": 4.368545054248169
+      },
+      "nextControl": {
+        "x": 6.585727209108686,
+        "y": 5.153235011651921
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 5.650646551724138,
+        "y": 7.221228448275863
+      },
+      "prevControl": {
+        "x": 6.3481875601266164,
+        "y": 6.552751648556822
+      },
+      "nextControl": {
+        "x": 5.416077586206898,
+        "y": 7.446023706896551
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 2.6403448275862074,
+        "y": 6.947564655172414
+      },
+      "prevControl": {
+        "x": 2.845592672413794,
+        "y": 7.32873922413793
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Left ShootPos"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.396092362344577,
+      "rotationDegrees": 0.0
+    },
+    {
+      "waypointRelativePos": 2.3445825932504065,
+      "rotationDegrees": 0.0
+    },
+    {
+      "waypointRelativePos": 6.37,
+      "rotationDegrees": -90.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -74.19748604606443
+  },
+  "reversed": false,
+  "folder": null,
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 180.0
+  },
+  "useDefaultConstraints": true
+}

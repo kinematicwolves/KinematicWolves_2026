@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.659800469483569,
-        "y": 2.3849413145539917
+        "x": 2.43468009478673,
+        "y": 1.7782464454976288
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.2872065727646302,
-        "y": 1.1394131455399088
+        "x": 2.0620861980677914,
+        "y": 0.5327182764835459
       },
       "isLocked": false,
       "linkedName": "RIght Corner"
@@ -48,16 +48,16 @@
     },
     {
       "anchor": {
-        "x": 7.269319248826292,
-        "y": 2.67237089201878
+        "x": 7.378045023696684,
+        "y": 4.325154028436018
       },
       "prevControl": {
-        "x": 6.662523474178405,
-        "y": 2.193321596244131
+        "x": 7.65745260663507,
+        "y": 3.669620853080568
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "CenterRight"
+      "linkedName": "through center"
     }
   ],
   "rotationTargets": [
@@ -72,7 +72,7 @@
     {
       "name": "Intake",
       "waypointRelativePos": 3.0,
-      "endWaypointRelativePos": 2.123831775700935,
+      "endWaypointRelativePos": 1.8020247469066373,
       "command": null
     }
   ],
@@ -92,7 +92,7 @@
   "folder": "Blue Right ",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -144.5829447238333
+    "rotation": -131.5317707410829
   },
   "useDefaultConstraints": true
 }

@@ -16,16 +16,16 @@
     },
     {
       "anchor": {
-        "x": 2.659800469483569,
-        "y": 2.3849413145539917
+        "x": 2.43468009478673,
+        "y": 1.7782464454976288
       },
       "prevControl": {
-        "x": 2.074295774642564,
-        "y": 1.7462089201877964
+        "x": 1.8491753999457252,
+        "y": 1.1395140511314334
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "RightShootPos"
+      "linkedName": "RIght Corner"
     }
   ],
   "rotationTargets": [],
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -131.72951207681638
+    "rotation": -131.5317707410829
   },
   "reversed": false,
   "folder": "Blue Right ",

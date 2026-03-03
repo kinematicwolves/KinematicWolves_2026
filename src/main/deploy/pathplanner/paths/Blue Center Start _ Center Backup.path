@@ -3,12 +3,12 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.6967378410438916,
+        "x": 3.5,
         "y": 3.9327876631079484
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.041682285483297,
+        "x": 2.8449444444394056,
         "y": 3.962787663107948
       },
       "isLocked": true,
@@ -16,16 +16,16 @@
     },
     {
       "anchor": {
-        "x": 3.105587188612101,
-        "y": 4.005
+        "x": 3.0019719827586213,
+        "y": 3.947036637931035
       },
       "prevControl": {
-        "x": 3.452822222222222,
-        "y": 3.9946888888888887
+        "x": 3.349207016368742,
+        "y": 3.9367255268199237
       },
       "nextControl": null,
       "isLocked": true,
-      "linkedName": "center backup"
+      "linkedName": "Blue Backout"
     }
   ],
   "rotationTargets": [],
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": null,

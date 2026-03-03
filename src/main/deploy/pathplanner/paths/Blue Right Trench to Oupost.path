@@ -3,42 +3,35 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.47987777777777785,
-        "y": 0.6488666666666665
+        "x": 4.24323275862069,
+        "y": 0.5848814655172418
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.4798777777777778,
-        "y": 0.6488666666666667
+        "x": 2.9934952606635066,
+        "y": 0.5746445497630319
       },
       "isLocked": false,
-      "linkedName": "right depot"
+      "linkedName": "Blue Right Trench"
     },
     {
       "anchor": {
-        "x": 2.6967378410438916,
-        "y": 3.9327876631079484
+        "x": 0.5585452586206905,
+        "y": 0.6728448275862069
       },
       "prevControl": {
-        "x": 1.6967378410438918,
-        "y": 3.932787663107948
+        "x": 1.6609360189573454,
+        "y": 0.907784360189571
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "center start"
+      "linkedName": "Blue Outpost"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "outtake",
-      "waypointRelativePos": 0.2336227308602956,
-      "endWaypointRelativePos": 0.9660615627466467,
-      "command": null
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,
@@ -49,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -179.65895772114118
+    "rotation": 180.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Blue Right ",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

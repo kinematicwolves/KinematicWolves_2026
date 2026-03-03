@@ -7,37 +7,49 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Blue Center Start _ Center Backup"
+            "pathName": "Middle to Blue Depot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": " Blue Depot Through Center to LshootPos"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 2.0
+            "waitTime": 3.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "outtake"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Blue center backup depot"
+            "pathName": "Left ShootPos thru Center to Left ShootPos"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "outtake"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Blue Depot Center Backup"
+            "pathName": "Left ShootPos to Blue Climb"
           }
         },
         {
-          "type": "wait",
+          "type": "named",
           "data": {
-            "waitTime": 5.0
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Blue Center Backup Climb"
+            "name": "Climb"
           }
         }
       ]
