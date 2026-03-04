@@ -9,6 +9,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -19,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.robot.Constants.LauncherProfile;
 import frc.robot.commands.FeedWithSpeeds;
 import frc.robot.commands.IntakeToPose;
 import frc.robot.commands.IntakeWithSpeeds;
@@ -36,15 +38,17 @@ public class RobotContainer {
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
-            .withDriveRequestType(DriveRequestType.Velocity); // Use open-loop control for drive motors
-    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
+        .withDeadband(MaxSpeed * 0.1)
+        .withRotationalDeadband(MaxAngularRate * 0.1)
+        .withDriveRequestType(DriveRequestType.Velocity);
     private final SwerveRequest.RobotCentric robotCentric = new SwerveRequest.RobotCentric().withDriveRequestType(DriveRequestType.Velocity);
+    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
-    private final Telemetry logger = new Telemetry(MaxSpeed);
+    // private final Telemetry logger = new Telemetry(MaxSpeed);
 
-    private final CommandXboxController driverController = new CommandXboxController(0);
+    private final CommandXboxController driverController = new CommandXboxController(0);   
+    private final CommandXboxController opController = new CommandXboxController(1);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
@@ -56,16 +60,29 @@ public class RobotContainer {
     /* Path follower */
     private final SendableChooser<Command> autoChooser;
 
+    // some variables
+    public double launcherPercent = 0;
+    public double launcherAngle   = 0;
 
     public RobotContainer() {
-         autoChooser = AutoBuilder.buildAutoChooser("New Auto");
-         SmartDashboard.putData("Auto Mode", autoChooser);
+        autoChooser = AutoBuilder.buildAutoChooser("New Auto");
+        SmartDashboard.putData("Auto Mode", autoChooser);
 
+        // create command for path planner
+        // NamedCommands.registerCommand("deployIntake",  new IntakeToPose(intake, Constants.IntakeProfile.deployedPose,  0));
+        // NamedCommands.registerCommand("retractIntake", new IntakeToPose(intake, Constants.IntakeProfile.retractedPose, 0));
+        // NamedCommands.registerCommand("ingeestLemons", new IntakeWithSpeeds(intake, indexer, 0.6, 0));
 
         configureBindings();
 
+        /*Named Commands For PathPlanner */
+
         // Warmup PathPlanner to avoid Java pauses
         FollowPathCommand.warmupCommand().schedule();
+
+        SmartDashboard.putNumber("OpLauncherPercent", getLauncherPercent());
+        SmartDashboard.putNumber("OpLauncherAngle", getLauncherAngle());
+        SmartDashboard.putNumber("Dist2goal", LauncherProfile.blueHub.getTranslation().getDistance(drivetrain.getPose().getTranslation()));
     }
 
     private void configureBindings() {
@@ -95,28 +112,53 @@ public class RobotContainer {
         // Reset the field-centric heading on left bumper press.
         driverController.y().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-        drivetrain.registerTelemetry(logger::telemeterize);
+        // drivetrain.registerTelemetry(logger::telemeterize);
 
         // launcher stuff
         driverController.rightTrigger(0.5)
-            .whileTrue(new LaunchwithParams(launcher, 0.6, 4));
+            .onTrue(new LaunchwithParams (launcher, this, getLauncherPercent(), getLauncherAngle()));
 
         driverController.b()
-            .onFalse(new LaunchwithParams(launcher, 0, 0));
+            .onTrue(new InstantCommand(() -> {this.launcherAngle=0; this.launcherPercent=0;}).andThen(new LaunchwithParams(launcher, this, 0, 0)));
         
         driverController.rightBumper()
             .whileTrue(new FeedWithSpeeds(indexer, 0.6, 1));
 
         // intake stuff
         driverController.leftTrigger(0.5)
-            .onTrue(new IntakeToPose(intake, 3.9, 0))
+            .onTrue(new IntakeToPose(intake, 4.3, 0))
             .whileTrue(new IntakeWithSpeeds(intake, indexer, 0.6, 0));
         
-        driverController.leftBumper().onTrue(new IntakeToPose(intake, 0, 0));        
+        driverController.leftBumper()
+            .onTrue(new IntakeToPose(intake, 0, 1))
+            .whileTrue(new IntakeWithSpeeds(intake, indexer, -0.5, 0)); // helps the intake go up
+        
+        /* operator controls */
+        opController.povUp()
+            .onTrue(new InstantCommand(() -> {BumpLauncerPercent(0.1);}));
+        opController.povDown()
+            .onTrue(new InstantCommand(() -> {BumpLauncerPercent(-0.1);}));
+         opController.y()
+            .onTrue(new InstantCommand(() -> {BumpLauncerAngle(0.5);}));
+        opController.a()
+            .onTrue(new InstantCommand(() -> {BumpLauncerAngle(-0.5);}));
     }
 
     public Command getAutonomousCommand() {
        /* Run the path selected from the auto chooser */
         return autoChooser.getSelected();
+    }
+
+    public void BumpLauncerPercent(double percent) {
+        this.launcherPercent += percent;
+    }
+    public void BumpLauncerAngle(double incrmenent) {
+        this.launcherAngle += incrmenent;
+    }
+    public double getLauncherPercent() {
+        return launcherPercent;
+    }
+    public double getLauncherAngle() {
+        return launcherAngle;
     }
 }

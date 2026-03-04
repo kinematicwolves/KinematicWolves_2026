@@ -5,6 +5,8 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Robot;
+import frc.robot.RobotContainer;
 import frc.robot.subsystems.Launcher;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
@@ -13,11 +15,13 @@ public class LaunchwithParams extends Command {
     private Launcher launcher;
     private double launcherPercent;
     private double hoodPose;
+    private RobotContainer robotContainer;
 
-    public LaunchwithParams(Launcher launcherSubsystem, double launchPercent, double hoodPose) {
+    public LaunchwithParams(Launcher launcherSubsystem, RobotContainer robotContainer, double launchPercent, double hoodPose) {
         this.launcher = launcherSubsystem;
         this.launcherPercent = launchPercent;
         this.hoodPose = hoodPose; 
+        this.robotContainer = robotContainer;
     
         // Use addRequirements() here to declare subsystem dependencies.
         addRequirements(launcherSubsystem);
@@ -26,13 +30,19 @@ public class LaunchwithParams extends Command {
     // Called when the command is initially scheduled.
     @Override
     public void initialize() {
-        this.launcher.setFlywheelPercent(this.launcherPercent);
-        this.launcher.setHoodPosition(this.hoodPose);
+        // this.launcher.setFlywheelPercent(this.launcherPercent);
+        // this.launcher.setHoodPosition(this.hoodPose);
     }
 
     // Called every time the scheduler runs while the command is scheduled.
     @Override
-    public void execute() {}
+    public void execute() {
+        this.launcher.setFlywheelPercent(this.robotContainer.getLauncherPercent());
+        this.launcher.setHoodPosition(this.robotContainer.getLauncherAngle());
+        System.out.print(this.robotContainer.getLauncherPercent());
+        System.out.print("    ");
+        System.out.println(this.robotContainer.getLauncherAngle());
+    }
 
     // Called once the command ends or is interrupted.
     @Override

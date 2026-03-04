@@ -125,14 +125,13 @@ public class Launcher extends SubsystemBase {
         config.inverted(false);
 
         // setting the forward / reverse position limits so the hood doesn't rip itself apart... hopefully :)
-        // config.softLimit.forwardSoftLimit(0); //TODO: Change limits to based on real hardware
-        // config.softLimit.forwardSoftLimitEnabled(false); //TODO: Change to true to enable
-        // config.softLimit.reverseSoftLimit(0); //TODO: Change limits to based on real hardware (this one will probably stay at 0)
-        // config.softLimit.reverseSoftLimitEnabled(false); //TODO: Change to true to enable
-
+        config.softLimit.forwardSoftLimit(5);
+        config.softLimit.forwardSoftLimitEnabled(true);
+        config.softLimit.reverseSoftLimit(0);
+        config.softLimit.reverseSoftLimitEnabled(true);
         // configuring the pid controller for the hood angle
         config.closedLoop
-        .p(0.1)
+        .p(1)
         .i(0.0)
         .d(0.0);
 
@@ -165,7 +164,8 @@ public class Launcher extends SubsystemBase {
      * @param rotations the position in the hood in rotations
      */
     public void setHoodPosition(double rotations) {
-        this.hoodPIDController.setReference(rotations, SparkMax.ControlType.kPosition);
+        this.hoodPIDController.setSetpoint(rotations, SparkMax.ControlType.kPosition);
+        // this.hoodPIDController.setReference(rotations, SparkMax.ControlType.kPosition);
     }
 
     /**
@@ -175,7 +175,7 @@ public class Launcher extends SubsystemBase {
     public boolean hoodIsAtSetpoint() {
         // Unlike the TalonFX, the spark max doesn't have a function call for how close it is.
         // Therefore, we will look at the the current position, and compare it to the stored setpoint
-        return Math.abs(this.hoodMotor.getEncoder().getPosition() - this.hoodPIDController.getSetpoint()) <= 0.1; // TODO: Determine reasonable tolerance and move to constants file
+        return Math.abs(this.hoodMotor.getEncoder().getPosition() - this.hoodPIDController.getSetpoint()) <= 0.2; // TODO: Determine reasonable tolerance and move to constants file
     }
 
     public void setHoodSpeed(double speed) {

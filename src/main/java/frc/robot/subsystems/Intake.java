@@ -42,11 +42,11 @@ public class Intake extends SubsystemBase {
     private void configureIntakeMotor1() {
         TalonFXConfiguration config = new TalonFXConfiguration();
         // PID
-        config.Slot0.kP = 1; // TODO: Replace with 1/(max motor range from smart dashboard)
+        config.Slot0.kP = 0.3; // TODO: Replace with 1/(max motor range from smart dashboard)
         config.Slot0.kI = 0.0;
         config.Slot0.kD = 0.0;
 
-        config.Slot1.kP = 0.3; // TODO: Replace with 1/(max motor range from smart dashboard)
+        config.Slot1.kP = 0.6; // TODO: Replace with 1/(max motor range from smart dashboard)
         config.Slot1.kI = 0.0;
         config.Slot1.kD = 0.0;
 
