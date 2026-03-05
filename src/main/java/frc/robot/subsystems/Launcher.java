@@ -6,6 +6,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
@@ -55,9 +56,9 @@ public class Launcher extends SubsystemBase {
 
         // PID (Velocity)
         // https://v6.docs.ctr-electronics.com/en/latest/docs/api-reference/device-specific/talonfx/basic-pid-control.html#velocity-control
-        // config.Slot0.kS = 0.0; // TODO: increase until the motors overcome friction in the launcher
-        // config.Slot0.kV = 0.0; // TODO: set to 0.12
-        // config.Slot0.kP = 0.0; // TODO: set to 1/(max speed)
+        config.Slot0.kS = 0.1; // Add 0.1 V output to overcome static friction
+        config.Slot0.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
+        config.Slot0.kP = 0.11; // An error of 1 rps results in 0.11 V output
         // config.Slot0.kI = 0.0;
         // config.Slot0.kD = 0.0;
 
@@ -165,7 +166,10 @@ public class Launcher extends SubsystemBase {
      */
     public void setHoodPosition(double rotations) {
         this.hoodPIDController.setSetpoint(rotations, SparkMax.ControlType.kPosition);
-        // this.hoodPIDController.setReference(rotations, SparkMax.ControlType.kPosition);
+    }
+
+    public void setFlywheelSpeed(double speed) {
+        this.launcherMotor1.setControl(new VelocityVoltage(speed));
     }
 
     /**

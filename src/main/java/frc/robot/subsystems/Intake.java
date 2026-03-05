@@ -105,7 +105,8 @@ public class Intake extends SubsystemBase {
         // This method will be called once per scheduler run
 
         // This is a good spot to put any state-monitoring, smart dashboard outputs, logging, etc
-        SmartDashboard.putNumber("Intake Position", this.intakeMotor1.getPosition().getValueAsDouble()); // puts the intake position on the smart dashboard
+        SmartDashboard.putNumber("Intake Pose", this.intakeMotor1.getPosition().getValueAsDouble()); // puts the intake position on the smart dashboard
+        SmartDashboard.putBoolean("IntakeAtPose", this.atSetpoint()); // puts the intake position on the smart dashboard
     }
 
     /* Public functions for commands */

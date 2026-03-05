@@ -37,7 +37,7 @@ public class RobotContainer {
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
-    private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+    private final SwerveRequest.FieldCentric fieldCentricDrive = new SwerveRequest.FieldCentric()
         .withDeadband(MaxSpeed * 0.1)
         .withRotationalDeadband(MaxAngularRate * 0.1)
         .withDriveRequestType(DriveRequestType.Velocity);
@@ -53,7 +53,7 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     // subsystems
-    private final Launcher launcher = new Launcher();
+    public final Launcher launcher = new Launcher();
     private final Intake   intake   = new Intake();
     private final Indexer  indexer  = new Indexer();
 
@@ -79,10 +79,6 @@ public class RobotContainer {
 
         // Warmup PathPlanner to avoid Java pauses
         FollowPathCommand.warmupCommand().schedule();
-
-        SmartDashboard.putNumber("OpLauncherPercent", getLauncherPercent());
-        SmartDashboard.putNumber("OpLauncherAngle", getLauncherAngle());
-        SmartDashboard.putNumber("Dist2goal", LauncherProfile.blueHub.getTranslation().getDistance(drivetrain.getPose().getTranslation()));
     }
 
     private void configureBindings() {
@@ -91,9 +87,10 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-driverController.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                fieldCentricDrive
+                    .withVelocityX(-driverController.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
                     .withVelocityY(-driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-driverController.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                    .withRotationalRate(driverController.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -116,7 +113,12 @@ public class RobotContainer {
 
         // launcher stuff
         driverController.rightTrigger(0.5)
-            .onTrue(new LaunchwithParams (launcher, this, getLauncherPercent(), getLauncherAngle()));
+            .onTrue(new LaunchwithParams (launcher, this, getLauncherPercent(), getLauncherAngle()))
+            .whileTrue(
+                drivetrain.applyRequest(() -> fieldCentricDrive
+                    .withVelocityX(-driverController.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(-driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate((LimelightHelpers.getTX("limelight")*0.05*MaxAngularRate)))); // rotate from limelight value
 
         driverController.b()
             .onTrue(new InstantCommand(() -> {this.launcherAngle=0; this.launcherPercent=0;}).andThen(new LaunchwithParams(launcher, this, 0, 0)));
@@ -126,8 +128,8 @@ public class RobotContainer {
 
         // intake stuff
         driverController.leftTrigger(0.5)
-            .onTrue(new IntakeToPose(intake, 4.3, 0))
-            .whileTrue(new IntakeWithSpeeds(intake, indexer, 0.6, 0));
+            .onTrue(new IntakeToPose(intake, 3.9, 0))
+            .whileTrue(new IntakeWithSpeeds(intake, indexer, 1, 0));
         
         driverController.leftBumper()
             .onTrue(new IntakeToPose(intake, 0, 1))
@@ -135,9 +137,9 @@ public class RobotContainer {
         
         /* operator controls */
         opController.povUp()
-            .onTrue(new InstantCommand(() -> {BumpLauncerPercent(0.1);}));
+            .onTrue(new InstantCommand(() -> {BumpLauncerPercent(10);}));
         opController.povDown()
-            .onTrue(new InstantCommand(() -> {BumpLauncerPercent(-0.1);}));
+            .onTrue(new InstantCommand(() -> {BumpLauncerPercent(-1);}));
          opController.y()
             .onTrue(new InstantCommand(() -> {BumpLauncerAngle(0.5);}));
         opController.a()

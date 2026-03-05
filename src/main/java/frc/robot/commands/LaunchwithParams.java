@@ -37,11 +37,8 @@ public class LaunchwithParams extends Command {
     // Called every time the scheduler runs while the command is scheduled.
     @Override
     public void execute() {
-        this.launcher.setFlywheelPercent(this.robotContainer.getLauncherPercent());
+        this.launcher.setFlywheelSpeed(this.robotContainer.getLauncherPercent());
         this.launcher.setHoodPosition(this.robotContainer.getLauncherAngle());
-        System.out.print(this.robotContainer.getLauncherPercent());
-        System.out.print("    ");
-        System.out.println(this.robotContainer.getLauncherAngle());
     }
 
     // Called once the command ends or is interrupted.
