@@ -16,16 +16,16 @@
     },
     {
       "anchor": {
-        "x": 0.7259952606635067,
-        "y": 5.915627962085307
+        "x": 1.1343601895734594,
+        "y": 5.947867298578199
       },
       "prevControl": {
-        "x": 1.5964573459715639,
-        "y": 6.033838862559241
+        "x": 2.0048222748815165,
+        "y": 6.066078199052133
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "blue depot"
+      "linkedName": "Blue Depot"
     }
   ],
   "rotationTargets": [],

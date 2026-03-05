@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 13.722077777777777,
-        "y": 4.014844444444445
+        "x": 13.073661137440759,
+        "y": 3.261255924170615
       },
       "prevControl": null,
       "nextControl": {
-        "x": 14.722077777777777,
-        "y": 4.014844444444445
+        "x": 14.073661137440759,
+        "y": 3.261255924170615
       },
       "isLocked": false,
       "linkedName": "Red center start"
     },
     {
       "anchor": {
-        "x": 15.30428888888889,
-        "y": 4.014844444444445
+        "x": 14.923462441319876,
+        "y": 3.9498356807511747
       },
       "prevControl": {
-        "x": 14.30428888888889,
-        "y": 4.014844444444445
+        "x": 13.923462441319876,
+        "y": 3.9498356807511747
       },
       "nextControl": null,
-      "isLocked": false,
-      "linkedName": null
+      "isLocked": true,
+      "linkedName": "Red climb"
     }
   ],
   "rotationTargets": [],
@@ -42,10 +42,10 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Red Climb",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0

@@ -7,37 +7,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Red Center Start _ Center Backup"
+            "pathName": "Red Center Start to Depot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Red Depot to Red Outpost"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 2.0
+            "waitTime": 3.0
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Red Center Backup Depot"
+            "pathName": "Red outpost to ShootPos"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Red Depot Center Backup"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 5.0
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Red Center Backup Climb"
+            "pathName": "Left ShootPos Thru Center to ShootPos"
           }
         }
       ]

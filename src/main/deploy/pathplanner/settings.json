@@ -3,11 +3,11 @@
   "robotLength": 0.9652,
   "holonomicMode": true,
   "pathFolders": [
-    "Blue Center",
+    "Blue Middle",
     "Blue Left",
     "Blue Outpost",
     "Blue Right ",
-    "Red Center",
+    "Red Middle",
     "Red Climb",
     "Red Depot",
     "Red Left",
