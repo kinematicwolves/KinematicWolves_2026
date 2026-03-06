@@ -347,6 +347,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return super.samplePoseAt(Utils.fpgaToCurrentTime(timestampSeconds));
     }
 
+    /**
+     * 
+     * @return the position of the drive train
+     */
     public Pose2d getPose() {
         return this.getState().Pose;
     }

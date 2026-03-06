@@ -20,15 +20,14 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.FeedWithSpeeds;
 import frc.robot.commands.IntakeToPose;
 import frc.robot.commands.IntakeWithSpeeds;
-import frc.robot.commands.LaunchFromPose;
-import frc.robot.commands.SetLaunchParameters;
+import frc.robot.commands.LaunchwithParams;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
@@ -45,24 +44,34 @@ public class RobotContainer {
         .withDeadband(MaxSpeed * 0.1)
         .withRotationalDeadband(MaxAngularRate * 0.1)
         .withDriveRequestType(DriveRequestType.Velocity);
+    private final SwerveRequest.RobotCentric robotCentricDrive = new SwerveRequest.RobotCentric()
+        .withDeadband(MaxSpeed * 0.1)
+        .withRotationalDeadband(MaxAngularRate * 0.1)    
+        .withDriveRequestType(DriveRequestType.Velocity);
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
-    private final Telemetry logger = new Telemetry(MaxSpeed);
+    // private final Telemetry logger = new Telemetry(MaxSpeed);
 
-    private final CommandXboxController driverController = new CommandXboxController(0);
+    private final CommandXboxController driverController = new CommandXboxController(0);   
+    private final CommandXboxController opController = new CommandXboxController(1);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     // subsystems
-    private final Launcher launcher = new Launcher();
+    public final Launcher launcher = new Launcher();
     private final Intake   intake   = new Intake();
     private final Indexer  indexer  = new Indexer();
 
+    /* Path follower */
     private final SendableChooser<Command> autoChooser;
 
     // custom triggers
     private Trigger hubActiveSoon = new Trigger(() -> isHubActive(5) == true); // true when the hub is active in 5 seconds
     private Trigger hubActive     = new Trigger(() -> isHubActive(0) == true); // true when the hub is active
+
+    // some variables
+    public double launcherPercent = 0;
+    public double launcherAngle   = 0;
 
     public RobotContainer() {
         autoChooser = AutoBuilder.buildAutoChooser("New Auto");
@@ -79,11 +88,11 @@ public class RobotContainer {
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
-            drivetrain.applyRequest(() ->
+            drivetrain.applyRequest(() ->   
                 fieldCentricDrive
-                    .withVelocityX(-driverController.getLeftY() * MaxSpeed)
-                    .withVelocityY(-driverController.getLeftX() * MaxSpeed)
-                    .withRotationalRate(-driverController.getRightX() * MaxAngularRate)
+                    .withVelocityX(-driverController.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(-driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate(-driverController.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -94,54 +103,46 @@ public class RobotContainer {
             drivetrain.applyRequest(() -> idle).ignoringDisable(true)
         );
 
-        // // Run SysId routines when holding back/start and X/Y.
-        // // Note that each routine should be run exactly once in a single log.
-        // driverController.back().and(driverController.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        // driverController.back().and(driverController.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        // driverController.start().and(driverController.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        // driverController.start().and(driverController.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        driverController.a().whileTrue(drivetrain.applyRequest(() -> brake));
 
-        // Reset the field-centric heading on y button press.
+        // Reset the field-centric heading on left bumper press.
         driverController.y().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-        drivetrain.registerTelemetry(logger::telemeterize);
+        // drivetrain.registerTelemetry(logger::telemeterize);
 
-        /* Intake control */
-        // deploy the intake, and intake game pieces
-        driverController.leftTrigger(0.5)
-            .onTrue(new IntakeToPose(intake, 3.9, 1))
-            .whileTrue(new IntakeWithSpeeds(intake, indexer, 0.6, 0.3));
-
-        // retract intake
-        driverController.leftBumper().onTrue(new IntakeToPose(intake, 0, 0));
-        
-        /* launcher control */
-        hubActiveSoon
-            // launcher auto-warm-up when the hub is active soon
-            .onTrue(new SetLaunchParameters(launcher, 0, 0.5));
-
-        // point at the goal with right trigger
-        driverController.rightTrigger(0.5).and(hubActive)
+        // launcher stuff
+        driverController.rightTrigger(0.5)
+            .onTrue(new LaunchwithParams (launcher, this, getLauncherPercent(), getLauncherAngle()))
             .whileTrue(
-                new ParallelCommandGroup(
-                    new LaunchFromPose(drivetrain, launcher, indexer, 0.6, 1),
-                    drivetrain.applyRequest(() -> 
-                        fieldCentricDrive
-                            .withRotationalRate(LimelightHelpers.getTX("limelight") * 0.5 * MaxAngularRate) // Use LL to auto rotate to goal
-                            .withVelocityX(-driverController.getLeftY() * MaxSpeed)
-                            .withVelocityY(-driverController.getLeftX() * MaxSpeed))));
+                drivetrain.applyRequest(() -> fieldCentricDrive
+                    .withVelocityX(-driverController.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(-driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate(-(LimelightHelpers.getTX("limelight")*0.05*MaxAngularRate)))); // rotate from limelight value
 
-        // launch with fixed values
-        driverController.a()
-            .onTrue(new SetLaunchParameters(launcher, 3, 0.5));
-
-        // feed balls to the launcher
+        driverController.b()
+            .onTrue(new InstantCommand(() -> {this.launcherAngle=0; this.launcherPercent=0;}).andThen(new LaunchwithParams(launcher, this, 0, 0)));
+        
         driverController.rightBumper()
             .whileTrue(new FeedWithSpeeds(indexer, 0.6, 1));
 
-        // turn off launcher and feeder
-        driverController.b()
-            .onFalse(new SetLaunchParameters(launcher, 0, 0));
+        // intake stuff
+        driverController.leftTrigger(0.5)
+            .onTrue(new IntakeToPose(intake, 3.9, 0))
+            .whileTrue(new IntakeWithSpeeds(intake, indexer, 1, 0));
+        
+        driverController.leftBumper()
+            .onTrue(new IntakeToPose(intake, 0, 1))
+            .whileTrue(new IntakeWithSpeeds(intake, indexer, -0.5, 0)); // helps the intake go up
+        
+        /* operator controls */
+        opController.povUp()
+            .onTrue(new InstantCommand(() -> {BumpLauncerPercent(10);}));
+        opController.povDown()
+            .onTrue(new InstantCommand(() -> {BumpLauncerPercent(-1);}));
+         opController.y()
+            .onTrue(new InstantCommand(() -> {BumpLauncerAngle(0.5);}));
+        opController.a()
+            .onTrue(new InstantCommand(() -> {BumpLauncerAngle(-0.5);}));
     }
 
     public Command getAutonomousCommand() {
@@ -217,5 +218,18 @@ public class RobotContainer {
         else
             // End game, hub always active (also reached earlier if earlySeconds > 0).
             return true;
+    }
+
+    public void BumpLauncerPercent(double percent) {
+        this.launcherPercent += percent;
+    }
+    public void BumpLauncerAngle(double incrmenent) {
+        this.launcherAngle += incrmenent;
+    }
+    public double getLauncherPercent() {
+        return launcherPercent;
+    }
+    public double getLauncherAngle() {
+        return launcherAngle;
     }
 }
