@@ -218,13 +218,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 ),
                 new PPHolonomicDriveController(
                     // PID constants for translation
-                    new PIDConstants(10, 0, 0),
+                    new PIDConstants(2.5, 0, 0), // same gains as 2025 robot
                     // PID constants for rotation
-                    new PIDConstants(7, 0, 0)
+                    new PIDConstants(2, 0, 0) // same gains as 2025 robot
                 ),
                 config,
-                // Assume the path needs to be flipped for Red vs Blue, this is normally the case
-                () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+                () -> false, // never flip the autos, instead sketch them on the red side
                 this // Subsystem for requirements
             );
         } catch (Exception ex) {
