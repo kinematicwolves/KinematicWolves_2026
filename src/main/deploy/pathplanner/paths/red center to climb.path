@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 13.073661137440759,
-        "y": 3.261255924170615
+        "x": 12.834321120689657,
+        "y": 0.6923922413793104
       },
       "prevControl": null,
       "nextControl": {
-        "x": 14.073661137440759,
-        "y": 3.261255924170615
+        "x": 13.834321120689657,
+        "y": 0.6923922413793102
       },
       "isLocked": false,
       "linkedName": "Red center start"
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 3.0,
-    "maxAcceleration": 3.0,
+    "maxVelocity": 1.5,
+    "maxAcceleration": 2.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -48,7 +48,7 @@
   "folder": "Red Climb",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }

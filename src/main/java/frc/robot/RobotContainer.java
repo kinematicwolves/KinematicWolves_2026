@@ -41,7 +41,10 @@ public class RobotContainer {
         .withDeadband(MaxSpeed * 0.1)
         .withRotationalDeadband(MaxAngularRate * 0.1)
         .withDriveRequestType(DriveRequestType.Velocity);
-    private final SwerveRequest.RobotCentric robotCentric = new SwerveRequest.RobotCentric().withDriveRequestType(DriveRequestType.Velocity);
+    private final SwerveRequest.RobotCentric robotCentricDrive = new SwerveRequest.RobotCentric()
+        .withDeadband(MaxSpeed * 0.1)
+        .withRotationalDeadband(MaxAngularRate * 0.1)    
+        .withDriveRequestType(DriveRequestType.Velocity);
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
@@ -86,11 +89,11 @@ public class RobotContainer {
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
-            drivetrain.applyRequest(() ->
+            drivetrain.applyRequest(() ->   
                 fieldCentricDrive
                     .withVelocityX(-driverController.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
                     .withVelocityY(-driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(driverController.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                    .withRotationalRate(-driverController.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -118,7 +121,7 @@ public class RobotContainer {
                 drivetrain.applyRequest(() -> fieldCentricDrive
                     .withVelocityX(-driverController.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
                     .withVelocityY(-driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate((LimelightHelpers.getTX("limelight")*0.05*MaxAngularRate)))); // rotate from limelight value
+                    .withRotationalRate(-(LimelightHelpers.getTX("limelight")*0.05*MaxAngularRate)))); // rotate from limelight value
 
         driverController.b()
             .onTrue(new InstantCommand(() -> {this.launcherAngle=0; this.launcherPercent=0;}).andThen(new LaunchwithParams(launcher, this, 0, 0)));

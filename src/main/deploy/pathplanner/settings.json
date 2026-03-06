@@ -15,8 +15,8 @@
     "Red Right"
   ],
   "autoFolders": [],
-  "defaultMaxVel": 3.0,
-  "defaultMaxAccel": 3.0,
+  "defaultMaxVel": 1.5,
+  "defaultMaxAccel": 2.0,
   "defaultMaxAngVel": 540.0,
   "defaultMaxAngAccel": 720.0,
   "defaultNominalVoltage": 12.0,
@@ -24,7 +24,7 @@
   "robotMOI": 6.883,
   "robotTrackwidth": 0.546,
   "driveWheelRadius": 0.048,
-  "driveGearing": 5.143,
+  "driveGearing": 5.902,
   "maxDriveSpeed": 5.45,
   "driveMotorType": "krakenX60",
   "driveCurrentLimit": 60.0,
@@ -39,5 +39,7 @@
   "brModuleY": -0.273,
   "bumperOffsetX": 0.0,
   "bumperOffsetY": 0.0,
-  "robotFeatures": []
+  "robotFeatures": [
+    "{\"name\":\"Line\",\"type\":\"line\",\"data\":{\"start\":{\"x\":-0.2,\"y\":0.25},\"end\":{\"x\":-0.5,\"y\":0.25},\"strokeWidth\":0.02}}"
+  ]
 }
