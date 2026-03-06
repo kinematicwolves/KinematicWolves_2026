@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.Constants.LEDProfile;
 import frc.robot.Constants.LauncherProfile;
 
 public class Robot extends TimedRobot {
@@ -23,10 +24,9 @@ public class Robot extends TimedRobot {
         .withTimestampReplay()
         .withJoystickReplay();
 
-    private final boolean kUseLimelight = true;
-
     public Robot() {
         m_robotContainer = new RobotContainer();
+        m_robotContainer.lighting.setSegmentColor(LEDProfile.CANdleLeds, LEDProfile.green);
     }
 
     @Override
@@ -54,13 +54,15 @@ public class Robot extends TimedRobot {
                 m_robotContainer.drivetrain.addVisionMeasurement(llMeasurement.pose, llMeasurement.timestampSeconds);
             }
         }
-        SmartDashboard.putNumber("OpLauncherSpeed", m_robotContainer.getLauncherPercent());
+        SmartDashboard.putNumber("OpLauncherSpeed", m_robotContainer.getLauncherSpeed());
         SmartDashboard.putNumber("OpLauncherAngle", m_robotContainer.getLauncherAngle());
         SmartDashboard.putNumber("Dist2goal", LauncherProfile.redHub.getTranslation().getDistance(m_robotContainer.drivetrain.getPose().getTranslation()));
     }
 
     @Override
-    public void disabledInit() {}
+    public void disabledInit() {
+        m_robotContainer.lighting.setSegmentColor(LEDProfile.CANdleLeds, LEDProfile.green);
+    }
 
     @Override
     public void disabledPeriodic() {}
@@ -88,6 +90,7 @@ public class Robot extends TimedRobot {
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().cancel(m_autonomousCommand);
         }
+        m_robotContainer.lighting.setSegmentRainbowAnimation(LEDProfile.CANdleLeds);
     }
 
     @Override

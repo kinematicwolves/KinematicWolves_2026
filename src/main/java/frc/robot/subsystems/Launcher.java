@@ -19,6 +19,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
@@ -38,18 +39,21 @@ public class Launcher extends SubsystemBase {
     private final TalonFX launcherMotor1 = new TalonFX(LauncherProfile.launcherMotor1ID, TunerConstants.kCANBus);
     private final TalonFX launcherMotor2 = new TalonFX(LauncherProfile.launcherMotor1ID, TunerConstants.kCANBus);
 
+    // debouncer for the launcher at speed check
+    private final Debouncer debouncer = new Debouncer(0.5);
+
     // hood motor and controller objects
     private final SparkMax hoodMotor = new SparkMax(LauncherProfile.hoodMotorID, SparkLowLevel.MotorType.kBrushless);
     private final SparkClosedLoopController hoodPIDController = hoodMotor.getClosedLoopController();
 
     private final InterpolatingTreeMap<Double, ShotParams> shotTable =
         new InterpolatingTreeMap<>(InverseInterpolator.forDouble(),ShotParams::interpolate) {{
-            // distance [m] → (hood rotations, rpm)
-            put(1.0, new ShotParams(1.0, 1000.0));
-            put(1.2, new ShotParams(1.5, 1000.0));
-            put(2.0, new ShotParams(2.0, 2000.0));
-            put(2.5, new ShotParams(2.5, 2000.0));
-            put(3.0, new ShotParams(3.0, 3000.0));
+            // distance [m] → (hood rotations, rps)
+            put(1.0, new ShotParams(1.0,  50));
+            put(1.2, new ShotParams(1.5, 100));
+            put(2.0, new ShotParams(2.0, 150));
+            put(2.5, new ShotParams(2.5, 200));
+            put(3.0, new ShotParams(3.0, 300));
         }};
 
     public Launcher() {
@@ -57,10 +61,8 @@ public class Launcher extends SubsystemBase {
         // Here, we will configure all the motors, and to whatever other setup we need.
         // I split this up into separate functions for readability
 
-        // Configure LauncherMotorA
         configureLauncherMotor1();
 
-        // Configure LauncherMotorB
         configureLauncherMotor2();
 
         configureHoodMotor();
@@ -159,6 +161,11 @@ public class Launcher extends SubsystemBase {
         this.hoodMotor.getEncoder().setPosition(0);
     }
 
+    /**
+     * Computes the distance from the robot to the current alliance goal
+     * @param currentPose
+     * @return the distance to the goal [m]
+     */
     private double getDistanceToGoal(Pose2d currentPose) {
         Transform2d bot2goal;
 
@@ -171,7 +178,6 @@ public class Launcher extends SubsystemBase {
 
         return bot2goal.getTranslation().getNorm();
     }
-
 
     @Override
     public void periodic() {
@@ -222,7 +228,7 @@ public class Launcher extends SubsystemBase {
     public boolean hoodIsAtSetpoint() {
         // Unlike the TalonFX, the spark max doesn't have a function call for how close it is.
         // Therefore, we will look at the the current position, and compare it to the stored setpoint
-        return Math.abs(this.hoodMotor.getEncoder().getPosition() - this.hoodPIDController.getSetpoint()) <= LauncherProfile.hoodTolerance;
+        return this.debouncer.calculate(Math.abs(this.hoodMotor.getEncoder().getPosition() - this.hoodPIDController.getSetpoint()) <= LauncherProfile.hoodTolerance);
     }
 
     /**
@@ -244,6 +250,6 @@ public class Launcher extends SubsystemBase {
 
         // apply the parameters to the hood, flywheel
         setHoodPosition(params.hoodRotations);
-        setFlywheelSpeed(params.rpm);
+        setFlywheelSpeed(params.rps);
     }
 }

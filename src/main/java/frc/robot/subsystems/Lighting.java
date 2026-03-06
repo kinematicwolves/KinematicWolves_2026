@@ -25,9 +25,10 @@ import com.ctre.phoenix6.controls.SolidColor;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CANdleSegment;
 import frc.robot.Constants.LEDProfile;
+import frc.robot.generated.TunerConstants;
 
 public class Lighting extends SubsystemBase {
-    public final CANdle candle = new CANdle(5);
+    public final CANdle candle = new CANdle(5, TunerConstants.kCANBus);
 
     /** Creates a new Lighting. */
     public Lighting() {

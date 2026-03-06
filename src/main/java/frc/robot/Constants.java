@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import java.util.Map;
-
 import com.ctre.phoenix6.signals.RGBWColor;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -29,9 +27,7 @@ public final class Constants {
         public static final RGBWColor off    = new RGBWColor(  0,   0,   0);
         public static final double BrightnessScalar = 0.5;
         
-        public static Map<String, CANdleSegment> CANdleSegments = Map.of(
-            "candle", new CANdleSegment( 0,  7, 1)
-        );
+        public static final CANdleSegment CANdleLeds = new CANdleSegment( 0,  7, 1);
     }
 
     public final class LauncherProfile {
@@ -43,7 +39,6 @@ public final class Constants {
 
         public static final double speedTolerance = 1; // rotation/s
         public static final double hoodTolerance  = 0.1; // rotations
-
     }
 
     public final class IntakeProfile {
@@ -54,10 +49,24 @@ public final class Constants {
 
         public static final double deployPose = 3.9;
         public static final double zeroPose   = 0.0;
+
+        public static final int gentleSlot     = 0;
+        public static final int aggressiveSlot = 1;
+
+        public static final double intakeSpeed  =  0.6;
+        public static final double retractSpeed = -0.5;
     }
 
     public final class IndexerProfile {
         public static final int kickerMotorID = 43;
         public static final int rollerMotorID = 34;
+    }
+
+    public final class ElevatorProfile {
+        public static final int motor1ID = 45;
+        public static final int motor2ID = 46;
+
+        public static final double zeroPose  = 0.0;
+        public static final double climbPose = 9.0; // TODO: Check max height in encoder space
     }
 }

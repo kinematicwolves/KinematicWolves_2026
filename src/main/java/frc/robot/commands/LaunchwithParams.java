@@ -12,14 +12,10 @@ import frc.robot.subsystems.Launcher;
 public class LaunchWithParams extends Command {
     /** Creates a new LaunchWithParams. */
     private Launcher launcher;
-    private double launcherPercent;
-    private double hoodPose;
     private RobotContainer robotContainer;
 
-    public LaunchWithParams(Launcher launcherSubsystem, RobotContainer robotContainer, double launchPercent, double hoodPose) {
+    public LaunchWithParams(Launcher launcherSubsystem, RobotContainer robotContainer) {
         this.launcher = launcherSubsystem;
-        this.launcherPercent = launchPercent;
-        this.hoodPose = hoodPose; 
         this.robotContainer = robotContainer;
     
         // Use addRequirements() here to declare subsystem dependencies.
@@ -28,15 +24,12 @@ public class LaunchWithParams extends Command {
 
     // Called when the command is initially scheduled.
     @Override
-    public void initialize() {
-        // this.launcher.setFlywheelPercent(this.launcherPercent);
-        // this.launcher.setHoodPosition(this.hoodPose);
-    }
+    public void initialize() {}
 
     // Called every time the scheduler runs while the command is scheduled.
     @Override
     public void execute() {
-        this.launcher.setFlywheelSpeed(this.robotContainer.getLauncherPercent());
+        this.launcher.setFlywheelSpeed(this.robotContainer.getLauncherSpeed());
         this.launcher.setHoodPosition(this.robotContainer.getLauncherAngle());
     }
 

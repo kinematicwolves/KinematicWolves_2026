@@ -11,18 +11,18 @@ import edu.wpi.first.math.interpolation.Interpolatable;
 public class ShotParams implements Interpolatable<ShotParams> {
 
     public final double hoodRotations;
-    public final double rpm;
+    public final double rps;
 
-    public ShotParams(double hoodRotations, double rpm) {
+    public ShotParams(double hoodRotations, double rps) {
         this.hoodRotations = hoodRotations;
-        this.rpm = rpm;
+        this.rps = rps;
     }
 
     @Override
     public ShotParams interpolate(ShotParams endValue, double t) {
         return new ShotParams(
             MathUtil.interpolate(this.hoodRotations, endValue.hoodRotations, t),
-            MathUtil.interpolate(this.rpm, endValue.rpm, t)
+            MathUtil.interpolate(this.rps, endValue.rps, t)
         );
     }
 }
