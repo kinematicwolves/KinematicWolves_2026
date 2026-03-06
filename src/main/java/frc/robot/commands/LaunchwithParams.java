@@ -5,19 +5,18 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.Launcher;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class LaunchwithParams extends Command {
-    /** Creates a new LaunchwithParams. */
+public class LaunchWithParams extends Command {
+    /** Creates a new LaunchWithParams. */
     private Launcher launcher;
     private double launcherPercent;
     private double hoodPose;
     private RobotContainer robotContainer;
 
-    public LaunchwithParams(Launcher launcherSubsystem, RobotContainer robotContainer, double launchPercent, double hoodPose) {
+    public LaunchWithParams(Launcher launcherSubsystem, RobotContainer robotContainer, double launchPercent, double hoodPose) {
         this.launcher = launcherSubsystem;
         this.launcherPercent = launchPercent;
         this.hoodPose = hoodPose; 

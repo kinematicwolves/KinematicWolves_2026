@@ -15,12 +15,13 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.IndexerProfile;
 
 public class Indexer extends SubsystemBase {
     /** Creates a new Indexer. */
     // Step one, create all the objects we need
-    private final SparkMax kickerMotor = new SparkMax(43, SparkLowLevel.MotorType.kBrushless); //TODO: Move to constants file
-    private final TalonSRX roller      = new TalonSRX(34); //TODO: Move to constants file
+    private final SparkMax kickerMotor = new SparkMax(IndexerProfile.kickerMotorID, SparkLowLevel.MotorType.kBrushless);
+    private final TalonSRX roller      = new TalonSRX(IndexerProfile.rollerMotorID);
 
     public Indexer() {
         configureKickerMotor();

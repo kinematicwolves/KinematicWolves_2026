@@ -61,8 +61,17 @@
   "cSpell.words": [
     "auton",
     "Brushless",
+    "CTRE",
     "deadband",
-    "nessesssary",
-    "telemeterize"
+    "feedforwards",
+    "Holonomic",
+    "Kalman",
+    "pathplanner",
+    "Quasistatic",
+    "RGBW",
+    "rpms",
+    "telemeterize",
+    "teleop",
+    "wpiblue"
   ]
 }

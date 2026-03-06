@@ -33,10 +33,31 @@ public final class Constants {
             "candle", new CANdleSegment( 0,  7, 1)
         );
     }
+
     public final class LauncherProfile {
         public static final Pose2d blueHub = new Pose2d( 4.642, 4.075, null); // in wpiblue coordinates, from pathplanner gui
-        public static final Pose2d redHub  = new Pose2d(11.981, 4.075, null); // in wpiblue coordintaes, from pathplanner gui
+        public static final Pose2d redHub  = new Pose2d(11.981, 4.075, null); // in wpiblue coordinates, from pathplanner gui
+        public static final int launcherMotor1ID = 41;
+        public static final int launcherMotor2ID = 42;
+        public static final int hoodMotorID      = 44;
+
+        public static final double speedTolerance = 1; // rotation/s
+        public static final double hoodTolerance  = 0.1; // rotations
+
     }
-    public final class IntakeProfile {}
-    public final class IndexerProfile {}
+
+    public final class IntakeProfile {
+        public static final int intakeDeployMotor1ID = 31;
+        public static final int intakeDeployMotor2ID = 32;
+        public static final int intakeRollerMotorID  = 33;
+        public static final double deployTolerance = 0.1;
+
+        public static final double deployPose = 3.9;
+        public static final double zeroPose   = 0.0;
+    }
+
+    public final class IndexerProfile {
+        public static final int kickerMotorID = 43;
+        public static final int rollerMotorID = 34;
+    }
 }

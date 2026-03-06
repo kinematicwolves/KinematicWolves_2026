@@ -16,15 +16,16 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.IntakeProfile;
 import frc.robot.generated.TunerConstants;
 
 public class Intake extends SubsystemBase {
     /** Creates a new Intake. */
     // Here, we declare all the motors, sensors, and other objects that this subsystem needs
     // Declaring all the motors for the intake
-    private final TalonFX  intakeMotor1 = new TalonFX(31, TunerConstants.kCANBus); //TODO: Move to constants file
-    private final TalonFX  intakeMotor2 = new TalonFX(32, TunerConstants.kCANBus); //TODO: Move to constants file
-    private final TalonSRX roller       = new TalonSRX(33); // TODO: Move to constants file
+    private final TalonFX  intakeMotor1 = new TalonFX(IntakeProfile.intakeDeployMotor1ID, TunerConstants.kCANBus);
+    private final TalonFX  intakeMotor2 = new TalonFX(IntakeProfile.intakeDeployMotor2ID, TunerConstants.kCANBus);
+    private final TalonSRX roller       = new TalonSRX(IntakeProfile.intakeRollerMotorID);
     
     public Intake() {
         // Here, we will configure all the motors, and to whatever other setup we need.
@@ -42,11 +43,11 @@ public class Intake extends SubsystemBase {
     private void configureIntakeMotor1() {
         TalonFXConfiguration config = new TalonFXConfiguration();
         // PID
-        config.Slot0.kP = 0.3; // TODO: Replace with 1/(max motor range from smart dashboard)
+        config.Slot0.kP = 0.3;
         config.Slot0.kI = 0.0;
         config.Slot0.kD = 0.0;
 
-        config.Slot1.kP = 0.6; // TODO: Replace with 1/(max motor range from smart dashboard)
+        config.Slot1.kP = 0.6;
         config.Slot1.kI = 0.0;
         config.Slot1.kD = 0.0;
 
@@ -57,10 +58,10 @@ public class Intake extends SubsystemBase {
         config.CurrentLimits.StatorCurrentLimitEnable = true;
 
         // Soft limits
-        config.SoftwareLimitSwitch.ForwardSoftLimitEnable = false; // TODO: change to True when motor limits are known
-        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 100.0; // rotations //TODO: Determine the range for the motor, then change this value
-        config.SoftwareLimitSwitch.ReverseSoftLimitEnable = false; // TODO: change to True when motor limits are known
-        config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.0; // rotations //TODO: Determine the range for the motor, then change this value
+        config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 5.0; // rotations
+        config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.0; // rotations
 
         // Neutral mode
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
@@ -119,7 +120,7 @@ public class Intake extends SubsystemBase {
      * @return True if the intake is at its set position, otherwise false
      */
     public boolean atSetpoint() {
-        return Math.abs(this.intakeMotor1.getClosedLoopError().getValue()) < 0.1; // TODO: Move tolerance, move to constants file
+        return Math.abs(this.intakeMotor1.getClosedLoopError().getValue()) < IntakeProfile.deployTolerance;
     }
 
     /**

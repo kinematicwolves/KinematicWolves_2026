@@ -24,10 +24,11 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.IntakeProfile;
 import frc.robot.commands.FeedWithSpeeds;
 import frc.robot.commands.IntakeToPose;
 import frc.robot.commands.IntakeWithSpeeds;
-import frc.robot.commands.LaunchwithParams;
+import frc.robot.commands.LaunchWithParams;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
@@ -112,37 +113,37 @@ public class RobotContainer {
 
         // launcher stuff
         driverController.rightTrigger(0.5)
-            .onTrue(new LaunchwithParams (launcher, this, getLauncherPercent(), getLauncherAngle()))
+            .onTrue(new LaunchWithParams (launcher, this, getLauncherPercent(), getLauncherAngle()))
             .whileTrue(
                 drivetrain.applyRequest(() -> fieldCentricDrive
-                    .withVelocityX(-driverController.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                    .withVelocityX(-driverController.getLeftY() * MaxSpeed) // Drive forward under driver control
+                    .withVelocityY(-driverController.getLeftX() * MaxSpeed) // Drive left / right with driver control
                     .withRotationalRate(-(LimelightHelpers.getTX("limelight")*0.05*MaxAngularRate)))); // rotate from limelight value
 
         driverController.b()
-            .onTrue(new InstantCommand(() -> {this.launcherAngle=0; this.launcherPercent=0;}).andThen(new LaunchwithParams(launcher, this, 0, 0)));
+            .onTrue(new InstantCommand(() -> {this.launcherAngle=0; this.launcherPercent=0;}).andThen(new LaunchWithParams(launcher, this, 0, 0)));
         
         driverController.rightBumper()
             .whileTrue(new FeedWithSpeeds(indexer, 0.6, 1));
 
         // intake stuff
         driverController.leftTrigger(0.5)
-            .onTrue(new IntakeToPose(intake, 3.9, 0))
+            .onTrue(new IntakeToPose(intake, IntakeProfile.deployPose, 0))
             .whileTrue(new IntakeWithSpeeds(intake, indexer, 1, 0));
         
         driverController.leftBumper()
-            .onTrue(new IntakeToPose(intake, 0, 1))
+            .onTrue(new IntakeToPose(intake, IntakeProfile.zeroPose, 1))
             .whileTrue(new IntakeWithSpeeds(intake, indexer, -0.5, 0)); // helps the intake go up
         
         /* operator controls */
         opController.povUp()
-            .onTrue(new InstantCommand(() -> {BumpLauncerPercent(10);}));
+            .onTrue(new InstantCommand(() -> {BumpLauncherPercent(10);}));
         opController.povDown()
-            .onTrue(new InstantCommand(() -> {BumpLauncerPercent(-1);}));
+            .onTrue(new InstantCommand(() -> {BumpLauncherPercent(-1);}));
          opController.y()
-            .onTrue(new InstantCommand(() -> {BumpLauncerAngle(0.5);}));
+            .onTrue(new InstantCommand(() -> {BumpLauncherAngle(0.5);}));
         opController.a()
-            .onTrue(new InstantCommand(() -> {BumpLauncerAngle(-0.5);}));
+            .onTrue(new InstantCommand(() -> {BumpLauncherAngle(-0.5);}));
     }
 
     public Command getAutonomousCommand() {
@@ -220,11 +221,11 @@ public class RobotContainer {
             return true;
     }
 
-    public void BumpLauncerPercent(double percent) {
+    public void BumpLauncherPercent(double percent) {
         this.launcherPercent += percent;
     }
-    public void BumpLauncerAngle(double incrmenent) {
-        this.launcherAngle += incrmenent;
+    public void BumpLauncherAngle(double increment) {
+        this.launcherAngle += increment;
     }
     public double getLauncherPercent() {
         return launcherPercent;

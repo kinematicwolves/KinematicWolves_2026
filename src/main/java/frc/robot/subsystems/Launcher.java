@@ -13,35 +13,33 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkClosedLoopController;
+import com.revrobotics.spark.SparkLowLevel;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkLowLevel;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.InverseInterpolator;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.generated.TunerConstants;
 import frc.robot.Constants.LauncherProfile;
 import frc.robot.ShotParams;
+import frc.robot.generated.TunerConstants;
 
 public class Launcher extends SubsystemBase {
     /** Creates a new Launcher. */
 
     // Step one, create all the objects we need
-    private final TalonFX launcherMotor1 = new TalonFX(41, TunerConstants.kCANBus); //TODO: Move to constants file
-    private final TalonFX launcherMotor2 = new TalonFX(42, TunerConstants.kCANBus); //TODO: Move to constants file
+    private final TalonFX launcherMotor1 = new TalonFX(LauncherProfile.launcherMotor1ID, TunerConstants.kCANBus);
+    private final TalonFX launcherMotor2 = new TalonFX(LauncherProfile.launcherMotor1ID, TunerConstants.kCANBus);
 
     // hood motor and controller objects
-    private final SparkMax hoodMotor = new SparkMax(44, SparkLowLevel.MotorType.kBrushless); //TODO: Move to constants file
+    private final SparkMax hoodMotor = new SparkMax(LauncherProfile.hoodMotorID, SparkLowLevel.MotorType.kBrushless);
     private final SparkClosedLoopController hoodPIDController = hoodMotor.getClosedLoopController();
 
     private final InterpolatingTreeMap<Double, ShotParams> shotTable =
@@ -181,7 +179,7 @@ public class Launcher extends SubsystemBase {
         SmartDashboard.putNumber("HoodPose [Rotations]",   this.hoodMotor.getEncoder().getPosition());
         SmartDashboard.putBoolean("HoodAtSetPoint",        this.hoodIsAtSetpoint());
         SmartDashboard.putNumber("HoodTarget [Rotations]", this.hoodPIDController.getSetpoint());
-        SmartDashboard.putNumber("LauncherSpeeed [RPM]",   this.launcherMotor1.getVelocity().getValueAsDouble());
+        SmartDashboard.putNumber("LauncherSpeed [RPS]",    this.launcherMotor1.getVelocity().getValueAsDouble());
         SmartDashboard.putBoolean("LauncherAtSpeed",       this.flywheelAtSpeed());
     }
 
@@ -195,7 +193,7 @@ public class Launcher extends SubsystemBase {
     }
 
     /**
-     * Sets the flywheel speed in rpms using closed loop mode.
+     * Sets the flywheel speed in rps using closed loop mode.
      * @param speed
      */
     public void setFlywheelSpeed(double speed) {
@@ -203,10 +201,10 @@ public class Launcher extends SubsystemBase {
     }
 
     /**
-     * @return true if the flywheel is at its setpoint, false otherwhise
+     * @return true if the flywheel is at its setpoint, false otherwise
      */
     public boolean flywheelAtSpeed() {
-        return Math.abs(this.launcherMotor1.getClosedLoopError().getValueAsDouble()) < 10.0; // TODO: Determine tolerance,
+        return Math.abs(this.launcherMotor1.getClosedLoopError().getValueAsDouble()) < LauncherProfile.speedTolerance;
     }
 
     /**
@@ -224,7 +222,7 @@ public class Launcher extends SubsystemBase {
     public boolean hoodIsAtSetpoint() {
         // Unlike the TalonFX, the spark max doesn't have a function call for how close it is.
         // Therefore, we will look at the the current position, and compare it to the stored setpoint
-        return Math.abs(this.hoodMotor.getEncoder().getPosition() - this.hoodPIDController.getSetpoint()) <= 0.2; // TODO: Determine reasonable tolerance and move to constants file
+        return Math.abs(this.hoodMotor.getEncoder().getPosition() - this.hoodPIDController.getSetpoint()) <= LauncherProfile.hoodTolerance;
     }
 
     /**
@@ -236,15 +234,15 @@ public class Launcher extends SubsystemBase {
     }
 
     public void setHoodAndSpeedFromPose(Pose2d currentPose) {
-        // compute the distancet the goal
+        // compute the distance the goal
         double distanceToGoal = this.getDistanceToGoal(currentPose);
         // TODO: Handle distances outside testing range
-        // TODO: Hangle fudge factor
+        // TODO: Handle fudge factor
 
         // use the lookup table to find our shot parameters
         ShotParams params = this.shotTable.get(distanceToGoal);
 
-        // apply the parameters to the hood, flywheeel
+        // apply the parameters to the hood, flywheel
         setHoodPosition(params.hoodRotations);
         setFlywheelSpeed(params.rpm);
     }
