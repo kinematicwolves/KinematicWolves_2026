@@ -54,7 +54,7 @@ public class Robot extends TimedRobot {
                 m_robotContainer.drivetrain.addVisionMeasurement(llMeasurement.pose, llMeasurement.timestampSeconds);
             }
         }
-        SmartDashboard.putNumber("OpLauncherSpeed", m_robotContainer.getLauncherPercent());
+        SmartDashboard.putNumber("OpLauncherSpeed", m_robotContainer.getLauncherSpeed());
         SmartDashboard.putNumber("OpLauncherAngle", m_robotContainer.getLauncherAngle());
         SmartDashboard.putNumber("Dist2goal", LauncherProfile.redHub.getTranslation().getDistance(m_robotContainer.drivetrain.getPose().getTranslation()));
     }

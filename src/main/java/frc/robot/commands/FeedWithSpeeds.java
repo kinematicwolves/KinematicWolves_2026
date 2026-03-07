@@ -26,7 +26,7 @@ public class FeedWithSpeeds extends Command {
     // Called when the command is initially scheduled.
     @Override
     public void initialize() {
-        this.indexer.setKickerspeed(this.kickerPercent);
+        this.indexer.setKickerPercent(this.kickerPercent);
         this.indexer.setRollerSpeed(this.rollerPercent);
     }
 
@@ -37,7 +37,7 @@ public class FeedWithSpeeds extends Command {
     // Called once the command ends or is interrupted.
     @Override
     public void end(boolean interrupted) {
-        this.indexer.setKickerspeed(0);
+        this.indexer.setKickerPercent(0);
         this.indexer.setRollerSpeed(0);
     }
 

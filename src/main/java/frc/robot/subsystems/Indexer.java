@@ -30,7 +30,7 @@ public class Indexer extends SubsystemBase {
     }
 
 
-        private void configureKickerMotor() {
+    private void configureKickerMotor() {
         // https://docs.revrobotics.com/brushless/spark-max/parameters
         // the spark max is configured differently than talon fx motors
         SparkMaxConfig config = new SparkMaxConfig();
@@ -48,6 +48,11 @@ public class Indexer extends SubsystemBase {
         // Setting the motor direction
         config.inverted(true);
 
+        //set the pid gains
+        config.closedLoop
+        .p(1)
+        .i(0.0)
+        .d(0.0);
         
         // configuring the pid controller for the hood angle
         
@@ -58,11 +63,23 @@ public class Indexer extends SubsystemBase {
     @Override
     public void periodic() {
         // This method will be called once per scheduler run
-        SmartDashboard.putNumber("Kicker/Velocity RPS", kickerEncoder.getVelocity());
+        SmartDashboard.putNumber("KickerVelocity[RPM]", kickerEncoder.getVelocity());
 
     }
 
-    public void setKickerspeed(double percent) {
+    /**
+     * Sets the speeed of the motor in closed loop mode
+     * @param speed the speed for the motor, rpm
+     */
+    public void setKickerSpeed(double speed) {
+        kickerMotor.getClosedLoopController().setSetpoint(speed, SparkMax.ControlType.kVelocity);
+    }
+
+    /**
+     * sets the speed of the motor in open loop mode
+     * @param percent the speed for the moror, -1 to 1
+     */
+    public void setKickerPercent(double percent) {
         kickerMotor.set(percent);
     }  
 

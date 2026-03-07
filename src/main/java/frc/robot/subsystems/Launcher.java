@@ -149,6 +149,7 @@ public class Launcher extends SubsystemBase {
         SmartDashboard.putBoolean("HoodAtSetPoint", hoodIsAtSetpoint());
         SmartDashboard.putNumber("HoodTarget", hoodPIDController.getSetpoint());
         SmartDashboard.putNumber("Launcher/Velocity RPS", launcherMotor1.getVelocity().getValueAsDouble());
+        SmartDashboard.putBoolean("LauncerAtSpeed", this.flywheelAtSpeed());
     }
 
     /* Public functions for commands */
@@ -172,6 +173,9 @@ public class Launcher extends SubsystemBase {
         this.launcherMotor1.setControl(new VelocityVoltage(speed));
     }
 
+    public boolean flywheelAtSpeed() {
+        return (this.launcherMotor1.getClosedLoopError().getValueAsDouble() < 1);
+    }
     /**
      * Returns if the hood is at its set point or not.
      * @return True if the hood is at its setpoint, false otherwise.
