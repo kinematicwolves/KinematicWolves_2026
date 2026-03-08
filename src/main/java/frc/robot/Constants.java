@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 
 /** Add your docs here. */
 public class Constants {
@@ -15,8 +16,8 @@ public class Constants {
 
         public static final double launcherTolerance = 1; // rotations/s
 
-        public static final Pose2d blueHub = new Pose2d( 4.642, 4.075, null);
-        public static final Pose2d redHub  = new Pose2d(11.981, 4.075, null);
+        public static final Pose2d blueHub = new Pose2d( 4.642, 4.075, new Rotation2d());
+        public static final Pose2d redHub  = new Pose2d(11.981, 4.075, new Rotation2d());
 
         public static final double idealLaunchDist = 2.5; // meters
     }

@@ -54,7 +54,8 @@ public class Robot extends TimedRobot {
         }
         SmartDashboard.putNumber("OpLauncherSpeed", m_robotContainer.getLauncherSpeed());
         SmartDashboard.putNumber("OpLauncherAngle", m_robotContainer.getLauncherAngle());
-        SmartDashboard.putNumber("Dist2goal", LauncherProfile.redHub.getTranslation().getDistance(m_robotContainer.drivetrain.getPose().getTranslation()));
+        SmartDashboard.putNumber("Dist2Redgoal", LauncherProfile.redHub.getTranslation().getDistance(m_robotContainer.drivetrain.getPose().getTranslation()));
+        SmartDashboard.putNumber("Dist2Bluegoal", LauncherProfile.blueHub.getTranslation().getDistance(m_robotContainer.drivetrain.getPose().getTranslation()));
     }
 
     @Override

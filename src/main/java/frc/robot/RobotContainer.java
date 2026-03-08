@@ -15,7 +15,9 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -119,17 +121,10 @@ public class RobotContainer {
             .onTrue(new LaunchFromSettings(launcher, indexer, this, driverController.getHID()))
             .whileTrue(
                 drivetrain.applyRequest(() -> robotCentricDrive
-                    // LL Based alignment, its a bit clunky in our testing
-                    // .withVelocityX(LimelightHelpers.getTY("limelight")*0.5*MaxSpeed) // Drive forward with negative Y (forward)
-                    // // .withVelocityX(Math.sin(Timer.getFPGATimestamp()*50)) // Drive forward with negative Y (forward)
-                    // .withVelocityY(driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                    // .withRotationalRate(-(LimelightHelpers.getTX("limelight")*0.03*MaxAngularRate))
-                    // odometry based alignment
-                    // TODO: Test this
-                    .withVelocityX(-(robot2goal().getTranslation().getNorm() - LauncherProfile.idealLaunchDist) * 0.1 * MaxSpeed)
-                    .withVelocityX(-driverController.getLeftX() * MaxSpeed)
-                    .withRotationalRate(-robot2goal().getRotation().getDegrees() * 0.01 * MaxAngularRate)
-                ));
+                    .withVelocityX(-(robot2goal().getTranslation().getNorm() - LauncherProfile.idealLaunchDist) * 2 * MaxSpeed)
+                    .withVelocityY(driverController.getLeftX() * MaxSpeed)
+                    .withRotationalRate((robot2goal().getRotation().getDegrees()) * 0.01 * MaxAngularRate)
+            ));
 
         driverController.b()
             .onTrue(new InstantCommand(() -> {this.launcherAngle=0; this.launcherSpeed=0;}));
@@ -184,13 +179,21 @@ public class RobotContainer {
         Pose2d robotPose = drivetrain.getState().Pose;
         
         // lookup the goal based on wich alliance we are, compute the transform to that goal        
-        Transform2d robot2goal;
+        Translation2d robot2goalTranslation;
         if (DriverStation.getAlliance().orElse(Alliance.Blue) ==  Alliance.Blue)
-            robot2goal = new Transform2d(LauncherProfile.blueHub, robotPose);
+            robot2goalTranslation = new Transform2d(LauncherProfile.blueHub, robotPose).getTranslation();
         else
-            robot2goal = new Transform2d(LauncherProfile.redHub, robotPose);
+            robot2goalTranslation = new Transform2d(LauncherProfile.redHub, robotPose).getTranslation();
 
-        return robot2goal;        
-        
+
+
+        double vectorToGoal = Math.atan2(robot2goalTranslation.getY(), robot2goalTranslation.getX());
+
+
+        System.out.println(Math.toDegrees(vectorToGoal) - robotPose.getRotation().getDegrees());
+
+        Rotation2d angleToGoal = new Rotation2d(vectorToGoal - robotPose.getRotation().getRadians());
+
+        return new Transform2d(robot2goalTranslation, angleToGoal);        
     }
 }
