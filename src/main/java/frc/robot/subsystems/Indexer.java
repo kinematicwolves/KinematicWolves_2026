@@ -16,12 +16,13 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.IndexerProfile;
 
 public class Indexer extends SubsystemBase {
     /** Creates a new Indexer. */
     // Step one, create all the objects we need
-    private final SparkMax kickerMotor = new SparkMax(43, SparkLowLevel.MotorType.kBrushless);
-    private final TalonSRX roller      = new TalonSRX(34); // TODO: Move to constants file
+    private final SparkMax kickerMotor = new SparkMax(IndexerProfile.kickerMotorCanID, SparkLowLevel.MotorType.kBrushless);
+    private final TalonSRX roller      = new TalonSRX(IndexerProfile.rollerMotorCanID);
 
     private RelativeEncoder kickerEncoder = kickerMotor.getEncoder();
     
@@ -39,10 +40,9 @@ public class Indexer extends SubsystemBase {
         this.kickerMotor.configure(config, ResetMode.kResetSafeParameters, null);
 
         // Current Limits
-        config.smartCurrentLimit(20);
+        config.smartCurrentLimit(30);
 
         //Neutral Mode    
-        // config.idleMode(IdleMode.kBrake); 
         config.idleMode(IdleMode.kCoast); 
         
         // Setting the motor direction
@@ -54,8 +54,6 @@ public class Indexer extends SubsystemBase {
         .i(0.0)
         .d(0.0);
         
-        // configuring the pid controller for the hood angle
-        
         // finally, we apply our config to as persistent parameters
         this.kickerMotor.configure(config, null, PersistMode.kPersistParameters);
     }
@@ -64,7 +62,6 @@ public class Indexer extends SubsystemBase {
     public void periodic() {
         // This method will be called once per scheduler run
         SmartDashboard.putNumber("KickerVelocity[RPM]", kickerEncoder.getVelocity());
-
     }
 
     /**
@@ -77,13 +74,17 @@ public class Indexer extends SubsystemBase {
 
     /**
      * sets the speed of the motor in open loop mode
-     * @param percent the speed for the moror, -1 to 1
+     * @param percent the speed for the motor, -1 to 1
      */
     public void setKickerPercent(double percent) {
         kickerMotor.set(percent);
     }  
 
-    public void setRollerSpeed(double percent) {
+    /**
+     * Tets the speed of the roller in open-loop-mode
+     * @param percent the speed for the motor, -1 to 1
+     */
+    public void setRollerPercent(double percent) {
         roller.set(TalonSRXControlMode.PercentOutput, percent);
     }
 }

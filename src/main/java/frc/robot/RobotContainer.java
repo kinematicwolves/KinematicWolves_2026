@@ -4,65 +4,68 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.pathplanner.lib.auto.NamedCommands;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.FollowPathCommand;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.FollowPathCommand;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.robot.Constants.IntakeProfile;
 import frc.robot.Constants.LauncherProfile;
-import frc.robot.commands.FeedWithSpeeds;
 import frc.robot.commands.IntakeToPose;
 import frc.robot.commands.IntakeWithSpeeds;
-import frc.robot.commands.LaunchFromPose;
+import frc.robot.commands.LaunchFromSettings;
 import frc.robot.commands.LaunchwithParams;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Launcher;
 
 public class RobotContainer {
     // this is swerve stuff
-    private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    public double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+    public double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric fieldCentricDrive = new SwerveRequest.FieldCentric()
         .withDeadband(MaxSpeed * 0.1)
+        .withRotationalDeadband(MaxAngularRate * 0.1)
         .withDriveRequestType(DriveRequestType.Velocity);
     private final SwerveRequest.RobotCentric robotCentricDrive = new SwerveRequest.RobotCentric()
-        // .withDeadband(MaxSpeed * 0.1)
         .withDriveRequestType(DriveRequestType.Velocity);
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
     // private final Telemetry logger = new Telemetry(MaxSpeed);
 
-    private final CommandXboxController driverController = new CommandXboxController(0);   
-    private final CommandXboxController opController = new CommandXboxController(1);
+    public final CommandXboxController driverController = new CommandXboxController(0);   
+    public final CommandXboxController opController     = new CommandXboxController(1);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     // subsystems
     public final Launcher launcher = new Launcher();
-    private final Intake  intake   = new Intake();
-    private final Indexer indexer  = new Indexer();
+    public final Intake   intake   = new Intake();
+    public final Indexer  indexer  = new Indexer();
 
     /* Path follower */
     private final SendableChooser<Command> autoChooser;
 
-    // some variables\][]
+    // some variables
     public double launcherSpeed = 65;
     public double launcherAngle = 1.5;
 
@@ -71,9 +74,10 @@ public class RobotContainer {
         SmartDashboard.putData("Auto Mode", autoChooser);
 
         // create command for path planner
-        // NamedCommands.registerCommand("deployIntake",  new IntakeToPose(intake, Constants.IntakeProfile.deployedPose,  0));
-        // NamedCommands.registerCommand("retractIntake", new IntakeToPose(intake, Constants.IntakeProfile.retractedPose, 0));
-        // NamedCommands.registerCommand("ingeestLemons", new IntakeWithSpeeds(intake, indexer, 0.6, 0));
+        NamedCommands.registerCommand("deployIntake",     new IntakeToPose(intake, IntakeProfile.deployedPose, IntakeProfile.gentleSlot));
+        NamedCommands.registerCommand("retractIntake",    new IntakeToPose(intake, IntakeProfile.retractedPose, IntakeProfile.aggressiveSlot));
+        NamedCommands.registerCommand("intakeLemos",      new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0));
+        NamedCommands.registerCommand("LaunchFromCenter", new LaunchwithParams(launcher, indexer, 65, 1.5));
 
         configureBindings();
 
@@ -93,7 +97,6 @@ public class RobotContainer {
                     .withVelocityX(-driverController.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
                     .withVelocityY(-driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
                     .withRotationalRate(-driverController.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-                    .withRotationalDeadband(MaxAngularRate * 0.1)
             )
         );
 
@@ -113,32 +116,35 @@ public class RobotContainer {
 
         // launcher stuff
         driverController.rightTrigger(0.5)
-            // .onTrue(new LaunchwithParams(launcher, this))
-            .onTrue(new LaunchFromPose(drivetrain, launcher, indexer, this, driverController))
+            .onTrue(new LaunchFromSettings(launcher, indexer, this, driverController.getHID()))
             .whileTrue(
                 drivetrain.applyRequest(() -> robotCentricDrive
-                    .withVelocityX(LimelightHelpers.getTY("limelight")*0.5*MaxSpeed) // Drive forward with negative Y (forward)
-                    // .withVelocityX(Math.sin(Timer.getFPGATimestamp()*50)) // Drive forward with negative Y (forward)
-                    .withVelocityY(driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-(LimelightHelpers.getTX("limelight")*0.03*MaxAngularRate))
-                    )); // rotate from limelight value
+                    // LL Based alignment, its a bit clunky in our testing
+                    // .withVelocityX(LimelightHelpers.getTY("limelight")*0.5*MaxSpeed) // Drive forward with negative Y (forward)
+                    // // .withVelocityX(Math.sin(Timer.getFPGATimestamp()*50)) // Drive forward with negative Y (forward)
+                    // .withVelocityY(driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                    // .withRotationalRate(-(LimelightHelpers.getTX("limelight")*0.03*MaxAngularRate))
+                    // odometry based alignment
+                    // TODO: Test this
+                    .withVelocityX(-(robot2goal().getTranslation().getNorm() - LauncherProfile.idealLaunchDist) * 0.1 * MaxSpeed)
+                    .withVelocityX(-driverController.getLeftX() * MaxSpeed)
+                    .withRotationalRate(-robot2goal().getRotation().getDegrees() * 0.01 * MaxAngularRate)
+                ));
 
         driverController.b()
             .onTrue(new InstantCommand(() -> {this.launcherAngle=0; this.launcherSpeed=0;}));
         driverController.x()
             .onTrue(new InstantCommand(() -> {this.launcherAngle=1.5; this.launcherSpeed=65;}));
-        
-        // driverController.rightBumper()
-            // .whileTrue(new FeedWithSpeeds(indexer, 0.6, 1));
+
 
         // intake stuff
         driverController.leftTrigger(0.5)
-            .onTrue(new IntakeToPose(intake, 0, 0))
-            .whileTrue(new IntakeWithSpeeds(intake, indexer, 1, 0));
+            .onTrue(new IntakeToPose(intake, IntakeProfile.deployedPose, IntakeProfile.gentleSlot))
+            .whileTrue(new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0));
         
         driverController.leftBumper()
-            .onTrue(new IntakeToPose(intake, -4, 1))
-            .whileTrue(new IntakeWithSpeeds(intake, indexer, -0.5, 0)); // helps the intake go up
+            .onTrue(new IntakeToPose(intake, IntakeProfile.retractedPose, IntakeProfile.aggressiveSlot))
+            .whileTrue(new IntakeWithSpeeds(intake, indexer, IntakeProfile.retractPrecent, 0)); // helps the intake go up
         
         /* operator controls */
         opController.povUp()
@@ -167,5 +173,24 @@ public class RobotContainer {
     }
     public double getLauncherAngle() {
         return launcherAngle;
+    }
+
+    /**
+     * Computs the transform of the robot to the goal, depending on the allance of the robot
+     * @return robot2goal transform (translation and angle between the robot and the goal)
+     */
+    public Transform2d robot2goal() {
+        // get the current robot position from the drivetrain
+        Pose2d robotPose = drivetrain.getState().Pose;
+        
+        // lookup the goal based on wich alliance we are, compute the transform to that goal        
+        Transform2d robot2goal;
+        if (DriverStation.getAlliance().orElse(Alliance.Blue) ==  Alliance.Blue)
+            robot2goal = new Transform2d(LauncherProfile.blueHub, robotPose);
+        else
+            robot2goal = new Transform2d(LauncherProfile.redHub, robotPose);
+
+        return robot2goal;        
+        
     }
 }

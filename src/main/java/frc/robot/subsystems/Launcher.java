@@ -11,29 +11,28 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.sim.TalonFXSimState.MotorType;
 import com.revrobotics.PersistMode;
-import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkClosedLoopController;
+import com.revrobotics.spark.SparkLowLevel;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkLowLevel;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.LauncherProfile;
 import frc.robot.generated.TunerConstants;
 
 public class Launcher extends SubsystemBase {
     /** Creates a new Launcher. */
 
     // Step one, create all the objects we need
-    private final TalonFX launcherMotor1 = new TalonFX(41, TunerConstants.kCANBus); 
-    private final TalonFX launcherMotor2 = new TalonFX(42, TunerConstants.kCANBus); 
+    private final TalonFX launcherMotor1 = new TalonFX(LauncherProfile.launcherMotor1CanID, TunerConstants.kCANBus); 
+    private final TalonFX launcherMotor2 = new TalonFX(LauncherProfile.launcherMotor2CanID, TunerConstants.kCANBus); 
 
     // hood motor and controller objects
-    private final SparkMax hoodMotor = new SparkMax(44, SparkLowLevel.MotorType.kBrushless);
+    private final SparkMax hoodMotor = new SparkMax(LauncherProfile.hoodMotorCanID, SparkLowLevel.MotorType.kBrushless);
     private final SparkClosedLoopController hoodPIDController = hoodMotor.getClosedLoopController();
 
     public Launcher() {
@@ -169,13 +168,22 @@ public class Launcher extends SubsystemBase {
         this.hoodPIDController.setSetpoint(rotations, SparkMax.ControlType.kPosition);
     }
 
+    /**
+     * Sets the speed of the flywheel in closed-loop-mode.
+     * @param speed the speed of the flywheel in rotations/s [rps]
+     */
     public void setFlywheelSpeed(double speed) {
         this.launcherMotor1.setControl(new VelocityVoltage(speed));
     }
 
+    /**
+     * Returns true of the flywheel is at its setpoint, otherwise false
+     * @return true if the flywheel is at speed, otherwise false.
+     */
     public boolean flywheelAtSpeed() {
-        return (this.launcherMotor1.getClosedLoopError().getValueAsDouble() < 1);
+        return (this.launcherMotor1.getClosedLoopError().getValueAsDouble() < LauncherProfile.launcherTolerance);
     }
+
     /**
      * Returns if the hood is at its set point or not.
      * @return True if the hood is at its setpoint, false otherwise.
@@ -186,8 +194,12 @@ public class Launcher extends SubsystemBase {
         return Math.abs(this.hoodMotor.getEncoder().getPosition() - this.hoodPIDController.getSetpoint()) <= 0.2; // TODO: Determine reasonable tolerance and move to constants file
     }
 
-    public void setHoodSpeed(double speed) {
-        this.hoodMotor.set(speed);
+    /**
+     * Sets the hood percentage in open-loop-mode. Do not use for launching. 
+     * @param percent between -1 and 1.
+     */
+    public void setHoodPercent(double percent) {
+        this.hoodMotor.set(percent);
     }
     
 }
