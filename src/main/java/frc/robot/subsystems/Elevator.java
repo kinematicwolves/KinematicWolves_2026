@@ -23,7 +23,6 @@ public class Elevator extends SubsystemBase {
     private TalonFX motor1 = new TalonFX(ElevatorProfile.motor1ID, TunerConstants.kCANBus);
     private TalonFX motor2 = new TalonFX(ElevatorProfile.motor2ID, TunerConstants.kCANBus);
 
- 
     public Elevator() {
         configureMotor1();
 

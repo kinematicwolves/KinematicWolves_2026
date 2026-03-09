@@ -20,8 +20,8 @@ import frc.robot.Constants.IndexerProfile;
 public class Indexer extends SubsystemBase {
     /** Creates a new Indexer. */
     // Step one, create all the objects we need
-    private final SparkMax kickerMotor = new SparkMax(IndexerProfile.kickerMotorID, SparkLowLevel.MotorType.kBrushless);
-    private final TalonSRX roller      = new TalonSRX(IndexerProfile.rollerMotorID);
+    private final SparkMax kickerMotor = new SparkMax(IndexerProfile.kickerMotorCanID, SparkLowLevel.MotorType.kBrushless);
+    private final TalonSRX roller      = new TalonSRX(IndexerProfile.rollerMotorCanID);
 
     public Indexer() {
         configureKickerMotor();
@@ -36,7 +36,7 @@ public class Indexer extends SubsystemBase {
         this.kickerMotor.configure(config, ResetMode.kResetSafeParameters, null);
 
         // Current Limits
-        config.smartCurrentLimit(20);
+        config.smartCurrentLimit(30);
 
         //Neutral Mode
         config.idleMode(IdleMode.kCoast); 
@@ -44,7 +44,11 @@ public class Indexer extends SubsystemBase {
         // Setting the motor direction
         config.inverted(true);
 
-        // configuring the pid controller for the hood angle
+        //set the pid gains
+        config.closedLoop
+        .p(1)
+        .i(0.0)
+        .d(0.0);
         
         // finally, we apply our config to as persistent parameters
         this.kickerMotor.configure(config, null, PersistMode.kPersistParameters);
@@ -53,22 +57,30 @@ public class Indexer extends SubsystemBase {
     @Override
     public void periodic() {
         // This method will be called once per scheduler run
-        SmartDashboard.putNumber("KickerSpeed [RPM]", this.kickerMotor.getEncoder().getVelocity());
+        SmartDashboard.putNumber("KickerVelocity[RPM]", kickerMotor.getEncoder().getVelocity());
     }
 
     /**
-     * Sets the roller speed percentage in open-loop mode
-     * @param percent between -1 and 1. -1 is full speed in reverse, 1 is full speed forward.
+     * Sets the speeed of the motor in closed loop mode
+     * @param speed the speed for the motor, rpm
+     */
+    public void setKickerSpeed(double speed) {
+        kickerMotor.getClosedLoopController().setSetpoint(speed, SparkMax.ControlType.kVelocity);
+    }
+
+    /**
+     * sets the speed of the motor in open loop mode
+     * @param percent the speed for the motor, -1 to 1
      */
     public void setKickerPercent(double percent) {
-        this.kickerMotor.set(percent);
-    }
+        kickerMotor.set(percent);
+    }  
 
     /**
-     * Sets the roller speed percentage in open-loop mode
-     * @param percent between -1 and 1. -1 is full speed in reverse, 1 is full speed forward.
+     * Tets the speed of the roller in open-loop-mode
+     * @param percent the speed for the motor, -1 to 1
      */
     public void setRollerPercent(double percent) {
-        this.roller.set(TalonSRXControlMode.PercentOutput, percent);
+        roller.set(TalonSRXControlMode.PercentOutput, percent);
     }
 }

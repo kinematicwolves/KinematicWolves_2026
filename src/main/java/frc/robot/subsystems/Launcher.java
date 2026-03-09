@@ -36,14 +36,14 @@ public class Launcher extends SubsystemBase {
     /** Creates a new Launcher. */
 
     // Step one, create all the objects we need
-    private final TalonFX launcherMotor1 = new TalonFX(LauncherProfile.launcherMotor1ID, TunerConstants.kCANBus);
-    private final TalonFX launcherMotor2 = new TalonFX(LauncherProfile.launcherMotor1ID, TunerConstants.kCANBus);
+    private final TalonFX launcherMotor1 = new TalonFX(LauncherProfile.launcherMotor1CanID, TunerConstants.kCANBus);
+    private final TalonFX launcherMotor2 = new TalonFX(LauncherProfile.launcherMotor2CanID, TunerConstants.kCANBus);
 
     // debouncer for the launcher at speed check
     private final Debouncer debouncer = new Debouncer(0.5);
 
     // hood motor and controller objects
-    private final SparkMax hoodMotor = new SparkMax(LauncherProfile.hoodMotorID, SparkLowLevel.MotorType.kBrushless);
+    private final SparkMax hoodMotor = new SparkMax(LauncherProfile.hoodMotorCanID, SparkLowLevel.MotorType.kBrushless);
     private final SparkClosedLoopController hoodPIDController = hoodMotor.getClosedLoopController();
 
     private final InterpolatingTreeMap<Double, ShotParams> shotTable =
@@ -210,7 +210,7 @@ public class Launcher extends SubsystemBase {
      * @return true if the flywheel is at its setpoint, false otherwise
      */
     public boolean flywheelAtSpeed() {
-        return Math.abs(this.launcherMotor1.getClosedLoopError().getValueAsDouble()) < LauncherProfile.speedTolerance;
+        return Math.abs(this.launcherMotor1.getClosedLoopError().getValueAsDouble()) < LauncherProfile.launcherTolerance;
     }
 
     /**
@@ -228,15 +228,7 @@ public class Launcher extends SubsystemBase {
     public boolean hoodIsAtSetpoint() {
         // Unlike the TalonFX, the spark max doesn't have a function call for how close it is.
         // Therefore, we will look at the the current position, and compare it to the stored setpoint
-        return this.debouncer.calculate(Math.abs(this.hoodMotor.getEncoder().getPosition() - this.hoodPIDController.getSetpoint()) <= LauncherProfile.hoodTolerance);
-    }
-
-    /**
-     * Sets the hood speed percentage in open-loop mode. Do not use for launching game pieces. This is to help with setup and testing.
-     * @param percent between -1 and 1. -1 is full speed in reverse, 1 is full speed forward.
-     */
-    public void setHoodPercent(double percent) {
-        this.hoodMotor.set(percent);
+        return this.debouncer.calculate(Math.abs(this.hoodMotor.getEncoder().getPosition() - this.hoodPIDController.getSetpoint()) <= 0.1);
     }
 
     public void setHoodAndSpeedFromPose(Pose2d currentPose) {

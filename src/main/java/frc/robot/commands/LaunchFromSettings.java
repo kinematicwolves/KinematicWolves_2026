@@ -4,31 +4,33 @@
 
 package frc.robot.commands;
 
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.RobotContainer;
 import frc.robot.Constants.IndexerProfile;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Launcher;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class LaunchwithParams extends Command {
+public class LaunchFromSettings extends Command {
     /** Creates a new SetLaunchParametersFromPose. */
     private final Launcher launcherSubsystem;
     private final Indexer indexerSubsystem;
-    private final double launcherSpeed;
-    private final double hoodPose;
+    private final RobotContainer robotContainer;
+    private final XboxController driverController;
 
     /**
-     * This is for automated launching with configurable settings without driver confirmation (basically for use in autos)
-     * @param launcherSubsystem the launcher
-     * @param indexerSubsystem the indexer
-     * @param launcherSpeed the speed for the launcher [rotations / second]
-     * @param hoodPose the angle for the hood [rotations]
+     * This is for launching with settings set by the operator, with driver confirmation (basically for use in teleop)
+     * @param launcherSubsystem
+     * @param indexerSubsystem
+     * @param robotContainer
+     * @param driverController
      */
-    public LaunchwithParams(Launcher launcherSubsystem, Indexer indexerSubsystem, double launcherSpeed, double hoodPose) {
+    public LaunchFromSettings(Launcher launcherSubsystem, Indexer indexerSubsystem, RobotContainer robotContainer, XboxController driverController) {
         this.launcherSubsystem = launcherSubsystem;
         this.indexerSubsystem = indexerSubsystem;
-        this.launcherSpeed = launcherSpeed;
-        this.hoodPose = hoodPose;
+        this.robotContainer = robotContainer;
+        this.driverController = driverController;
 
         // Use addRequirements() here to declare subsystem dependencies.
         addRequirements(launcherSubsystem, indexerSubsystem);
@@ -42,11 +44,11 @@ public class LaunchwithParams extends Command {
     @Override
     public void execute() {
         // set the launcher from the current robot container settigns
-        this.launcherSubsystem.setFlywheelSpeed(this.launcherSpeed);
-        this.launcherSubsystem.setHoodPosition(this.hoodPose);
+        this.launcherSubsystem.setFlywheelSpeed(this.robotContainer.getLauncherSpeed());
+        this.launcherSubsystem.setHoodPosition(this.robotContainer.getLauncherAngle());
 
         // if the launcher is good, launch
-        if (this.launcherSubsystem.flywheelAtSpeed()) {
+        if (this.launcherSubsystem.flywheelAtSpeed() && this.driverController.getRightBumperButton()) {
             this.indexerSubsystem.setRollerPercent(IndexerProfile.indexPercent);
             this.indexerSubsystem.setKickerPercent(IndexerProfile.feedPercent);
         }

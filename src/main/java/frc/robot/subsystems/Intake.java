@@ -23,9 +23,9 @@ public class Intake extends SubsystemBase {
     /** Creates a new Intake. */
     // Here, we declare all the motors, sensors, and other objects that this subsystem needs
     // Declaring all the motors for the intake
-    private final TalonFX  intakeMotor1 = new TalonFX(IntakeProfile.intakeDeployMotor1ID, TunerConstants.kCANBus);
-    private final TalonFX  intakeMotor2 = new TalonFX(IntakeProfile.intakeDeployMotor2ID, TunerConstants.kCANBus);
-    private final TalonSRX roller       = new TalonSRX(IntakeProfile.intakeRollerMotorID);
+    private final TalonFX  intakeMotor1 = new TalonFX(IntakeProfile.intakeMotorACanID, TunerConstants.kCANBus);
+    private final TalonFX  intakeMotor2 = new TalonFX(IntakeProfile.intakeMotorBCanID, TunerConstants.kCANBus);
+    private final TalonSRX roller       = new TalonSRX(IntakeProfile.rollerMotorCanID);
     
     public Intake() {
         // Here, we will configure all the motors, and to whatever other setup we need.
@@ -52,20 +52,19 @@ public class Intake extends SubsystemBase {
         config.Slot1.kD = 0.0;
 
         // Current Limits
-        config.CurrentLimits.SupplyCurrentLimit = 40.0;
+        config.CurrentLimits.SupplyCurrentLimit = 20.0;
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
         config.CurrentLimits.StatorCurrentLimit = 60.0;
         config.CurrentLimits.StatorCurrentLimitEnable = true;
 
         // Soft limits
         config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 5.0; // rotations
+        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = IntakeProfile.deployedPose;
         config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.0; // rotations
+        config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = IntakeProfile.retractedPose;
 
         // Neutral mode
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        // config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         // Setting the motor direction
         // I suggest this be set such that when the intake moves outside the robot, that is positive
@@ -83,7 +82,6 @@ public class Intake extends SubsystemBase {
 
         // Neutral mode
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        // config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         // Setting the motor direction
         // I suggest this be set such that when the intake moves outside the robot, that is positive
@@ -120,14 +118,21 @@ public class Intake extends SubsystemBase {
      * @return True if the intake is at its set position, otherwise false
      */
     public boolean atSetpoint() {
-        return Math.abs(this.intakeMotor1.getClosedLoopError().getValue()) < IntakeProfile.deployTolerance;
+        return Math.abs(this.intakeMotor1.getClosedLoopError().getValue()) < IntakeProfile.poseTolerance;
     }
 
     /**
-     * Sets the roller percentage in open-loop mode.
-     * @param speedFraction between -1 and 1. -1 is full speed in reverse, 1 is full speed forward.
+     * Sets the speed percent of the roller in open-loop-mode.
+     * @param percet between -1 and 1
      */
-    public void setRollerPercent(double percent) {
-        this.roller.set(TalonSRXControlMode.PercentOutput, percent);
+    public void setRollerPercent(double percet) {
+        this.roller.set(TalonSRXControlMode.PercentOutput, percet);
+    }
+
+    /**
+     * Resests the intake zero as the current position of the intake
+     */
+    public void zeroIntake() {
+        this.intakeMotor1.setPosition(0.0);
     }
 }
