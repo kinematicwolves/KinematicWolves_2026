@@ -289,27 +289,30 @@ public class RobotContainer {
     }
 
     /**
-     * Computs the transform of the robot to the goal, depending on the allance of the robot
-     * @return robot2goal transform (translation and angle between the robot and the goal)
+     * Computes the transform of the robot to the goal, depending on the alliance of the robot
+     * @return robot2goal transform. 
+     * robot2goal.getTranslation() is the xy offset between the robot center and the goal
+     * robot2goal.getRotation() is the angular offset between the robot's current direction and the line from the robot position to the goal.
+     * robot2goal.getTranslation().getNorm() is the distance to the goal.
      */
     public Transform2d robot2goal() {
         // get the current robot position from the drivetrain
         Pose2d robotPose = drivetrain.getState().Pose;
         
-        // lookup the goal based on wich alliance we are, compute the transform to that goal        
+        // lookup the goal based on which alliance we are, compute the transform to that goal
         Translation2d robot2goalTranslation;
         if (DriverStation.getAlliance().orElse(Alliance.Blue) ==  Alliance.Blue)
             robot2goalTranslation = new Transform2d(LauncherProfile.blueHub, robotPose).getTranslation();
         else
             robot2goalTranslation = new Transform2d(LauncherProfile.redHub, robotPose).getTranslation();
 
+        // the rotation of the goal is arbitrary, we want to find the angle from the robot's current direction to the goal
 
-
+        // This this gets us the angle of the vector from the robot to the goal, in field coordinates
         double vectorToGoal = Math.atan2(robot2goalTranslation.getY(), robot2goalTranslation.getX());
 
-
-        System.out.println(Math.toDegrees(vectorToGoal) - robotPose.getRotation().getDegrees());
-
+        // the value we care about is the difference between the current robot angle and the angle to the goal.
+        // That is how much the robot must rotate by
         Rotation2d angleToGoal = new Rotation2d(vectorToGoal - robotPose.getRotation().getRadians());
 
         return new Transform2d(robot2goalTranslation, angleToGoal);        
