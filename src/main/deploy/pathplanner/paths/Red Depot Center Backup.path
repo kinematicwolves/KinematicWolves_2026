@@ -16,15 +16,15 @@
     },
     {
       "anchor": {
-        "x": 14.923462441319876,
-        "y": 3.9498356807511747
+        "x": 14.743935599284436,
+        "y": 4.010661896243291
       },
       "prevControl": {
-        "x": 14.118801564955865,
-        "y": 3.944300000000001
+        "x": 13.939274722920425,
+        "y": 4.005126215492117
       },
       "nextControl": null,
-      "isLocked": true,
+      "isLocked": false,
       "linkedName": "Red climb"
     }
   ],
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 1.2279224132631301
   },
   "reversed": false,
   "folder": "Red Depot",

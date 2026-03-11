@@ -5,9 +5,28 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "Blue Middle to Blue Depot"
+            "name": "deployIntake"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "timedintake5s"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Middle to Blue Depot"
+                }
+              }
+            ]
           }
         }
       ]

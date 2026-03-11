@@ -5,9 +5,40 @@
     "data": {
       "commands": [
         {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Red Center Start to Depot"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "deployIntake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "timedintake5s"
+          }
+        },
+        {
           "type": "path",
           "data": {
-            "pathName": "Red Center Start to Depot"
+            "pathName": "Red Depot Center Backup"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "LaunchFromCenter"
           }
         }
       ]

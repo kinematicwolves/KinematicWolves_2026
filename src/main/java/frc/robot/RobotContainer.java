@@ -72,18 +72,18 @@ public class RobotContainer {
     public double launcherAngle = 1.5;
 
     public RobotContainer() {
-        autoChooser = AutoBuilder.buildAutoChooser("New Auto");
-        SmartDashboard.putData("Auto Mode", autoChooser);
-
-        // create command for path planner
-        NamedCommands.registerCommand("deployIntake",     new IntakeToPose(intake, IntakeProfile.deployedPose, IntakeProfile.gentleSlot));
-        NamedCommands.registerCommand("retractIntake",    new IntakeToPose(intake, IntakeProfile.retractedPose, IntakeProfile.aggressiveSlot));
-        NamedCommands.registerCommand("intakeLemos",      new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0));
-        NamedCommands.registerCommand("LaunchFromCenter", new LaunchwithParams(launcher, indexer, 65, 1.5));
-
         configureBindings();
 
         /*Named Commands For PathPlanner */
+        NamedCommands.registerCommand("deployIntake",     new IntakeToPose(intake, IntakeProfile.deployedPose, IntakeProfile.gentleSlot));
+        NamedCommands.registerCommand("retractIntake",    new IntakeToPose(intake, IntakeProfile.retractedPose, IntakeProfile.aggressiveSlot));
+        NamedCommands.registerCommand("timedintake5s",    new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0).withTimeout(5));
+        NamedCommands.registerCommand("timedintake3s",    new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0).withTimeout(3));
+        NamedCommands.registerCommand("neverendingintake",new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0));
+        NamedCommands.registerCommand("LaunchFromCenter", new LaunchwithParams(launcher, indexer, 65, 1.5));
+        
+        autoChooser = AutoBuilder.buildAutoChooser("New Auto");
+        SmartDashboard.putData("Auto Mode", autoChooser);
 
         // Warmup PathPlanner to avoid Java pauses
         FollowPathCommand.warmupCommand().schedule();
@@ -123,8 +123,15 @@ public class RobotContainer {
                 drivetrain.applyRequest(() -> robotCentricDrive
                     .withVelocityX(-(robot2goal().getTranslation().getNorm() - LauncherProfile.idealLaunchDist) * 2 * MaxSpeed)
                     .withVelocityY(driverController.getLeftX() * MaxSpeed)
-                    .withRotationalRate((robot2goal().getRotation().getDegrees()) * 0.01 * MaxAngularRate)
-            ));
+                    .withRotationalRate((robot2goal().getRotation().getDegrees()) * 0.01 * MaxAngularRate))
+                // drivetrain.applyRequest(() -> fieldCentricDrive
+                //     .withRotationalRate((robot2goal().getRotation().getDegrees()) * 0.01 * MaxAngularRate)
+                //     .withVelocityX(-(robot2goal().getTranslation().getNorm() - LauncherProfile.idealLaunchDist)*Math.sin(robot2goal().getRotation().getRadians()) * MaxSpeed)
+                //     .withVelocityY(-(robot2goal().getTranslation().getNorm() - LauncherProfile.idealLaunchDist)*Math.cos(robot2goal().getRotation().getRadians()) * MaxSpeed)
+                // )
+                .alongWith(new InstantCommand(() -> intake.setRollerPercent(0.5))))
+            .onFalse(new InstantCommand(() -> intake.setRollerPercent(0.0)));
+
 
         driverController.b()
             .onTrue(new InstantCommand(() -> {this.launcherAngle=0; this.launcherSpeed=0;}));
@@ -135,11 +142,12 @@ public class RobotContainer {
         // intake stuff
         driverController.leftTrigger(0.5)
             .onTrue(new IntakeToPose(intake, IntakeProfile.deployedPose, IntakeProfile.gentleSlot))
-            .whileTrue(new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0));
+            .whileTrue(new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0))
+            .onFalse (new InstantCommand(() -> intake.setRollerPercent(0.3))); //keeps balls
         
         driverController.leftBumper()
             .onTrue(new IntakeToPose(intake, IntakeProfile.retractedPose, IntakeProfile.aggressiveSlot))
-            .whileTrue(new IntakeWithSpeeds(intake, indexer, IntakeProfile.retractPrecent, 0)); // helps the intake go up
+            .whileTrue(new IntakeWithSpeeds(intake, indexer, IntakeProfile.retractPrecent, 0));
         
         /* operator controls */
         opController.povUp()
@@ -190,7 +198,7 @@ public class RobotContainer {
         double vectorToGoal = Math.atan2(robot2goalTranslation.getY(), robot2goalTranslation.getX());
 
 
-        System.out.println(Math.toDegrees(vectorToGoal) - robotPose.getRotation().getDegrees());
+        // System.out.println(Math.toDegrees(vectorToGoal) - robotPose.getRotation().getDegrees());
 
         Rotation2d angleToGoal = new Rotation2d(vectorToGoal - robotPose.getRotation().getRadians());
 

@@ -7,19 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Middle to Blue Depot"
+            "pathName": "red trench to depot"
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "Blue depot to Outpost"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Blue Oupost to Right ShootPos"
+            "name": "deployIntake"
           }
         }
       ]

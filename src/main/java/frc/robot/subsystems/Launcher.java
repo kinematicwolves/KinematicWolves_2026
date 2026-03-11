@@ -19,6 +19,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.LauncherProfile;
@@ -30,6 +31,8 @@ public class Launcher extends SubsystemBase {
     // Step one, create all the objects we need
     private final TalonFX launcherMotor1 = new TalonFX(LauncherProfile.launcherMotor1CanID, TunerConstants.kCANBus); 
     private final TalonFX launcherMotor2 = new TalonFX(LauncherProfile.launcherMotor2CanID, TunerConstants.kCANBus); 
+
+    Debouncer debouncer = new Debouncer(0.1);
 
     // hood motor and controller objects
     private final SparkMax hoodMotor = new SparkMax(LauncherProfile.hoodMotorCanID, SparkLowLevel.MotorType.kBrushless);
@@ -83,9 +86,18 @@ public class Launcher extends SubsystemBase {
     private void configureLauncherMotor2() {
         TalonFXConfiguration config = new TalonFXConfiguration();
 
+        // PID (Velocity)
+        // https://v6.docs.ctr-electronics.com/en/latest/docs/api-reference/device-specific/talonfx/basic-pid-control.html#velocity-control
+        config.Slot0.kS = 0.1; // Add 0.1 V output to overcome static friction
+        config.Slot0.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
+        config.Slot0.kP = 0.11; // An error of 1 rps results in 0.11 V output
+        // config.Slot0.kI = 0.0;
+        // config.Slot0.kD = 0.0;
+
         // Current Limits
         config.CurrentLimits.SupplyCurrentLimit = 20.0;
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
+
         config.CurrentLimits.StatorCurrentLimit = 20.0;
         config.CurrentLimits.StatorCurrentLimitEnable = true;
 
@@ -95,13 +107,10 @@ public class Launcher extends SubsystemBase {
 
         // Setting the motor direction
         // I suggest this be set such that a positive number launcher the game piece
-        // config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
         // applying the config
         this.launcherMotor2.getConfigurator().apply(config);
-
-        // set motorB to follow motorA
-        this.launcherMotor2.setControl(new Follower(this.launcherMotor1.getDeviceID(), MotorAlignmentValue.Opposed));
     }
 
     private void configureHoodMotor() {
@@ -131,7 +140,7 @@ public class Launcher extends SubsystemBase {
         config.softLimit.reverseSoftLimitEnabled(true);
         // configuring the pid controller for the hood angle
         config.closedLoop
-        .p(1)
+        .p(0.5)
         .i(0.0)
         .d(0.0);
 
@@ -148,7 +157,10 @@ public class Launcher extends SubsystemBase {
         SmartDashboard.putBoolean("HoodAtSetPoint", hoodIsAtSetpoint());
         SmartDashboard.putNumber("HoodTarget", hoodPIDController.getSetpoint());
         SmartDashboard.putNumber("Launcher/Velocity RPS", launcherMotor1.getVelocity().getValueAsDouble());
-        SmartDashboard.putBoolean("LauncerAtSpeed", this.flywheelAtSpeed());
+        SmartDashboard.putBoolean("Launcher1AtSpeed", this.launcherMotor1.getClosedLoopError().getValueAsDouble() < LauncherProfile.launcherTolerance);
+        SmartDashboard.putBoolean("Launcher2AtSpeed", this.launcherMotor2.getClosedLoopError().getValueAsDouble() < LauncherProfile.launcherTolerance);
+        SmartDashboard.putNumber("Launcher1Speed", this.launcherMotor1.getVelocity().getValueAsDouble());
+        SmartDashboard.putNumber("Launcher2Speed", this.launcherMotor2.getVelocity().getValueAsDouble());
     }
 
     /* Public functions for commands */
@@ -158,6 +170,8 @@ public class Launcher extends SubsystemBase {
      */
     public void setFlywheelPercent(double speedFraction) {
         this.launcherMotor1.set(speedFraction);
+        this.launcherMotor2.set(-speedFraction);
+
     }
 
     /**
@@ -174,6 +188,7 @@ public class Launcher extends SubsystemBase {
      */
     public void setFlywheelSpeed(double speed) {
         this.launcherMotor1.setControl(new VelocityVoltage(speed));
+        this.launcherMotor2.setControl(new VelocityVoltage(speed));
     }
 
     /**
@@ -181,7 +196,10 @@ public class Launcher extends SubsystemBase {
      * @return true if the flywheel is at speed, otherwise false.
      */
     public boolean flywheelAtSpeed() {
-        return (this.launcherMotor1.getClosedLoopError().getValueAsDouble() < LauncherProfile.launcherTolerance);
+        return debouncer.calculate(
+            Math.abs(this.launcherMotor1.getClosedLoopError().getValueAsDouble()) < LauncherProfile.launcherTolerance //&&
+            // Math.abs(this.launcherMotor2.getClosedLoopError().getValueAsDouble()) < LauncherProfile.launcherTolerance
+            );
     }
 
     /**

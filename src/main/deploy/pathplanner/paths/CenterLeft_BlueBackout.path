@@ -70,7 +70,7 @@
   ],
   "eventMarkers": [
     {
-      "name": "outake",
+      "name": "",
       "waypointRelativePos": 1.4470377019748648,
       "endWaypointRelativePos": 2.0,
       "command": null
