@@ -5,9 +5,40 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "deployIntake"
+          }
+        },
+        {
+          "type": "deadline",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Blue Middle to Blue Depot"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "neverendingintake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "timedintake3s"
+          }
+        },
+        {
           "type": "path",
           "data": {
-            "pathName": "Blue Middle to Blue Depot"
+            "pathName": "Blue depot to Outpost"
           }
         }
       ]

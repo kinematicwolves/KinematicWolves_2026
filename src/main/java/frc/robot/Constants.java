@@ -20,6 +20,7 @@ public class Constants {
         public static final Pose2d redHub  = new Pose2d(11.981, 4.075, new Rotation2d());
 
         public static final double idealLaunchDist = 2.7; // meters
+        public static final boolean enableFOC = true;
     }
 
     public static class IntakeProfile {
@@ -43,5 +44,10 @@ public class Constants {
 
         public static final double indexPercent = 0.6; // percent
         public static final double feedPercent  = 1.0; // percent
+    }
+
+    public static class ElevatorProfile {
+        public static final int motorACanID = 23;
+        public static final int motorBCanID = 24;
     }
 }

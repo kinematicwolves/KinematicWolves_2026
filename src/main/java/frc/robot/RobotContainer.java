@@ -8,11 +8,16 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
+import java.lang.annotation.ElementType;
+import java.nio.file.OpenOption;
+import java.util.concurrent.ThreadPoolExecutor.DiscardOldestPolicy;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
+import com.pathplanner.lib.util.PathPlannerLogging;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -20,6 +25,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -34,6 +40,7 @@ import frc.robot.commands.LaunchFromSettings;
 import frc.robot.commands.LaunchwithParams;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Launcher;
@@ -52,7 +59,7 @@ public class RobotContainer {
         .withDriveRequestType(DriveRequestType.Velocity);
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
-    // private final Telemetry logger = new Telemetry(MaxSpeed);
+    private final Telemetry logger = new Telemetry(MaxSpeed);
 
     public final CommandXboxController driverController = new CommandXboxController(0);   
     public final CommandXboxController opController     = new CommandXboxController(1);
@@ -63,13 +70,14 @@ public class RobotContainer {
     public final Launcher launcher = new Launcher();
     public final Intake   intake   = new Intake();
     public final Indexer  indexer  = new Indexer();
+    public final Elevator elevator = new Elevator();
 
     /* Path follower */
     private final SendableChooser<Command> autoChooser;
 
     // some variables
-    public double launcherSpeed = 65;
-    public double launcherAngle = 1.5;
+    public double launcherSpeed = 75;
+    public double launcherAngle = 0;
 
     public RobotContainer() {
         configureBindings();
@@ -87,6 +95,8 @@ public class RobotContainer {
 
         // Warmup PathPlanner to avoid Java pauses
         FollowPathCommand.warmupCommand().schedule();
+
+        setupPathplannerLogging();
     }
 
     private void configureBindings() {
@@ -114,7 +124,7 @@ public class RobotContainer {
         // Reset the field-centric heading on left bumper press.
         driverController.y().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-        // drivetrain.registerTelemetry(logger::telemeterize);
+        drivetrain.registerTelemetry(logger::telemeterize);
 
         // launcher stuff
         driverController.rightTrigger(0.5)
@@ -136,7 +146,7 @@ public class RobotContainer {
         driverController.b()
             .onTrue(new InstantCommand(() -> {this.launcherAngle=0; this.launcherSpeed=0;}));
         driverController.x()
-            .onTrue(new InstantCommand(() -> {this.launcherAngle=1.5; this.launcherSpeed=65;}));
+            .onTrue(new InstantCommand(() -> {this.launcherAngle=0; this.launcherSpeed=75;}));
 
 
         // intake stuff
@@ -153,16 +163,46 @@ public class RobotContainer {
         opController.povUp()
             .onTrue(new InstantCommand(() -> {BumpLauncerSpeed(10);}));
         opController.povDown()
-            .onTrue(new InstantCommand(() -> {BumpLauncerSpeed(-1);}));
-         opController.y()
+            .onTrue(new InstantCommand(() -> {BumpLauncerSpeed(-2);}));
+        opController.y()
             .onTrue(new InstantCommand(() -> {BumpLauncerAngle(0.5);}));
         opController.a()
             .onTrue(new InstantCommand(() -> {BumpLauncerAngle(-0.1);}));
+
+        opController.rightTrigger(0.5)
+            .whileTrue(new InstantCommand(() -> elevator.setPercent(0.5)))
+            .onFalse(new InstantCommand(() -> elevator.setPercent(0)));
+        opController.leftTrigger()
+            .whileTrue(new InstantCommand(() -> elevator.setPercent(-0.50)))
+            .onFalse(new InstantCommand(() -> elevator.setPercent(0)));
+        opController.start().onTrue(new InstantCommand(() -> elevator.togglBreakMode()));
     }
 
     public Command getAutonomousCommand() {
        /* Run the path selected from the auto chooser */
         return autoChooser.getSelected();
+    }
+
+    private void setupPathplannerLogging() {
+        // from https://pathplanner.dev/pplib-custom-logging.html
+        Field2d field = drivetrain.field2d;
+
+        // this portion is already setup in the command swerve drivetrain
+        // // Logging callback for current robot pose
+        // PathPlannerLogging.setLogCurrentPoseCallback((pose) -> {
+        //     // Do whatever you want with the pose here
+        //     field.setRobotPose(pose);
+        // });
+
+        // Logging callback for target robot pose
+        PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
+            field.getObject("target pose").setPose(pose);
+        });
+
+        // Logging callback for the active path, this is sent as a list of poses
+        PathPlannerLogging.setLogActivePathCallback((poses) -> {
+            field.getObject("path").setPoses(poses);
+        });
     }
 
     public void BumpLauncerSpeed(double percent) {

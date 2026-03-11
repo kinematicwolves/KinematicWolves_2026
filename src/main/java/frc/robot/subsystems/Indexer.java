@@ -50,9 +50,9 @@ public class Indexer extends SubsystemBase {
 
         //set the pid gains
         config.closedLoop
-        .p(1)
-        .i(0.0)
-        .d(0.0);
+        .p(0.0001)
+        .i(0.00001)
+        .d(0.1);
         
         // finally, we apply our config to as persistent parameters
         this.kickerMotor.configure(config, null, PersistMode.kPersistParameters);

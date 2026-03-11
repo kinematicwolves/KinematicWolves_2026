@@ -7,13 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "red trench to depot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "deployIntake"
+            "pathName": null
           }
         }
       ]

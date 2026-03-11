@@ -156,7 +156,8 @@ public class Launcher extends SubsystemBase {
         SmartDashboard.putNumber("HoodPose", hoodMotor.getEncoder().getPosition());
         SmartDashboard.putBoolean("HoodAtSetPoint", hoodIsAtSetpoint());
         SmartDashboard.putNumber("HoodTarget", hoodPIDController.getSetpoint());
-        SmartDashboard.putNumber("Launcher/Velocity RPS", launcherMotor1.getVelocity().getValueAsDouble());
+        SmartDashboard.putNumber("LauncherVelocity RPS", launcherMotor1.getVelocity().getValueAsDouble());
+        SmartDashboard.putBoolean("LauncherAtSpeed", this.flywheelAtSpeed());
         SmartDashboard.putBoolean("Launcher1AtSpeed", this.launcherMotor1.getClosedLoopError().getValueAsDouble() < LauncherProfile.launcherTolerance);
         SmartDashboard.putBoolean("Launcher2AtSpeed", this.launcherMotor2.getClosedLoopError().getValueAsDouble() < LauncherProfile.launcherTolerance);
         SmartDashboard.putNumber("Launcher1Speed", this.launcherMotor1.getVelocity().getValueAsDouble());
@@ -187,8 +188,8 @@ public class Launcher extends SubsystemBase {
      * @param speed the speed of the flywheel in rotations/s [rps]
      */
     public void setFlywheelSpeed(double speed) {
-        this.launcherMotor1.setControl(new VelocityVoltage(speed));
-        this.launcherMotor2.setControl(new VelocityVoltage(speed));
+        this.launcherMotor1.setControl(new VelocityVoltage(speed).withEnableFOC(LauncherProfile.enableFOC));
+        this.launcherMotor2.setControl(new VelocityVoltage(speed).withEnableFOC(LauncherProfile.enableFOC));
     }
 
     /**
@@ -197,8 +198,8 @@ public class Launcher extends SubsystemBase {
      */
     public boolean flywheelAtSpeed() {
         return debouncer.calculate(
-            Math.abs(this.launcherMotor1.getClosedLoopError().getValueAsDouble()) < LauncherProfile.launcherTolerance //&&
-            // Math.abs(this.launcherMotor2.getClosedLoopError().getValueAsDouble()) < LauncherProfile.launcherTolerance
+            Math.abs(this.launcherMotor1.getClosedLoopError().getValueAsDouble()) < LauncherProfile.launcherTolerance &&
+            Math.abs(this.launcherMotor2.getClosedLoopError().getValueAsDouble()) < LauncherProfile.launcherTolerance
             );
     }
 

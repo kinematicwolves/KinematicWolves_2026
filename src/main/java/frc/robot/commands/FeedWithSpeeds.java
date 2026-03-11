@@ -12,12 +12,12 @@ public class FeedWithSpeeds extends Command {
     /** Creates a new FeedWithSpeeds. */
     Indexer indexer;
 
-    double kickerPercent;
+    double kickerPrecent;
     double rollerPercent;
 
-    public FeedWithSpeeds(Indexer indexerSubsystem, double rollerPercent, double kickerPercent) {
+    public FeedWithSpeeds(Indexer indexerSubsystem, double rollerPercent, double kickerPrecent) {
         this.indexer = indexerSubsystem;
-        this.kickerPercent = kickerPercent;
+        this.kickerPrecent = kickerPrecent;
         this.rollerPercent = rollerPercent;
         // Use addRequirements() here to declare subsystem dependencies.
         addRequirements(indexerSubsystem);
@@ -32,7 +32,7 @@ public class FeedWithSpeeds extends Command {
     // Called every time the scheduler runs while the command is scheduled.
     @Override
     public void execute() { 
-        this.indexer.setKickerPercent(this.kickerPercent);
+        this.indexer.setKickerPercent(this.kickerPrecent);
         this.indexer.setRollerPercent(this.rollerPercent);
     }
 

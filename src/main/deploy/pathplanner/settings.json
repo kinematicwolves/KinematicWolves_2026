@@ -15,8 +15,8 @@
     "Red Right"
   ],
   "autoFolders": [],
-  "defaultMaxVel": 1.5,
-  "defaultMaxAccel": 2.0,
+  "defaultMaxVel": 2.0,
+  "defaultMaxAccel": 3.0,
   "defaultMaxAngVel": 540.0,
   "defaultMaxAngAccel": 720.0,
   "defaultNominalVoltage": 12.0,

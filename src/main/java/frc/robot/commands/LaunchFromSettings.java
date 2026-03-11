@@ -50,7 +50,7 @@ public class LaunchFromSettings extends Command {
         // if the launcher is good, launch
         if (this.launcherSubsystem.flywheelAtSpeed() && this.driverController.getRightBumperButton()) {
             this.indexerSubsystem.setRollerPercent(IndexerProfile.indexPercent);
-            this.indexerSubsystem.setKickerPercent(IndexerProfile.feedPercent);
+            this.indexerSubsystem.setKickerPercent(IndexerProfile.indexPercent);
         }
         // otherwise, don't launch
         else {
