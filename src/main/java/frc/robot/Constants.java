@@ -14,7 +14,7 @@ public class Constants {
         public static final int launcherMotor2CanID = 42;
         public static final int hoodMotorCanID      = 44;
 
-        public static final double launcherTolerance = 2.5; // rotations/s
+        public static final double launcherTolerance = 3; // rotations/s
 
         public static final Pose2d blueHub = new Pose2d( 4.642, 4.075, new Rotation2d());
         public static final Pose2d redHub  = new Pose2d(11.981, 4.075, new Rotation2d());

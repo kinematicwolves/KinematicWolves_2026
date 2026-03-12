@@ -43,7 +43,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left ShootPos to Blue Climb"
+            "pathName": null
           }
         },
         {
@@ -56,6 +56,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Not for comp atp",
   "choreoAuto": false
 }

@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.4239336492890993,
-        "y": 5.947867298578199
+        "x": 3.4808836206896556,
+        "y": 2.256185344827586
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.6585026148063404,
-        "y": 5.165970746854061
+        "x": 2.571928879310345,
+        "y": 1.7968211206896556
       },
       "isLocked": false,
-      "linkedName": "Left ShootPos"
+      "linkedName": "middle right "
     },
     {
       "anchor": {
-        "x": 1.5857109004739334,
-        "y": 4.120971563981041
+        "x": 0.8713038793103456,
+        "y": 0.6826185344827593
       },
       "prevControl": {
-        "x": 2.308038793103449,
-        "y": 4.083868534482758
+        "x": 1.7607112068965525,
+        "y": 1.0931142241379326
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "blue Climb"
+      "linkedName": "Blue Outpost"
     }
   ],
   "rotationTargets": [],
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.0,
-    "maxAcceleration": 3.0,
+    "maxVelocity": 1.5,
+    "maxAcceleration": 2.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -75.0
+    "rotation": -122.12499844038754
   },
   "useDefaultConstraints": true
 }

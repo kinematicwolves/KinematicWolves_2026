@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.5585452586206905,
-        "y": 0.6728448275862069
+        "x": 0.8713038793103456,
+        "y": 0.6826185344827593
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.5585452586206903,
-        "y": 0.6728448275862069
+        "x": 1.8713038793103454,
+        "y": 0.6826185344827593
       },
       "isLocked": false,
       "linkedName": "Blue Outpost"
     },
     {
       "anchor": {
-        "x": 2.43468009478673,
-        "y": 1.7782464454976288
+        "x": 2.3862284482758627,
+        "y": 2.177995689655172
       },
       "prevControl": {
-        "x": 1.8491753999457252,
-        "y": 1.1395140511314334
+        "x": 1.8007237534348577,
+        "y": 1.5392632952889769
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.0,
-    "maxAcceleration": 3.0,
+    "maxVelocity": 1.5,
+    "maxAcceleration": 2.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -131.5317707410829
+    "rotation": -138.91824886406744
   },
   "reversed": false,
   "folder": "Blue Right ",

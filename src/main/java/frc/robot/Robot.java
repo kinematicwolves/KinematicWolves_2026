@@ -78,13 +78,18 @@ public class Robot extends TimedRobot {
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(m_autonomousCommand);
         }
+        LimelightHelpers.setRewindEnabled("limelight", true);
     }
-
+    
     @Override
     public void autonomousPeriodic() {}
-
+    
     @Override
-    public void autonomousExit() {}
+    public void autonomousExit() {
+        LimelightHelpers.triggerRewindCapture("limelight", 30);
+        LimelightHelpers.setRewindEnabled("limelight", false);
+
+    }
 
     @Override
     public void teleopInit() {

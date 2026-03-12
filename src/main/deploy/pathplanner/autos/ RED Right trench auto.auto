@@ -5,25 +5,19 @@
     "data": {
       "commands": [
         {
-          "type": "named",
-          "data": {
-            "name": "deployIntake"
-          }
-        },
-        {
-          "type": "deadline",
+          "type": "parallel",
           "data": {
             "commands": [
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Blue Middle to Blue Depot"
+                  "pathName": "red right trench to outpost"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "neverendingintake"
+                  "name": "deployIntake"
                 }
               }
             ]
@@ -36,9 +30,22 @@
           }
         },
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "Blue depot to Outpost"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "LaunchFromCenter"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Red outpost to ShootPos"
+                }
+              }
+            ]
           }
         }
       ]

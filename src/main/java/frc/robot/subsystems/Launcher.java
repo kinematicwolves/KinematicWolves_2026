@@ -32,7 +32,7 @@ public class Launcher extends SubsystemBase {
     private final TalonFX launcherMotor1 = new TalonFX(LauncherProfile.launcherMotor1CanID, TunerConstants.kCANBus); 
     private final TalonFX launcherMotor2 = new TalonFX(LauncherProfile.launcherMotor2CanID, TunerConstants.kCANBus); 
 
-    Debouncer debouncer = new Debouncer(0.1);
+    Debouncer debouncer = new Debouncer(0.3);
 
     // hood motor and controller objects
     private final SparkMax hoodMotor = new SparkMax(LauncherProfile.hoodMotorCanID, SparkLowLevel.MotorType.kBrushless);

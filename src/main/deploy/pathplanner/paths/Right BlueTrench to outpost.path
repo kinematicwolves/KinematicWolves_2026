@@ -3,32 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.2231573275862075,
-        "y": 5.960420258620689
+        "x": 3.8522844827586216,
+        "y": 0.6923922413793104
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.2231573275862075,
-        "y": 5.960420258620689
+        "x": 2.3471336206896556,
+        "y": 1.034471982758621
       },
       "isLocked": false,
-      "linkedName": "Blue Depot"
-    },
-    {
-      "anchor": {
-        "x": 2.0441487068965523,
-        "y": 3.389935344827586
-      },
-      "prevControl": {
-        "x": 2.2680744881465524,
-        "y": 4.711829202586207
-      },
-      "nextControl": {
-        "x": 1.8202229256465523,
-        "y": 2.068041487068965
-      },
-      "isLocked": false,
-      "linkedName": null
+      "linkedName": "Blue Right Trench"
     },
     {
       "anchor": {
@@ -36,8 +20,8 @@
         "y": 0.6826185344827593
       },
       "prevControl": {
-        "x": 1.565237068965518,
-        "y": 0.6826185344827593
+        "x": 2.014827586206897,
+        "y": 1.1322090517241385
       },
       "nextControl": null,
       "isLocked": false,
@@ -64,7 +48,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }

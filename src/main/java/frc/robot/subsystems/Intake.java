@@ -6,6 +6,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.ctre.phoenix.motorcontrol.can.TalonSRXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionVoltage;
@@ -36,6 +37,8 @@ public class Intake extends SubsystemBase {
 
         // Configure intakeMotor2
         configureIntakeMotorB();
+
+        configureRollorMotor();
 
     }
 
@@ -92,6 +95,12 @@ public class Intake extends SubsystemBase {
 
         // Tell this motor to follow whatever intakeMotor1 does
         this.intakeMotor2.setControl(new Follower(this.intakeMotor1.getDeviceID(), MotorAlignmentValue.Opposed));
+    }
+
+    private void configureRollorMotor() {
+        TalonSRXConfiguration config = new TalonSRXConfiguration();
+        config.continuousCurrentLimit = 20;
+        roller.configAllSettings(config);
     }
 
     @Override

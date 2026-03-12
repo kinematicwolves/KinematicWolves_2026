@@ -34,6 +34,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Constants.IntakeProfile;
 import frc.robot.Constants.LauncherProfile;
+import frc.robot.commands.FeedWithSpeeds;
 import frc.robot.commands.IntakeToPose;
 import frc.robot.commands.IntakeWithSpeeds;
 import frc.robot.commands.LaunchFromSettings;
@@ -88,7 +89,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("timedintake5s",    new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0).withTimeout(5));
         NamedCommands.registerCommand("timedintake3s",    new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0).withTimeout(3));
         NamedCommands.registerCommand("neverendingintake",new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0));
-        NamedCommands.registerCommand("LaunchFromCenter", new LaunchwithParams(launcher, indexer, 65, 1.5));
+        NamedCommands.registerCommand("LaunchFromCenter", new LaunchwithParams(launcher, indexer, 75, 1.2));
         
         autoChooser = AutoBuilder.buildAutoChooser("New Auto");
         SmartDashboard.putData("Auto Mode", autoChooser);
@@ -176,6 +177,7 @@ public class RobotContainer {
             .whileTrue(new InstantCommand(() -> elevator.setPercent(-0.50)))
             .onFalse(new InstantCommand(() -> elevator.setPercent(0)));
         opController.start().onTrue(new InstantCommand(() -> elevator.togglBreakMode()));
+        opController.rightBumper().whileTrue(new FeedWithSpeeds(indexer, -0.7, -0.7));
     }
 
     public Command getAutonomousCommand() {

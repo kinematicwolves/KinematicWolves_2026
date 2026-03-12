@@ -52,7 +52,7 @@ public class LaunchwithParams extends Command {
         }
         // otherwise, don't launch
         else {
-            this.indexerSubsystem.setRollerPercent(0);
+            this.indexerSubsystem.setRollerPercent(IndexerProfile.indexPercent);
             this.indexerSubsystem.setKickerPercent(0);
         }
     }
