@@ -1,0 +1,70 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 15.351907582938388,
+        "y": 2.15
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 14.64440758293839,
+        "y": 2.1321327014218
+      },
+      "isLocked": false,
+      "linkedName": "Red depot"
+    },
+    {
+      "anchor": {
+        "x": 14.621149289099527,
+        "y": 3.648127962085308
+      },
+      "prevControl": {
+        "x": 14.922049763033177,
+        "y": 2.4445260663507105
+      },
+      "nextControl": {
+        "x": 14.297937019122362,
+        "y": 4.94097704199397
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 15.453674568965518,
+        "y": 7.43625
+      },
+      "prevControl": {
+        "x": 14.529480256169304,
+        "y": 6.716238151658768
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Red Outpost"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 1.5,
+    "maxAcceleration": 2.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "reversed": false,
+  "folder": null,
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": true
+}

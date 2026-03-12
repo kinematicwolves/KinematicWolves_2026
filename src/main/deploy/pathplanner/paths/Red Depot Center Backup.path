@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 15.351907582938388,
+        "y": 2.15
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 14.45278786462853,
+        "y": 2.139448356807512
+      },
+      "isLocked": true,
+      "linkedName": "Red depot"
+    },
+    {
+      "anchor": {
+        "x": 14.743935599284436,
+        "y": 4.010661896243291
+      },
+      "prevControl": {
+        "x": 13.939274722920425,
+        "y": 4.005126215492117
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Red climb"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 2.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 1.2279224132631301
+  },
+  "reversed": false,
+  "folder": "Red Depot",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": true
+}

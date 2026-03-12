@@ -6,9 +6,14 @@ package frc.robot;
 
 import com.ctre.phoenix6.HootAutoReplay;
 
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.Constants.LauncherProfile;
 
 public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
@@ -22,12 +27,39 @@ public class Robot extends TimedRobot {
 
     public Robot() {
         m_robotContainer = new RobotContainer();
+        PowerDistribution pd = new PowerDistribution(1, ModuleType.kRev);
+        pd.clearStickyFaults();
     }
 
     @Override
     public void robotPeriodic() {
         m_timeAndJoystickReplay.update();
-        CommandScheduler.getInstance().run(); 
+        CommandScheduler.getInstance().run();
+
+        /*
+         * This example of adding Limelight is very simple and may not be sufficient for on-field use.
+         * Users typically need to provide a standard deviation that scales with the distance to target
+         * and changes with number of tags available.
+         *
+         * This example is sufficient to show that vision integration is possible, though exact implementation
+         * of how to use vision should be tuned per-robot and to the team's specification.
+         */
+        if (true) {
+            var driveState = m_robotContainer.drivetrain.getState();
+            double headingDeg = driveState.Pose.getRotation().getDegrees();
+            double omegaRps = Units.radiansToRotations(driveState.Speeds.omegaRadiansPerSecond);
+
+            LimelightHelpers.SetRobotOrientation("limelight", headingDeg, 0, 0, 0, 0, 0);
+            // var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
+            var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
+            if (llMeasurement != null && llMeasurement.tagCount > 0 && Math.abs(omegaRps) < 2.0) {
+                m_robotContainer.drivetrain.addVisionMeasurement(llMeasurement.pose, llMeasurement.timestampSeconds);
+            }
+        }
+        SmartDashboard.putNumber("OpLauncherSpeed", m_robotContainer.getLauncherSpeed());
+        SmartDashboard.putNumber("OpLauncherAngle", m_robotContainer.getLauncherAngle());
+        SmartDashboard.putNumber("Dist2Redgoal", LauncherProfile.redHub.getTranslation().getDistance(m_robotContainer.drivetrain.getPose().getTranslation()));
+        SmartDashboard.putNumber("Dist2Bluegoal", LauncherProfile.blueHub.getTranslation().getDistance(m_robotContainer.drivetrain.getPose().getTranslation()));
     }
 
     @Override
@@ -46,13 +78,18 @@ public class Robot extends TimedRobot {
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(m_autonomousCommand);
         }
+        LimelightHelpers.setRewindEnabled("limelight", true);
     }
-
+    
     @Override
     public void autonomousPeriodic() {}
-
+    
     @Override
-    public void autonomousExit() {}
+    public void autonomousExit() {
+        LimelightHelpers.triggerRewindCapture("limelight", 30);
+        LimelightHelpers.setRewindEnabled("limelight", false);
+
+    }
 
     @Override
     public void teleopInit() {
