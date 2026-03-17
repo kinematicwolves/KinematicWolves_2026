@@ -99,7 +99,7 @@ public class Intake extends SubsystemBase {
 
     private void configureRollorMotor() {
         TalonSRXConfiguration config = new TalonSRXConfiguration();
-        config.continuousCurrentLimit = 20;
+        config.continuousCurrentLimit = 5;
         roller.configAllSettings(config);
     }
 

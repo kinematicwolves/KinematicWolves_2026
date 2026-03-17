@@ -32,7 +32,7 @@ public class Launcher extends SubsystemBase {
     private final TalonFX launcherMotor1 = new TalonFX(LauncherProfile.launcherMotor1CanID, TunerConstants.kCANBus); 
     private final TalonFX launcherMotor2 = new TalonFX(LauncherProfile.launcherMotor2CanID, TunerConstants.kCANBus); 
 
-    Debouncer debouncer = new Debouncer(0.3);
+    Debouncer debouncer = new Debouncer(0.1);
 
     // hood motor and controller objects
     private final SparkMax hoodMotor = new SparkMax(LauncherProfile.hoodMotorCanID, SparkLowLevel.MotorType.kBrushless);
@@ -60,8 +60,8 @@ public class Launcher extends SubsystemBase {
         // https://v6.docs.ctr-electronics.com/en/latest/docs/api-reference/device-specific/talonfx/basic-pid-control.html#velocity-control
         config.Slot0.kS = 0.1; // Add 0.1 V output to overcome static friction
         config.Slot0.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
-        config.Slot0.kP = 0.11; // An error of 1 rps results in 0.11 V output
-        // config.Slot0.kI = 0.0;
+        config.Slot0.kP = 0.7; // An error of 1 rps results in 0.11 V output
+        config.Slot0.kI = 0.07;
         // config.Slot0.kD = 0.0;
 
         // Current Limits
@@ -90,15 +90,15 @@ public class Launcher extends SubsystemBase {
         // https://v6.docs.ctr-electronics.com/en/latest/docs/api-reference/device-specific/talonfx/basic-pid-control.html#velocity-control
         config.Slot0.kS = 0.1; // Add 0.1 V output to overcome static friction
         config.Slot0.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
-        config.Slot0.kP = 0.11; // An error of 1 rps results in 0.11 V output
-        // config.Slot0.kI = 0.0;
+        config.Slot0.kP = 0.7; // An error of 1 rps results in 0.11 V output
+        config.Slot0.kI = 0.07;
         // config.Slot0.kD = 0.0;
 
         // Current Limits
-        config.CurrentLimits.SupplyCurrentLimit = 20.0;
+        config.CurrentLimits.SupplyCurrentLimit = 40.0;
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-        config.CurrentLimits.StatorCurrentLimit = 20.0;
+        config.CurrentLimits.StatorCurrentLimit = 40.0;
         config.CurrentLimits.StatorCurrentLimitEnable = true;
 
         // Neutral Mode

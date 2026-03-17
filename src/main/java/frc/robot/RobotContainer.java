@@ -10,6 +10,7 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.lang.annotation.ElementType;
 import java.nio.file.OpenOption;
+import java.util.Optional;
 import java.util.concurrent.ThreadPoolExecutor.DiscardOldestPolicy;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -30,8 +31,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.IntakeProfile;
 import frc.robot.Constants.LauncherProfile;
 import frc.robot.commands.FeedWithSpeeds;
@@ -64,6 +67,7 @@ public class RobotContainer {
 
     public final CommandXboxController driverController = new CommandXboxController(0);   
     public final CommandXboxController opController     = new CommandXboxController(1);
+    public final CommandXboxController TechController     = new CommandXboxController(2);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
@@ -77,8 +81,9 @@ public class RobotContainer {
     private final SendableChooser<Command> autoChooser;
 
     // some variables
-    public double launcherSpeed = 75;
-    public double launcherAngle = 0;
+    public double launcherSpeed = 55;
+    public double launcherAngle = 0.9;
+    private Trigger hubActiveSoon = new Trigger(() -> isHubActive(5));
 
     public RobotContainer() {
         configureBindings();
@@ -89,7 +94,14 @@ public class RobotContainer {
         NamedCommands.registerCommand("timedintake5s",    new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0).withTimeout(5));
         NamedCommands.registerCommand("timedintake3s",    new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0).withTimeout(3));
         NamedCommands.registerCommand("neverendingintake",new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0));
-        NamedCommands.registerCommand("LaunchFromCenter", new LaunchwithParams(launcher, indexer, 75, 1.2));
+        NamedCommands.registerCommand("LaunchFromCenter", new ParallelCommandGroup(
+            new LaunchwithParams(launcher, indexer, 55, 1.6).withTimeout(6), 
+            new InstantCommand(() -> intake.setRollerPercent(IntakeProfile.intakePercent))));
+        // NamedCommands.registerCommand("BlueLaunchFromCenter", new ParallelCommandGroup(
+        //     new LaunchwithParams(launcher, indexer, 55, 1.9).withTimeout(6), 
+        //     new InstantCommand(() -> intake.setRollerPercent(IntakeProfile.intakePercent))));
+        NamedCommands.registerCommand("LaunchFromMiddle", new LaunchwithParams(launcher, indexer, 55, .4));
+        
         
         autoChooser = AutoBuilder.buildAutoChooser("New Auto");
         SmartDashboard.putData("Auto Mode", autoChooser);
@@ -147,14 +159,14 @@ public class RobotContainer {
         driverController.b()
             .onTrue(new InstantCommand(() -> {this.launcherAngle=0; this.launcherSpeed=0;}));
         driverController.x()
-            .onTrue(new InstantCommand(() -> {this.launcherAngle=0; this.launcherSpeed=75;}));
+            .onTrue(new InstantCommand(() -> {this.launcherAngle=0.9; this.launcherSpeed=55;}));
 
 
         // intake stuff
         driverController.leftTrigger(0.5)
             .onTrue(new IntakeToPose(intake, IntakeProfile.deployedPose, IntakeProfile.gentleSlot))
-            .whileTrue(new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0))
-            .onFalse (new InstantCommand(() -> intake.setRollerPercent(0.3))); //keeps balls
+            .whileTrue(new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0));
+            //.onFalse (new InstantCommand(() -> intake.setRollerPercent(IntakeProfile.holdPercent))); //keeps balls
         
         driverController.leftBumper()
             .onTrue(new IntakeToPose(intake, IntakeProfile.retractedPose, IntakeProfile.aggressiveSlot))
@@ -168,7 +180,7 @@ public class RobotContainer {
         opController.y()
             .onTrue(new InstantCommand(() -> {BumpLauncerAngle(0.5);}));
         opController.a()
-            .onTrue(new InstantCommand(() -> {BumpLauncerAngle(-0.1);}));
+            .onTrue(new InstantCommand(() -> {BumpLauncerAngle(-0.2);}));
 
         opController.rightTrigger(0.5)
             .whileTrue(new InstantCommand(() -> elevator.setPercent(0.5)))
@@ -178,6 +190,13 @@ public class RobotContainer {
             .onFalse(new InstantCommand(() -> elevator.setPercent(0)));
         opController.start().onTrue(new InstantCommand(() -> elevator.togglBreakMode()));
         opController.rightBumper().whileTrue(new FeedWithSpeeds(indexer, -0.7, -0.7));
+
+      //  hubActiveSoon.onTrue(new InstantCommand(() -> launcher.setFlywheelSpeed(launcherSpeed)));
+
+         TechController.leftTrigger(0.5)
+            .onTrue(new IntakeToPose(intake, IntakeProfile.deployedPose, IntakeProfile.gentleSlot))
+            .whileTrue(new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0))
+            .onFalse (new InstantCommand(() -> intake.setRollerPercent(0.3))); //keeps balls
     }
 
     public Command getAutonomousCommand() {
@@ -245,5 +264,74 @@ public class RobotContainer {
         Rotation2d angleToGoal = new Rotation2d(vectorToGoal - robotPose.getRotation().getRadians());
 
         return new Transform2d(robot2goalTranslation, angleToGoal);        
+    }
+
+    /**
+     * Tells us if the hub is active, or active in earlySeconds. This can be used to let robot warm up its launcher
+     * @param earlySeconds the number of seconds to turn on early
+     * @return true if the hub is active or active in earlySeconds
+     */
+    public boolean isHubActive(double earlySeconds) {
+        // Lovingly stolen (and modified) from wpi-lib: https://docs.wpilib.org/en/stable/docs/yearly-overview/2026-game-data.html
+        earlySeconds = Math.max(0.0, earlySeconds);
+
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+        // If we have no alliance, we cannot be enabled, therefore no hub.
+        if (alliance.isEmpty())
+            return false;
+
+        // Hub is always enabled in autonomous.
+        if (DriverStation.isAutonomousEnabled())
+            return true;
+
+        // At this point, if we're not teleop enabled, there is no hub.
+        if (!DriverStation.isTeleopEnabled())
+            return false;
+
+        // We're teleop enabled, compute.
+        // NOTE: earlySeconds shifts all activation windows earlier in match time.
+        double matchTime = DriverStation.getMatchTime();
+        String gameData = DriverStation.getGameSpecificMessage();
+
+        // If we have no game data, we cannot compute, assume hub is active,
+        // as it's likely early in teleop.
+        if (gameData.isEmpty())
+            return true;
+
+        boolean redInactiveFirst = false;
+        switch (gameData.charAt(0)) {
+            case 'R' -> redInactiveFirst = true;
+            case 'B' -> redInactiveFirst = false;
+            default -> {
+                // If we have invalid game data, assume hub is active.
+                return true;
+            }
+        }
+
+        // Shift 1 is active for blue if red won auto, or red if blue won auto.
+        boolean shift1Active = switch (alliance.get()) {
+            case Red -> !redInactiveFirst;
+            case Blue -> redInactiveFirst;
+        };
+
+        // All shift thresholds are offset earlier by earlySeconds.
+        if (matchTime > 130 - earlySeconds)
+            // Transition shift, hub is active (early if earlySeconds > 0).
+            return true;
+        else if (matchTime > 105 - earlySeconds)
+            // Shift 1 (early if earlySeconds > 0).
+            return shift1Active;
+        else if (matchTime > 80 - earlySeconds)
+            // Shift 2 (early if earlySeconds > 0).
+            return !shift1Active;
+        else if (matchTime > 55 - earlySeconds)
+            // Shift 3 (early if earlySeconds > 0).
+            return shift1Active;
+        else if (matchTime > 30 - earlySeconds)
+            // Shift 4 (early if earlySeconds > 0).
+            return !shift1Active;
+        else
+            // End game, hub always active (also reached earlier if earlySeconds > 0).
+            return true;
     }
 }

@@ -34,15 +34,15 @@
           "data": {
             "commands": [
               {
-                "type": "named",
-                "data": {
-                  "name": "LaunchFromCenter"
-                }
-              },
-              {
                 "type": "path",
                 "data": {
                   "pathName": "Red outpost to ShootPos"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "LaunchFromCenter"
                 }
               }
             ]
@@ -52,6 +52,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Not for comp atp",
   "choreoAuto": false
 }

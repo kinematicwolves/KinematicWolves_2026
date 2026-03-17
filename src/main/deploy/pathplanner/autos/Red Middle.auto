@@ -5,22 +5,15 @@
     "data": {
       "commands": [
         {
-          "type": "parallel",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Blue Middle right to Outpost"
-                }
-              }
-            ]
+            "pathName": "Red Backout"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "LaunchFromCenter"
+            "name": "LaunchFromMiddle"
           }
         }
       ]
