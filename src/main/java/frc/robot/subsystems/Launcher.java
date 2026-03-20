@@ -5,6 +5,7 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -79,6 +80,15 @@ public class Launcher extends SubsystemBase {
         config.Slot0.kP = 0.11; // An error of 1 rps results in 0.11 V output
         // config.Slot0.kI = 0.0;
         // config.Slot0.kD = 0.0;
+
+        // TODO: Tune values
+        // 0) Tune FeedForward (see below)
+        // 1) Disable FeedForward, tune kS (increase until the motor can barely overcome static friction) kS may need to be negative.
+        // 2) Increase kV until the output velocity closely matches the velocity set points.
+        // 3) Increase kP until the output starts to oscillate around the setpoint.
+        // 4) Increase kD as much as possible without introducing jittering to the response.
+        // 5) Re Enable Feed Forward.
+        // 6) kI can be omitted, or left at 0
 
         // Current Limits
         config.CurrentLimits.SupplyCurrentLimit = 20.0;
@@ -187,6 +197,8 @@ public class Launcher extends SubsystemBase {
         SmartDashboard.putNumber("HoodTarget [Rotations]", this.hoodPIDController.getSetpoint());
         SmartDashboard.putNumber("LauncherSpeed [RPS]",    this.launcherMotor1.getVelocity().getValueAsDouble());
         SmartDashboard.putBoolean("LauncherAtSpeed",       this.flywheelAtSpeed());
+        SmartDashboard.putNumber("LauncherMotor1Current",  this.launcherMotor1.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("LauncherMotor2Current",  this.launcherMotor2.getStatorCurrent().getValueAsDouble());
     }
 
     /* Public functions for commands */
@@ -203,7 +215,15 @@ public class Launcher extends SubsystemBase {
      * @param speed
      */
     public void setFlywheelSpeed(double speed) {
-        this.launcherMotor1.setControl(new VelocityVoltage(speed));
+        // TODO: Change feed forward value until the launcher motor achieves the default lauch speed on its own without any kP, etc.
+        this.launcherMotor1.setControl(new VelocityVoltage(speed).withEnableFOC(true).withFeedForward(0.0));
+    }
+
+    /**
+     * Turns off the flywheel by allowing it to coast out to 0.
+     */
+    public void turnFlywheelOff() {
+        this.launcherMotor1.setControl(new CoastOut());
     }
 
     /**

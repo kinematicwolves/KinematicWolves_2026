@@ -147,7 +147,7 @@ public class RobotContainer {
             ));
 
         driverController.b()
-            .onTrue(new InstantCommand(() -> {this.launcherAngle=0; this.launcherSpeed=0;}));
+            .onTrue(new InstantCommand(() -> this.launcher.turnFlywheelOff()));
         driverController.x()
             .onTrue(new InstantCommand(() -> {this.launcherAngle=1.5; this.launcherSpeed=65;}));
 
