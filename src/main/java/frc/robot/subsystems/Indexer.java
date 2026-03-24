@@ -8,6 +8,7 @@ import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkLowLevel;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
@@ -18,50 +19,56 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IndexerProfile;
 
 public class Indexer extends SubsystemBase {
-    /** Creates a new Indexer. */
-    // Step one, create all the objects we need
+
+    // --- Hardware ---
     private final SparkMax kickerMotor = new SparkMax(IndexerProfile.kickerMotorCanID, SparkLowLevel.MotorType.kBrushless);
     private final TalonSRX roller      = new TalonSRX(IndexerProfile.rollerMotorCanID);
 
     public Indexer() {
         configureKickerMotor();
+        configureRollerMotor();
     }
 
     private void configureKickerMotor() {
-        // https://docs.revrobotics.com/brushless/spark-max/parameters
-        // the spark max is configured differently than talon fx motors
         SparkMaxConfig config = new SparkMaxConfig();
-
-        // first, we clear the current parameters
-        this.kickerMotor.configure(config, ResetMode.kResetSafeParameters, null);
 
         // Current Limits
         config.smartCurrentLimit(30);
 
-        //Neutral Mode
+        // Neutral Mode & Direction
         config.idleMode(IdleMode.kCoast); 
-        
-        // Setting the motor direction
         config.inverted(true);
 
-        //set the pid gains
+        // PID & Feedforward for Velocity Control
         config.closedLoop
-        .p(1)
-        .i(0.0)
-        .d(0.0);
+            .p(0.0001, ClosedLoopSlot.kSlot0) // TODO: Tune this. P should be very small for velocity!
+            .i(0.0, ClosedLoopSlot.kSlot0)
+            .d(0.0, ClosedLoopSlot.kSlot0);
         
-        // finally, we apply our config to as persistent parameters
-        this.kickerMotor.configure(config, null, PersistMode.kPersistParameters);
+        // Apply the config ONCE, resetting old parameters and saving the new ones
+        this.kickerMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    }
+
+    private void configureRollerMotor() {
+        // Factory default to clear any old settings
+        this.roller.configFactoryDefault();
+        
+        // Coast mode prevents game pieces from getting stuck
+        this.roller.setNeutralMode(com.ctre.phoenix.motorcontrol.NeutralMode.Coast);
+        
+        // Protect the 775 motor!
+        this.roller.configContinuousCurrentLimit(20);
+        this.roller.enableCurrentLimit(true);
     }
 
     @Override
     public void periodic() {
-        // This method will be called once per scheduler run
-        SmartDashboard.putNumber("KickerVelocity[RPM]", kickerMotor.getEncoder().getVelocity());
+        SmartDashboard.putNumber("Kicker Velocity [RPM]", kickerMotor.getEncoder().getVelocity());
+        SmartDashboard.putNumber("Indexer Roller Current", roller.getStatorCurrent());
     }
 
     /**
-     * Sets the speeed of the motor in closed loop mode
+     * Sets the speed of the motor in closed loop mode
      * @param speed the speed for the motor, rpm
      */
     public void setKickerSpeed(double speed) {
@@ -69,7 +76,7 @@ public class Indexer extends SubsystemBase {
     }
 
     /**
-     * sets the speed of the motor in open loop mode
+     * Sets the speed of the motor in open loop mode
      * @param percent the speed for the motor, -1 to 1
      */
     public void setKickerPercent(double percent) {
@@ -77,7 +84,7 @@ public class Indexer extends SubsystemBase {
     }  
 
     /**
-     * Tets the speed of the roller in open-loop-mode
+     * Sets the speed of the roller in open-loop-mode
      * @param percent the speed for the motor, -1 to 1
      */
     public void setRollerPercent(double percent) {

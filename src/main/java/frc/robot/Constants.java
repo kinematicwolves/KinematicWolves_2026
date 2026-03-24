@@ -8,6 +8,7 @@ import com.ctre.phoenix6.signals.RGBWColor;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import frc.robot.utils.CANdleSegment;
 
 /** Add your docs here. */
 public class Constants {

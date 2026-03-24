@@ -17,22 +17,27 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+
 import frc.robot.Constants.IntakeProfile;
 import frc.robot.Constants.LauncherProfile;
+import frc.robot.commands.AutoShoot;
 import frc.robot.commands.IntakeToPose;
 import frc.robot.commands.IntakeWithSpeeds;
 import frc.robot.commands.LaunchFromPose;
@@ -46,11 +51,10 @@ import frc.robot.subsystems.Launcher;
 import frc.robot.subsystems.Lighting;
 
 public class RobotContainer {
-    // this is swerve stuff
-    private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    // --- Swerve Drivetrain Settings ---
+    private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
 
-    /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric fieldCentricDrive = new SwerveRequest.FieldCentric()
         .withDeadband(MaxSpeed * 0.1)
         .withDriveRequestType(DriveRequestType.Velocity);
@@ -60,47 +64,54 @@ public class RobotContainer {
 
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
-    // private final Telemetry logger = new Telemetry(MaxSpeed);
-
+    // --- Controllers ---
     public final CommandXboxController driverController = new CommandXboxController(0);   
     public final CommandXboxController opController     = new CommandXboxController(1);
 
+    // --- Subsystems ---
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-
-    // subsystems
     public final Launcher launcher = new Launcher();
     public final Intake   intake   = new Intake();
     public final Indexer  indexer  = new Indexer();
     public final Lighting lighting = new Lighting();
 
-    /* Path follower */
+    // --- Path Follower ---
     private final SendableChooser<Command> autoChooser;
 
-    /* custom triggers */
-    private Trigger hubActiveSoon = new Trigger(() -> isHubActive(5) == true); // true when the hub is active in 5 seconds
-    private Trigger hubActive     = new Trigger(() -> isHubActive(0) == true); // true when the hub is active
+    // --- Custom Triggers ---
+    private Trigger hubActiveSoon = new Trigger(() -> isHubActive(5) == true);
+    private Trigger hubActive     = new Trigger(() -> isHubActive(0) == true);
     
-    /* some variables */
+    // --- State Variables (TODO: Move to Launcher Subsystem later) ---
     public double launcherSpeed = 65;
     public double launcherAngle = 1.5;
 
+    // --- Auto Aim PID ---
+    private final ProfiledPIDController autoAimPid = new ProfiledPIDController(
+        4.0, 0.0, 0.2, // TODO: Tune these! Start with P=4.0, I=0, D=0.2
+        new TrapezoidProfile.Constraints(MaxAngularRate, MaxAngularRate * 2) 
+    );
+
     public RobotContainer() {
-        autoChooser = AutoBuilder.buildAutoChooser("New Auto"); // TODO: choose a default auto that actually exists plz
+        // Prevents the robot from doing a 360 to go from 179 degrees to -179 degrees
+        autoAimPid.enableContinuousInput(-Math.PI, Math.PI); 
+
+        autoChooser = AutoBuilder.buildAutoChooser("New Auto");
         SmartDashboard.putData("Auto Mode", autoChooser);
 
-        // create command for path planner
+        // --- Register PathPlanner Named Commands (Duplicates Removed) ---
         NamedCommands.registerCommand("deployIntake",     new IntakeToPose(intake, IntakeProfile.deployedPose, IntakeProfile.gentleSlot));
         NamedCommands.registerCommand("retractIntake",    new IntakeToPose(intake, IntakeProfile.retractedPose, IntakeProfile.aggressiveSlot));
-        NamedCommands.registerCommand("intakeLemons",     new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0));
+        NamedCommands.registerCommand("ingest",           new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0.6));
+        NamedCommands.registerCommand("launchFromPose",   new LaunchFromPose(drivetrain, launcher, indexer, 0.6, 1));
         NamedCommands.registerCommand("LaunchFromCenter", new LaunchwithParams(launcher, indexer, 65, 1.5));
+        NamedCommands.registerCommand("AutoShoot", new AutoShoot(launcher, indexer, drivetrain));
+        
+        // This command exists in your auto map but might be meant as a duplicate of ingest. 
+        // Keeping it registered here just in case an old auto path uses it.
+        NamedCommands.registerCommand("intakeLemons",     new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0));
 
         configureBindings();
-
-        /* Named commands for path planner here */
-        NamedCommands.registerCommand("deployIntake",   new IntakeToPose(intake, IntakeProfile.deployedPose,  IntakeProfile.gentleSlot));
-        NamedCommands.registerCommand("retractIntake",  new IntakeToPose(intake, IntakeProfile.retractedPose, IntakeProfile.aggressiveSlot));
-        NamedCommands.registerCommand("ingest",         new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0.6));
-        NamedCommands.registerCommand("launchFromPose", new LaunchFromPose(drivetrain, launcher, indexer, 0.6, 1));
 
         // Warmup PathPlanner to avoid Java pauses
         FollowPathCommand.warmupCommand().schedule();
@@ -109,212 +120,179 @@ public class RobotContainer {
     }
 
     private void configureBindings() {
-        // Note that X is defined as forward according to WPILib convention,
-        // and Y is defined as to the left according to WPILib convention.
+        // --- Default Drivetrain Command ---
         drivetrain.setDefaultCommand(
-            // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
                 fieldCentricDrive
-                    .withVelocityX(-driverController.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-driverController.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                    .withVelocityX(-driverController.getLeftY() * MaxSpeed)
+                    .withVelocityY(-driverController.getLeftX() * MaxSpeed)
+                    .withRotationalRate(-driverController.getRightX() * MaxAngularRate)
                     .withRotationalDeadband(0.1 * MaxAngularRate)
             )
         );
 
-        // Idle while the robot is disabled. This ensures the configured
-        // neutral mode is applied to the drive motors while disabled.
+        // Idle while disabled to apply neutral mode
         final var idle = new SwerveRequest.Idle();
         RobotModeTriggers.disabled().whileTrue(
             drivetrain.applyRequest(() -> idle).ignoringDisable(true)
         );
 
         driverController.a().whileTrue(drivetrain.applyRequest(() -> brake));
-
         driverController.y().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-        // drivetrain.registerTelemetry(logger::telemeterize);
-
-        /* Driver controls */
-        // launcher stuff
+        /* --- DRIVER CONTROLS --- */
+        
+        // Launcher & Auto-Aim (Overhauled)
         driverController.rightTrigger(0.5)
             .onTrue(new LaunchFromSettings(launcher, indexer, this, driverController.getHID()))
             .whileTrue(
-                drivetrain.applyRequest(() -> robotCentricDrive
-                    .withVelocityX(-(robot2goal().getTranslation().getNorm() - LauncherProfile.idealLaunchDist) * 2 * MaxSpeed)
-                    .withVelocityY(driverController.getLeftX() * MaxSpeed)
-                    .withRotationalRate((robot2goal().getRotation().getDegrees()) * 0.01 * MaxAngularRate)
-            ));
+                drivetrain.applyRequest(() -> {
+                    double forward = -driverController.getLeftY() * MaxSpeed;
+                    double strafe = -driverController.getLeftX() * MaxSpeed;
 
-        driverController.b()
-            .onTrue(new InstantCommand(() -> this.launcher.turnFlywheelOff()));
-        driverController.x()
-            .onTrue(new InstantCommand(() -> {this.launcherAngle=1.5; this.launcherSpeed=65;}));
+                    // Calculate rotational speed to snap to target
+                    double targetAngleRadians = getAngleToGoal().getRadians();
+                    double currentAngleRadians = drivetrain.getState().Pose.getRotation().getRadians();
+                    
+                    double rotationRate = autoAimPid.calculate(currentAngleRadians, targetAngleRadians);
 
+                    return fieldCentricDrive
+                        .withVelocityX(forward)
+                        .withVelocityY(strafe)
+                        .withRotationalRate(rotationRate);
+                })
+            );
 
-        // intake stuff
-        driverController.leftTrigger(0.5)
-            .onTrue(new IntakeToPose(intake, IntakeProfile.deployedPose, IntakeProfile.gentleSlot))
-            .whileTrue(new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0));
+        driverController.b().onTrue(new InstantCommand(() -> this.launcher.turnFlywheelOff()));
+        driverController.x().onTrue(new InstantCommand(() -> {this.launcherAngle=1.5; this.launcherSpeed=65;}));
+
+        // Intake (Fixed Command Conflicts using Commands.parallel)
+        driverController.leftTrigger(0.5).whileTrue(
+            Commands.parallel(
+                new IntakeToPose(intake, IntakeProfile.deployedPose, IntakeProfile.gentleSlot),
+                new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0)
+            )
+        );
         
-        driverController.leftBumper()
-            .onTrue(new IntakeToPose(intake, IntakeProfile.retractedPose, IntakeProfile.aggressiveSlot))
-            .whileTrue(new IntakeWithSpeeds(intake, indexer, IntakeProfile.retractPrecent, 0)); // helps the intake go up
+        driverController.leftBumper().whileTrue(
+            Commands.parallel(
+                new IntakeToPose(intake, IntakeProfile.retractedPose, IntakeProfile.aggressiveSlot),
+                new IntakeWithSpeeds(intake, indexer, IntakeProfile.retractPrecent, 0)
+            )
+        );
         
-        /* operator controls */
-        opController.povUp()
-            .onTrue(new InstantCommand(() -> {BumpLauncherSpeed(10);}));
-        opController.povDown()
-            .onTrue(new InstantCommand(() -> {BumpLauncherSpeed(-1);}));
-         opController.y()
-            .onTrue(new InstantCommand(() -> {BumpLauncherAngle(1);}));
-        opController.a()
-            .onTrue(new InstantCommand(() -> {BumpLauncherAngle(-0.25);}));
+        /* --- OPERATOR CONTROLS --- */
+        opController.povUp().onTrue(new InstantCommand(() -> BumpLauncherSpeed(10)));
+        opController.povDown().onTrue(new InstantCommand(() -> BumpLauncherSpeed(-1)));
+        opController.y().onTrue(new InstantCommand(() -> BumpLauncherAngle(1)));
+        opController.a().onTrue(new InstantCommand(() -> BumpLauncherAngle(-0.25)));
+
+        // Driver presses right bumper to automatically spool, feed, and fire based on their position
+        driverController.rightBumper().onTrue(new AutoShoot(launcher, indexer, drivetrain)
+);
     }
 
     public Command getAutonomousCommand() {
-        /* Run the path selected from the auto chooser */
         return autoChooser.getSelected();
     }
 
-    public void BumpLauncerSpeed(double percent) {
-        this.launcherSpeed += percent;
-    }
-    public void BumpLauncerAngle(double incrmenent) {
-        this.launcherAngle += incrmenent;
-    }
-
+    // --- Logging & Telemetry ---
     private void setupPathplannerLogging() {
-        // from https://pathplanner.dev/pplib-custom-logging.html
         Field2d field = drivetrain.field2d;
-
-        // this portion is already setup in the command swerve drivetrain
-        // // Logging callback for current robot pose
-        // PathPlannerLogging.setLogCurrentPoseCallback((pose) -> {
-        //     // Do whatever you want with the pose here
-        //     field.setRobotPose(pose);
-        // });
-
-        // Logging callback for target robot pose
         PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
             field.getObject("target pose").setPose(pose);
         });
-
-        // Logging callback for the active path, this is sent as a list of poses
         PathPlannerLogging.setLogActivePathCallback((poses) -> {
             field.getObject("path").setPoses(poses);
         });
     }
 
-    /**
-     * Tells us if the hub is active, or active in earlySeconds. This can be used to let robot warm up its launcher
-     * @param earlySeconds the number of seconds to turn on early
-     * @return true if the hub is active or active in earlySeconds
-     */
-    public boolean isHubActive(double earlySeconds) {
-        // Lovingly stolen (and modified) from wpi-lib: https://docs.wpilib.org/en/stable/docs/yearly-overview/2026-game-data.html
-        earlySeconds = Math.max(0.0, earlySeconds);
-
-        Optional<Alliance> alliance = DriverStation.getAlliance();
-        // If we have no alliance, we cannot be enabled, therefore no hub.
-        if (alliance.isEmpty())
-            return false;
-
-        // Hub is always enabled in autonomous.
-        if (DriverStation.isAutonomousEnabled())
-            return true;
-
-        // At this point, if we're not teleop enabled, there is no hub.
-        if (!DriverStation.isTeleopEnabled())
-            return false;
-
-        // We're teleop enabled, compute.
-        // NOTE: earlySeconds shifts all activation windows earlier in match time.
-        double matchTime = DriverStation.getMatchTime();
-        String gameData = DriverStation.getGameSpecificMessage();
-
-        // If we have no game data, we cannot compute, assume hub is active,
-        // as it's likely early in teleop.
-        if (gameData.isEmpty())
-            return true;
-
-        boolean redInactiveFirst = false;
-        switch (gameData.charAt(0)) {
-            case 'R' -> redInactiveFirst = true;
-            case 'B' -> redInactiveFirst = false;
-            default -> {
-                // If we have invalid game data, assume hub is active.
-                return true;
-            }
-        }
-
-        // Shift 1 is active for blue if red won auto, or red if blue won auto.
-        boolean shift1Active = switch (alliance.get()) {
-            case Red -> !redInactiveFirst;
-            case Blue -> redInactiveFirst;
-        };
-
-        // All shift thresholds are offset earlier by earlySeconds.
-        if (matchTime > 130 - earlySeconds)
-            // Transition shift, hub is active (early if earlySeconds > 0).
-            return true;
-        else if (matchTime > 105 - earlySeconds)
-            // Shift 1 (early if earlySeconds > 0).
-            return shift1Active;
-        else if (matchTime > 80 - earlySeconds)
-            // Shift 2 (early if earlySeconds > 0).
-            return !shift1Active;
-        else if (matchTime > 55 - earlySeconds)
-            // Shift 3 (early if earlySeconds > 0).
-            return shift1Active;
-        else if (matchTime > 30 - earlySeconds)
-            // Shift 4 (early if earlySeconds > 0).
-            return !shift1Active;
-        else
-            // End game, hub always active (also reached earlier if earlySeconds > 0).
-            return true;
-    }
-
+    // --- State Management Helpers ---
     public void BumpLauncherSpeed(double increment) {
         this.launcherSpeed += increment;
     }
+    
     public void BumpLauncherAngle(double increment) {
         this.launcherAngle += increment;
     }
+    
     public double getLauncherSpeed() {
         return launcherSpeed;
     }
+    
     public double getLauncherAngle() {
         return launcherAngle;
     }
 
     /**
-     * Computes the transform of the robot to the goal, depending on the alliance of the robot
-     * @return robot2goal transform. 
-     * robot2goal.getTranslation() is the xy offset between the robot center and the goal
-     * robot2goal.getRotation() is the angular offset between the robot's current direction and the line from the robot position to the goal.
-     * robot2goal.getTranslation().getNorm() is the distance to the goal.
+     * Computes the exact angle required to point the robot at the alliance goal
      */
-    public Transform2d robot2goal() {
-        // get the current robot position from the drivetrain
+    public Rotation2d getAngleToGoal() {
         Pose2d robotPose = drivetrain.getState().Pose;
         
-        // lookup the goal based on which alliance we are, compute the transform to that goal
+        Translation2d goalTranslation = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red 
+            ? LauncherProfile.redHub.getTranslation() 
+            : LauncherProfile.blueHub.getTranslation();
+
+        // Subtracting the robot's position from the goal's position creates a vector pointing exactly at the goal
+        Translation2d robotToGoalVector = goalTranslation.minus(robotPose.getTranslation());
+        
+        // Extract the exact angle from that vector
+        return robotToGoalVector.getAngle();        
+    }
+
+    /**
+     * Computes the transform of the robot to the goal, depending on the alliance of the robot
+     */
+    public Transform2d robot2goal() {
+        Pose2d robotPose = drivetrain.getState().Pose;
         Translation2d robot2goalTranslation;
-        if (DriverStation.getAlliance().orElse(Alliance.Blue) ==  Alliance.Blue)
+        
+        if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue) {
             robot2goalTranslation = new Transform2d(LauncherProfile.blueHub, robotPose).getTranslation();
-        else
+        } else {
             robot2goalTranslation = new Transform2d(LauncherProfile.redHub, robotPose).getTranslation();
+        }
 
-        // the rotation of the goal is arbitrary, we want to find the angle from the robot's current direction to the goal
-
-        // This this gets us the angle of the vector from the robot to the goal, in field coordinates
         double vectorToGoal = Math.atan2(robot2goalTranslation.getY(), robot2goalTranslation.getX());
-
-        // the value we care about is the difference between the current robot angle and the angle to the goal.
-        // That is how much the robot must rotate by
         Rotation2d angleToGoal = new Rotation2d(vectorToGoal - robotPose.getRotation().getRadians());
 
         return new Transform2d(robot2goalTranslation, angleToGoal);        
+    }
+
+    /**
+     * Tells us if the hub is active, or active in earlySeconds.
+     */
+    public boolean isHubActive(double earlySeconds) {
+        earlySeconds = Math.max(0.0, earlySeconds);
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+        
+        if (alliance.isEmpty()) return false;
+        if (DriverStation.isAutonomousEnabled()) return true;
+        if (!DriverStation.isTeleopEnabled()) return false;
+
+        double matchTime = DriverStation.getMatchTime();
+        String gameData = DriverStation.getGameSpecificMessage();
+
+        if (gameData.isEmpty()) return true;
+
+        boolean redInactiveFirst = false;
+        switch (gameData.charAt(0)) {
+            case 'R' -> redInactiveFirst = true;
+            case 'B' -> redInactiveFirst = false;
+            default -> { return true; }
+        }
+
+        boolean shift1Active = switch (alliance.get()) {
+            case Red -> !redInactiveFirst;
+            case Blue -> redInactiveFirst;
+        };
+
+        if (matchTime > 130 - earlySeconds) return true;
+        else if (matchTime > 105 - earlySeconds) return shift1Active;
+        else if (matchTime > 80 - earlySeconds) return !shift1Active;
+        else if (matchTime > 55 - earlySeconds) return shift1Active;
+        else if (matchTime > 30 - earlySeconds) return !shift1Active;
+        else return true;
     }
 }
