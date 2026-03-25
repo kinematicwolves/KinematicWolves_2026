@@ -5,6 +5,8 @@ import java.util.Optional;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -16,28 +18,79 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.VisionProfile;
 import frc.robot.Constants.FieldConstants;
 
-public class VisionSubsystem extends SubsystemBase {
+public class Vision extends SubsystemBase {
 
     private final NetworkTable m_limelightTable;
-    private final PIDController m_aimController;
-    private final Swerve m_swerve; // We need Swerve to update Odometry
+    private final Swerve m_swerve;
 
-    public VisionSubsystem(Swerve swerve) {
+    // Controller for Limelight Crosshair (Fallback)
+    private final PIDController m_limelightAimController;
+    
+    // Controller for Odometry/Pose Aiming (Primary)
+    private final PIDController m_odometryAimController;
+
+    public Vision(Swerve swerve) {
         m_swerve = swerve;
         m_limelightTable = NetworkTableInstance.getDefault().getTable(VisionProfile.kLimelightName);
         
-        m_aimController = new PIDController(
+        // Setup Limelight Fallback Controller
+        m_limelightAimController = new PIDController(
             VisionProfile.kP_Align, 
             VisionProfile.kI_Align, 
             VisionProfile.kD_Align
         );
-        
-        m_aimController.setSetpoint(0.0);
-        m_aimController.setTolerance(VisionProfile.kAlignToleranceDegrees);
+        m_limelightAimController.setSetpoint(0.0);
+        m_limelightAimController.setTolerance(VisionProfile.kAlignToleranceDegrees);
+
+        // Setup Odometry Controller (Previously in RobotContainer)
+        // TODO: Move these PID constants to VisionProfile in Constants.java
+        m_odometryAimController = new PIDController(5.0, 0.0, 0.1); 
+        m_odometryAimController.enableContinuousInput(-Math.PI, Math.PI);
+        m_odometryAimController.setTolerance(Units.degreesToRadians(2.0));
     }
 
     /* ========================================================= */
-    /* RAW LIMELIGHT DATA                                        */
+    /* POSE-BASED SCORING (PRIMARY METHOD)                       */
+    /* ========================================================= */
+
+    /** Helper: Which Hub are we shooting at? */
+    public Translation2d getTargetHub() {
+        boolean isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
+        return isRed ? FieldConstants.kRedHub : FieldConstants.kBlueHub;
+    }
+
+    /** Helper: Calculate distance from Robot Pose to the Hub */
+    public double getOdometryDistanceMeters() {
+        Translation2d robotPos = m_swerve.getPose().getTranslation();
+        return robotPos.getDistance(getTargetHub());
+    }
+
+    /** Helper: Calculate the rotational speed needed to face the Hub */
+    public double getOdometryAimRate() {
+        Translation2d robotPos = m_swerve.getPose().getTranslation();
+        Translation2d target = getTargetHub();
+        
+        // Calculate the angle from the robot to the target
+        Rotation2d targetHeading = target.minus(robotPos).getAngle();
+        
+        // BACKWARDS OFFSET: Because your shooter is on the BACK
+        targetHeading = targetHeading.plus(Rotation2d.fromDegrees(180));
+
+        // Calculate the PID output based on our current rotation vs target rotation
+        return m_odometryAimController.calculate(
+            m_swerve.getPose().getRotation().getRadians(), 
+            targetHeading.getRadians()
+        );
+    }
+
+    /** Checks if Odometry rotation is locked onto the target */
+    public boolean isOdometryAligned() {
+        return m_odometryAimController.atSetpoint();
+    }
+
+
+    /* ========================================================= */
+    /* RAW LIMELIGHT DATA & FALLBACKS                            */
     /* ========================================================= */
 
     public boolean hasTarget() {
@@ -47,10 +100,6 @@ public class VisionSubsystem extends SubsystemBase {
     public double getTx() {
         return m_limelightTable.getEntry("tx").getDouble(0.0);
     }
-
-    /* ========================================================= */
-    /* PROCESSED DATA FOR SCORING (Keep as Fallbacks)            */
-    /* ========================================================= */
 
     public double getDistanceMeters_Fallback() {
         if (!hasTarget()) return 0.0;
@@ -62,8 +111,9 @@ public class VisionSubsystem extends SubsystemBase {
 
     public double getSteeringFeedback_Fallback() {
         if (!hasTarget()) return 0.0; 
-        return -m_aimController.calculate(getTx());
+        return -m_limelightAimController.calculate(getTx());
     }
+
 
     /* ========================================================= */
     /* MEGATAG ODOMETRY UPDATES                                  */
@@ -72,17 +122,13 @@ public class VisionSubsystem extends SubsystemBase {
     private void updateOdometry() {
         if (!hasTarget()) return;
 
-        // Limelight's botpose_wpiblue array gives us: [x, y, z, roll, pitch, yaw, latency_ms]
         double[] botpose = m_limelightTable.getEntry("botpose_wpiblue").getDoubleArray(new double[7]);
         
         if (botpose.length == 7) {
             Pose2d visionPose = new Pose2d(botpose[0], botpose[1], Rotation2d.fromDegrees(botpose[5]));
-            
-            // Calculate exact timestamp by subtracting Limelight latency from the current FPGA time
             double latencySeconds = botpose[6] / 1000.0;
             double timestamp = Timer.getFPGATimestamp() - latencySeconds;
 
-            // Feed the vision data to the Swerve Drive!
             m_swerve.addVisionMeasurement(visionPose, timestamp);
         }
     }
@@ -96,9 +142,14 @@ public class VisionSubsystem extends SubsystemBase {
             m_limelightTable.getEntry("alliance").setDouble(allianceValue);
         }
 
-        // Continually update our Swerve Odometry using the Limelight Pose
+        // Continually update our Swerve Odometry
         updateOdometry();
 
+        // TELEMETRY (Use these for your Tuning!)
+        SmartDashboard.putNumber("Shooting/Odometry Distance", getOdometryDistanceMeters());
+        SmartDashboard.putBoolean("Shooting/Is Aligned", isOdometryAligned());
+        
+        // Fallback telemetry
         SmartDashboard.putBoolean("Vision/Has Target", hasTarget());
         SmartDashboard.putNumber("Vision/Fallback Distance", getDistanceMeters_Fallback());
     }

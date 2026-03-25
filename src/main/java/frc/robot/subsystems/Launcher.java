@@ -18,6 +18,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.LauncherProfile;
 import frc.robot.generated.TunerConstants;
@@ -148,10 +149,36 @@ public class Launcher extends SubsystemBase {
                .withName("HubShot");
     }
 
+    public static Command closeShotCommand(Launcher launcher, Indexer indexer) {
+        return Commands.parallel(
+            launcher.hubShotCommand(),
+            Commands.waitUntil(launcher::isReadyToFire)
+                    .andThen(indexer.feedShooterCommand())
+        ).withName("FenderShotSequence");
+    }
+
+    /**
+     * Reads RPS and Hood setpoints directly from the SmartDashboard.
+     * Great for finding the "Goldilocks" settings at a new distance.
+     */
+    public Command technicianTuningCommand() {
+        return run(() -> {
+            double rps = SmartDashboard.getNumber("Tech/Target RPS", 0.0);
+            double hood = SmartDashboard.getNumber("Tech/Target Hood", 0.0);
+            runShooter(rps, hood);
+        }).finallyDo(this::stop).withName("TechnicianTuning");
+    }
+
     @Override
     public void periodic() {
+        // Standard Telemetry
         SmartDashboard.putNumber("Launcher/Left RPS", m_leftFlywheel.getVelocity().getValueAsDouble());
         SmartDashboard.putNumber("Launcher/Hood Pos", m_hood.getEncoder().getPosition());
         SmartDashboard.putBoolean("Launcher/ReadyToFire", isReadyToFire());
+
+        // --- TECHNICIAN INPUTS ---
+        // setDefaultNumber only sets the value if the key doesn't exist yet (preserves what the tech typed)
+        SmartDashboard.setDefaultNumber("Technician/Target RPS", 0.0);
+        SmartDashboard.setDefaultNumber("Technician/Target Hood", 0.0);
     }
 }

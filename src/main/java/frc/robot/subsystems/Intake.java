@@ -12,6 +12,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeProfile;
 import frc.robot.generated.TunerConstants;
@@ -75,6 +76,14 @@ public class Intake extends SubsystemBase {
     // Factory for roller control
     public Command runRollersCommand(double volts) {
         return run(() -> setRollerVoltage(volts)).finallyDo(() -> setRollerVoltage(0));
+    }
+
+    public Command deploySequenceCommand() {
+        return this.setPivotCommand(IntakeProfile.kPivotDownPosition)
+            .alongWith(
+                Commands.waitUntil(this::isIntakeDown)
+                .andThen(this.runRollersCommand(IntakeProfile.kRollerVoltage))
+            ).withName("IntakeDeploySequence");
     }
 
     // Separate Exhaust Command

@@ -30,7 +30,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+
 import frc.robot.Constants.SwerveProfile;
+import frc.robot.Telemetry; // <-- Imported your new Telemetry class
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
 /**
@@ -41,6 +43,9 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     private static final double kSimLoopPeriod = 0.004; // 4 ms
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
+
+    // <-- Create the logger using your max speed profile!
+    private final Telemetry m_logger = new Telemetry(SwerveProfile.kMaxSpeed);
 
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -88,18 +93,27 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         super(drivetrainConstants, modules);
         if (Utils.isSimulation()) startSimThread();
         configureAutoBuilder();
+        
+        // <-- Register the telemetry callback
+        this.registerTelemetry(m_logger::telemeterize); 
     }
 
     public Swerve(SwerveDrivetrainConstants drivetrainConstants, double odometryUpdateFrequency, SwerveModuleConstants<?, ?, ?>... modules) {
         super(drivetrainConstants, odometryUpdateFrequency, modules);
         if (Utils.isSimulation()) startSimThread();
         configureAutoBuilder();
+        
+        // <-- Register the telemetry callback
+        this.registerTelemetry(m_logger::telemeterize); 
     }
 
     public Swerve(SwerveDrivetrainConstants drivetrainConstants, double odometryUpdateFrequency, Matrix<N3, N1> odometryStandardDeviation, Matrix<N3, N1> visionStandardDeviation, SwerveModuleConstants<?, ?, ?>... modules) {
         super(drivetrainConstants, odometryUpdateFrequency, odometryStandardDeviation, visionStandardDeviation, modules);
         if (Utils.isSimulation()) startSimThread();
         configureAutoBuilder();
+        
+        // <-- Register the telemetry callback
+        this.registerTelemetry(m_logger::telemeterize); 
     }
 
     private void configureAutoBuilder() {
