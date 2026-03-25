@@ -243,8 +243,8 @@ public class RobotContainer {
             boolean isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
             
             // TODO: Update these exact X/Y tower coordinates
-            Pose2d redTowerPose = new Pose2d(14.0, 5.0, Rotation2d.fromDegrees(0));
-            Pose2d blueTowerPose = new Pose2d(2.5, 5.0, Rotation2d.fromDegrees(180));
+            Pose2d redTowerPose = new Pose2d(15.902, 4.059, Rotation2d.fromDegrees(180));
+            Pose2d blueTowerPose = new Pose2d(1.648, 4.059, Rotation2d.fromDegrees(0));
             
             // Select target based on alliance
             Pose2d targetPose = isRed ? redTowerPose : blueTowerPose;
