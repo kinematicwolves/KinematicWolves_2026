@@ -1,171 +1,157 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsystems;
 
+import java.util.function.DoubleSupplier; // Added for continuous aiming
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.CoastOut;
-import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
-import com.revrobotics.spark.ClosedLoopSlot;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkLowLevel;
+import com.revrobotics.spark.FeedbackSensor;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
-import edu.wpi.first.math.interpolation.InverseInterpolator;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.LauncherProfile;
 import frc.robot.generated.TunerConstants;
-import frc.robot.utils.ShotParams;
 
 public class Launcher extends SubsystemBase {
 
-    // --- Hardware ---
-    private final TalonFX launcherMotor1 = new TalonFX(LauncherProfile.launcherMotor1CanID, TunerConstants.kCANBus);
-    private final TalonFX launcherMotor2 = new TalonFX(LauncherProfile.launcherMotor2CanID, TunerConstants.kCANBus);
+    private final TalonFX m_leftFlywheel;
+    private final TalonFX m_rightFlywheel;
+    private final SparkMax m_hood;
 
-    private final SparkMax hoodMotor = new SparkMax(LauncherProfile.hoodMotorCanID, SparkLowLevel.MotorType.kBrushless);
-    private final SparkClosedLoopController hoodPIDController = hoodMotor.getClosedLoopController();
+    // CTRE Velocity Request
+    private final VelocityVoltage m_velocityRequest = new VelocityVoltage(0).withSlot(0);
 
-    // --- State & Filtering ---
-    private final Debouncer debouncer = new Debouncer(0.5);
-    public double speedFudgeFactor = 0.0;
-    public double hoodFudgeFactor = 0.0;
+    // Interpolating Maps
+    private final InterpolatingDoubleTreeMap m_rpmMap = new InterpolatingDoubleTreeMap();
+    private final InterpolatingDoubleTreeMap m_hoodMap = new InterpolatingDoubleTreeMap();
 
-    // --- Shot Logic ---
-    private final InterpolatingTreeMap<Double, ShotParams> shotTable =
-        new InterpolatingTreeMap<>(InverseInterpolator.forDouble(),ShotParams::interpolate) {{
-            // distance [m] → (hood rotations, rps)
-            // TODO: Refine these values on the real field
-            put(1.0, new ShotParams(1.0,  50));
-            put(1.2, new ShotParams(1.5, 100));
-            put(2.0, new ShotParams(2.0, 150));
-            put(2.5, new ShotParams(2.5, 200));
-            put(3.0, new ShotParams(3.0, 300));
-        }};
+    private double m_currentTargetRPS = 0.0;
+    private double m_currentTargetHood = 0.0;
 
     public Launcher() {
-        configureFlywheels();
-        configureHoodMotor();
+        m_leftFlywheel = new TalonFX(LauncherProfile.kFlywheelLeftID, TunerConstants.kCANBus);
+        m_rightFlywheel = new TalonFX(LauncherProfile.kFlywheelRightID, TunerConstants.kCANBus);
+        m_hood = new SparkMax(LauncherProfile.kHoodID, MotorType.kBrushless);
+
+        setupInterpolation();
+        configureHardware();
     }
 
-    private void configureFlywheels() {
-        TalonFXConfiguration config = new TalonFXConfiguration();
+    private void setupInterpolation() {
+        for (double[] data : LauncherProfile.kShootingData) {
+            m_rpmMap.put(data[0], data[1]);
+            m_hoodMap.put(data[0], data[2]);
+        }
+    }
 
-        // PID (Velocity)
-        config.Slot0.kS = 0.1; // Static friction
-        config.Slot0.kV = 0.12; // Velocity feedforward
-        config.Slot0.kP = 0.11; // Error correction
-
-        // Current Limits (Bumped up for Kraken flywheels)
-        config.CurrentLimits.SupplyCurrentLimit = 40.0;
-        config.CurrentLimits.SupplyCurrentLimitEnable = true;
-        config.CurrentLimits.StatorCurrentLimit = 60.0;
-        config.CurrentLimits.StatorCurrentLimitEnable = true;
-
-        // Neutral Mode & Direction
-        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-
-        // Apply to Leader
-        this.launcherMotor1.getConfigurator().apply(config);
-
-        // Apply exactly the same config to Follower
-        this.launcherMotor2.getConfigurator().apply(config);
+    private void configureHardware() {
+        /* --- KRAKEN FLYWHEELS --- */
+        TalonFXConfiguration flyConfig = new TalonFXConfiguration();
+        flyConfig.Slot0.kP = LauncherProfile.kFlywheelP;
+        flyConfig.Slot0.kV = LauncherProfile.kFlywheelV;
+        flyConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         
-        // Set Motor 2 to follow Motor 1
-        this.launcherMotor2.setControl(new Follower(this.launcherMotor1.getDeviceID(), MotorAlignmentValue.Opposed));
+        flyConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        m_leftFlywheel.getConfigurator().apply(flyConfig);
+
+        flyConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        m_rightFlywheel.getConfigurator().apply(flyConfig);
+
+        /* --- HOOD --- */
+        SparkMaxConfig hoodConfig = new SparkMaxConfig();
+        hoodConfig
+            .idleMode(IdleMode.kBrake)
+            .smartCurrentLimit(30); 
+        
+        // Use the imported FeedbackSensor enum directly
+        hoodConfig.closedLoop
+            .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+            .p(LauncherProfile.kHoodP);
+
+        // Apply and Persist
+        m_hood.configure(hoodConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
-    private void configureHoodMotor() {
-        SparkMaxConfig config = new SparkMaxConfig();
+    /* ========================================================= */
+    /* LOGIC METHODS                                             */
+    /* ========================================================= */
 
-        config.smartCurrentLimit(20);
-        config.idleMode(IdleMode.kBrake); 
-        config.inverted(false);
+    public void runShooter(double targetRPS, double targetHoodRotations) {
+        m_currentTargetRPS = targetRPS;
+        m_currentTargetHood = targetHoodRotations;
 
-        // Soft limits to prevent the hood from ripping itself apart
-        config.softLimit.forwardSoftLimit(5);
-        config.softLimit.forwardSoftLimitEnabled(true);
-        config.softLimit.reverseSoftLimit(0);
-        config.softLimit.reverseSoftLimitEnabled(true);
-
-        // Position PID
-        config.closedLoop
-            .p(1.0, ClosedLoopSlot.kSlot0)
-            .i(0.0, ClosedLoopSlot.kSlot0)
-            .d(0.0, ClosedLoopSlot.kSlot0);
-
-        // Apply everything at once and save to flash
-        this.hoodMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
-        // Reset the hood position at code startup
-        this.hoodMotor.getEncoder().setPosition(0);
+        m_leftFlywheel.setControl(m_velocityRequest.withVelocity(targetRPS));
+        m_rightFlywheel.setControl(m_velocityRequest.withVelocity(targetRPS));
+        
+        m_hood.getClosedLoopController().setSetpoint(targetHoodRotations, SparkMax.ControlType.kPosition);
     }
 
-    private double getDistanceToGoal(Pose2d currentPose) {
-        Translation2d goalTranslation = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red 
-            ? LauncherProfile.redHub.getTranslation() 
-            : LauncherProfile.blueHub.getTranslation();
+    public void stop() {
+        m_leftFlywheel.stopMotor();
+        m_rightFlywheel.stopMotor();
+        m_hood.stopMotor();
 
-        return currentPose.getTranslation().getDistance(goalTranslation);
+        // Reset targets when stopped so isReadyToFire doesn't return true accidentally
+        m_currentTargetRPS = 0.0; 
+        m_currentTargetHood = 0.0;
+    }
+
+    /**
+     * Checks if the shooter is rev'd up and the hood is in position based on the LIVE target.
+     */
+    public boolean isReadyToFire() {
+        if (m_currentTargetRPS == 0.0) return false; // Not trying to shoot
+
+        double leftErr = Math.abs(m_leftFlywheel.getVelocity().getValueAsDouble() - m_currentTargetRPS);
+        double hoodErr = Math.abs(m_hood.getEncoder().getPosition() - m_currentTargetHood);
+        return (leftErr < LauncherProfile.kRPSTolerance) && (hoodErr < LauncherProfile.kHoodTolerance);
+    }
+
+    /* ========================================================= */
+    /* COMMAND FACTORIES                                         */
+    /* ========================================================= */
+
+    /**
+     * Takes a distance supplier so the RPS and Angle update LIVE as the robot drives.
+     */
+    public Command continuousAimCommand(DoubleSupplier distanceMetersSupplier) {
+        return run(() -> {
+            double distance = distanceMetersSupplier.getAsDouble();
+            if (distance > 0.1) { // If we have a valid target
+                double rps = m_rpmMap.get(distance);
+                double hood = m_hoodMap.get(distance);
+                runShooter(rps, hood);
+            } else {
+                // Default to a known safe shot if vision drops
+                runShooter(m_rpmMap.get(1.0), m_hoodMap.get(1.0));
+            }
+        }).finallyDo(this::stop).withName("ContinuousAim");
+    }
+
+    /**
+     * Fallback "Hub Shot" manually forced by the driver.
+     */
+    public Command hubShotCommand() {
+        // Pulls the 1.0 meter mapped values
+        return run(() -> runShooter(m_rpmMap.get(1.0), m_hoodMap.get(1.0)))
+               .finallyDo(this::stop)
+               .withName("HubShot");
     }
 
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("HoodPose [Rotations]",   this.hoodMotor.getEncoder().getPosition());
-        SmartDashboard.putBoolean("HoodAtSetPoint",        this.hoodIsAtSetpoint());
-        SmartDashboard.putNumber("LauncherSpeed [RPS]",    this.launcherMotor1.getVelocity().getValueAsDouble());
-        SmartDashboard.putBoolean("LauncherAtSpeed",       this.flywheelAtSpeed());
-    }
-
-    /* --- Public Commands --- */
-
-    public void setFlywheelPercent(double percent) {
-        this.launcherMotor1.set(percent);
-    }
-
-    public void setFlywheelSpeed(double speed) {
-        this.launcherMotor1.setControl(new VelocityVoltage(speed).withEnableFOC(true));
-    }
-
-    public void turnFlywheelOff() {
-        this.launcherMotor1.setControl(new CoastOut());
-    }
-
-    public boolean flywheelAtSpeed() {
-        return Math.abs(this.launcherMotor1.getClosedLoopError().getValueAsDouble()) < LauncherProfile.launcherTolerance;
-    }
-
-    public void setHoodPosition(double rotations) {
-        this.hoodPIDController.setSetpoint(rotations, SparkMax.ControlType.kPosition);
-    }
-
-    public boolean hoodIsAtSetpoint() {
-        return this.debouncer.calculate(Math.abs(this.hoodMotor.getEncoder().getPosition() - this.hoodPIDController.getSetpoint()) <= 0.1);
-    }
-
-    public void setHoodAndSpeedFromPose(Pose2d currentPose) {
-        double distanceToGoal = this.getDistanceToGoal(currentPose);
-        ShotParams params = this.shotTable.get(distanceToGoal);
-
-        setHoodPosition(params.hoodRotations + hoodFudgeFactor);
-        setFlywheelSpeed(params.rps + speedFudgeFactor);
+        SmartDashboard.putNumber("Launcher/Left RPS", m_leftFlywheel.getVelocity().getValueAsDouble());
+        SmartDashboard.putNumber("Launcher/Hood Pos", m_hood.getEncoder().getPosition());
+        SmartDashboard.putBoolean("Launcher/ReadyToFire", isReadyToFire());
     }
 }
