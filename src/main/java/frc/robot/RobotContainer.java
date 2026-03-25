@@ -6,16 +6,17 @@ import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.IntakeProfile;
 import frc.robot.Constants.SwerveProfile;
 import frc.robot.commands.AimAndShoot;
 import frc.robot.commands.autoCommands.TowerTrajectory;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Launcher;
+import frc.robot.subsystems.Lighting;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.Vision;
 
@@ -31,6 +32,7 @@ public class RobotContainer {
     private final Intake m_intake = new Intake();
     private final Indexer m_indexer = new Indexer();
     private final Launcher m_launcher = new Launcher();
+    private final Lighting m_lighting = new Lighting();
     //private final Climber m_climber = new Climber();
 
     // --- CONTROLLERS ---
@@ -81,6 +83,21 @@ public class RobotContainer {
         // m_climber.setDefaultCommand(m_climber.manualOverrideCommand(
         //     () -> Math.abs(m_operator.getRightY()) > 0.1 ? -m_operator.getRightY() * 12.0 : 0.0
         // ));
+
+        m_lighting.setDefaultCommand(
+            Commands.run(() -> {
+                if (m_launcher.isReadyToFire() && m_vision.isOdometryAligned()) {
+                    // Highest Priority: We are lined up and spun up
+                    m_lighting.setState(Lighting.LEDState.READY_TO_FIRE);
+                } else if (m_vision.hasTarget()) {
+                    // Medium Priority: We see the target but aren't ready to shoot
+                    m_lighting.setState(Lighting.LEDState.HAS_TARGET);
+                } else {
+                    // Lowest Priority: Just driving around
+                    m_lighting.setState(Lighting.LEDState.IDLE);
+                }
+            }, m_lighting).ignoringDisable(true)
+        );
     }
 
     /**
