@@ -4,7 +4,7 @@ import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-
+import frc.robot.Constants.LauncherProfile;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Launcher;
 import frc.robot.subsystems.Swerve;
@@ -42,7 +42,7 @@ public class AimAndShoot {
         // The Firing Sequence (This is our "Deadline")
         Command fireSequence = Commands.sequence(
             Commands.waitUntil(() -> launcher.isReadyToFire() && vision.isOdometryAligned()),
-            indexer.feedShooterCommand().withTimeout(3.0) // Adjust timeout during tuning
+            indexer.feedShooterCommand().withTimeout(LauncherProfile.kAutoShootTimerSec) // Adjust timeout during tuning
         );
 
         // Background Tasks (Aiming and Spooling via Odometry)

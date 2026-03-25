@@ -7,9 +7,9 @@ import edu.wpi.first.math.geometry.Translation2d;
 public final class Constants {
 
     public static final class SwerveProfile {
-    public static final double kMaxSpeed = 5.0; 
-    public static final double kMaxAngularRate = 1.5 * Math.PI;
-    public static final double kSlowTranslationScalar = 0.30; // Shoot while moving speed
+    public static final double kMaxSpeed = 1.2; 
+    public static final double kMaxAngularRate = 0.6 * Math.PI;
+    public static final double kSlowTranslationScalar = 0.25; // Shoot while moving speed
 
     // PathPlanner PID Constants
     public static final PIDConstants kTranslationPID = new PIDConstants(2.5, 0.0, 0.0);
@@ -47,9 +47,9 @@ public final class Constants {
         public static final int kRollerID = 33; 
 
         // Pivot Positions (Motor Rotations, NOT ticks)
-        public static final double kPivotUpPosition = -4.72;
-        public static final double kPivotDownPosition = 0; //
-        public static final double kPivotTolerance = 0.2;
+        public static final double kPivotUpPosition = 0;
+        public static final double kPivotDownPosition = 5.1; //
+        public static final double kPivotTolerance = 0.5;
 
         // Motor Speeds
         public static final double kRollerVoltage = 11; 
@@ -60,7 +60,7 @@ public final class Constants {
         public static final int kRollerCurrentLimit = 40; // Amps
 
         // PID & Motion Magic for Kraken Pivot
-        public static final double kPivotP = 0.1; //TODO: Tune
+        public static final double kPivotP = 0.7; //TODO: Tune
         public static final double kPivotI = 0.0;
         public static final double kPivotD = 0.01;
         public static final double kPivotMaxVelocity = 5; // Rotations per second
@@ -77,13 +77,13 @@ public final class Constants {
         public static final double kHoodTolerance = 0.25; // TODO: Tune (Rotations)
 
         // Hood Config
-        public static final double kHoodP = 0.5; // TODO: Tune
+        public static final double kHoodP = 0.3; // TODO: Tune
         public static final double kHoodMinPosition = 0.0;
         public static final double kHoodMaxPosition = 5; // Total travel rotations
 
         // Flywheel PID
-        public static final double kFlywheelP = 0.7; //TODO: Tune both p and feedfoward
-        public static final double kFlywheelV = 0.12; // Feedforward is key for flywheels
+        public static final double kFlywheelP = 0.8; //TODO: Tune both p and feedfoward
+        public static final double kFlywheelV = 0.2; // Feedforward is key for flywheels
 
         // --- INTERPOLATING TABLE DATA ---
         // Key: Distance (meters), Value: {Flywheel RPS, Hood Rotations}
@@ -93,6 +93,9 @@ public final class Constants {
             {4.0, 75, 1.2},  // Long Range
             {5.5, 90, 2}   // Maximum Distance
         };
+
+        // Timer for auto shoot command for pathplanner
+        public static final double kAutoShootTimerSec = 3.0;
     }
 
     public static final class IndexerProfile {
@@ -104,7 +107,7 @@ public final class Constants {
         public static final double kKickerVoltage = 11.0;
         
         // Reverse/Exhaust Voltages
-        public static final double kReverseVoltage = -6.0;
+        public static final double kReverseVoltage = -8.0;
 
         // Current Limits (Prevents brownouts when rapidly firing)
         public static final int kHopperCurrentLimit = 30; // Amps

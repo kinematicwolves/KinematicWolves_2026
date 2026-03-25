@@ -17,6 +17,7 @@ import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
@@ -32,7 +33,7 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import frc.robot.Constants.SwerveProfile;
-import frc.robot.Telemetry; // <-- Imported your new Telemetry class
+import frc.robot.Telemetry;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
 /**
@@ -44,22 +45,22 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
 
-    // <-- Create the logger using your max speed profile!
     private final Telemetry m_logger = new Telemetry(SwerveProfile.kMaxSpeed);
 
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
     /* Red alliance sees forward as 180 degrees (toward blue alliance wall) */
     private static final Rotation2d kRedAlliancePerspectiveRotation = Rotation2d.k180deg;
-    /* Keep track if we've ever applied the operator perspective before or not */
-    private boolean m_hasAppliedOperatorPerspective = false;
+    
+    // <-- FIX #1: Track the actual alliance, not just a boolean
+    private Alliance m_lastAlliance = null;
 
     /** Swerve request to apply during robot-centric path following */
     private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
 
     /** Standard Teleop Drive Request */
     private final SwerveRequest.FieldCentric m_driveRequest = new SwerveRequest.FieldCentric()
-            .withDeadband(0.1) // Adjust based on max speed/stick drift
+            .withDeadband(0.1) 
             .withRotationalDeadband(0.1);
 
     /* Swerve requests to apply during SysId characterization */
@@ -93,8 +94,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         super(drivetrainConstants, modules);
         if (Utils.isSimulation()) startSimThread();
         configureAutoBuilder();
-        
-        // <-- Register the telemetry callback
         this.registerTelemetry(m_logger::telemeterize); 
     }
 
@@ -102,8 +101,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         super(drivetrainConstants, odometryUpdateFrequency, modules);
         if (Utils.isSimulation()) startSimThread();
         configureAutoBuilder();
-        
-        // <-- Register the telemetry callback
         this.registerTelemetry(m_logger::telemeterize); 
     }
 
@@ -111,8 +108,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         super(drivetrainConstants, odometryUpdateFrequency, odometryStandardDeviation, visionStandardDeviation, modules);
         if (Utils.isSimulation()) startSimThread();
         configureAutoBuilder();
-        
-        // <-- Register the telemetry callback
         this.registerTelemetry(m_logger::telemeterize); 
     }
 
@@ -145,9 +140,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     /* CUSTOM LOGIC: COMMAND FACTORIES FOR DRIVING & SLOW MODE   */
     /* ========================================================= */
 
-    /**
-     * Standard field-oriented drive command.
-     */
     public Command applyDrive(DoubleSupplier velocityX, DoubleSupplier velocityY, DoubleSupplier rotationalRate) {
         return run(() -> this.setControl(
             m_driveRequest
@@ -157,24 +149,15 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         )).withName("StandardDrive");
     }
 
-    /**
-     * Slow mode drive command. Translates at a reduced speed (30%) while aiming.
-     * The rotational rate should be supplied by a PID controller targeting the Limelight tx value.
-     */
     public Command applySlowDrive(DoubleSupplier velocityX, DoubleSupplier velocityY, DoubleSupplier visionRotationalRate) {
         return run(() -> this.setControl(
             m_driveRequest
-                // Scale driver inputs to 30% for fine-tuning positioning
                 .withVelocityX(velocityX.getAsDouble() * SwerveProfile.kSlowTranslationScalar)
                 .withVelocityY(velocityY.getAsDouble() * SwerveProfile.kSlowTranslationScalar)
-                // Pass in the vision PID output for strict rotational locking
                 .withRotationalRate(visionRotationalRate.getAsDouble())
         )).withName("SlowDrive");
     }
 
-    /**
-     * Zeroes the gyroscope. Crucial for field-oriented control.
-     */
     public Command resetHeading() {
         return runOnce(() -> this.seedFieldCentric()).withName("ResetHeading");
     }
@@ -193,16 +176,17 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
 
     @Override
     public void periodic() {
-        if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
-            DriverStation.getAlliance().ifPresent(allianceColor -> {
-                setOperatorPerspectiveForward(
-                    allianceColor == Alliance.Red
-                        ? kRedAlliancePerspectiveRotation
-                        : kBlueAlliancePerspectiveRotation
-                );
-                m_hasAppliedOperatorPerspective = true;
-            });
+        // <-- FIX #1: Only apply the operator perspective when the alliance ACTUALLY changes
+        Optional<Alliance> currentAlliance = DriverStation.getAlliance();
+        if (currentAlliance.isPresent() && currentAlliance.get() != m_lastAlliance) {
+            m_lastAlliance = currentAlliance.get();
+            setOperatorPerspectiveForward(
+                m_lastAlliance == Alliance.Red
+                    ? kRedAlliancePerspectiveRotation
+                    : kBlueAlliancePerspectiveRotation
+            );
         }
+        
         field2d.setRobotPose(this.getState().Pose);
         SmartDashboard.putData("Field", field2d);
     }
@@ -220,7 +204,12 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
 
     @Override
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
-        super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds));
+        // <-- FIX #2: Trust Vision X/Y (0.7), but completely IGNORE Vision Rotation (9999999)
+        super.addVisionMeasurement(
+            visionRobotPoseMeters, 
+            Utils.fpgaToCurrentTime(timestampSeconds),
+            VecBuilder.fill(0.7, 0.7, 9999999) 
+        );
     }
 
     @Override

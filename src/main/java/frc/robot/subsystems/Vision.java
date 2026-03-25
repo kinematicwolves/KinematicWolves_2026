@@ -23,17 +23,16 @@ public class Vision extends SubsystemBase {
     private final NetworkTable m_limelightTable;
     private final Swerve m_swerve;
 
-    // Controller for Limelight Crosshair (Fallback)
     private final PIDController m_limelightAimController;
-    
-    // Controller for Odometry/Pose Aiming (Primary)
     private final PIDController m_odometryAimController;
+
+    // Track if we have synced the gyro to the field yet
+    private boolean m_hasSeededOdometry = false;
 
     public Vision(Swerve swerve) {
         m_swerve = swerve;
         m_limelightTable = NetworkTableInstance.getDefault().getTable(VisionProfile.kLimelightName);
         
-        // Setup Limelight Fallback Controller
         m_limelightAimController = new PIDController(
             VisionProfile.kP_Align, 
             VisionProfile.kI_Align, 
@@ -42,8 +41,6 @@ public class Vision extends SubsystemBase {
         m_limelightAimController.setSetpoint(0.0);
         m_limelightAimController.setTolerance(VisionProfile.kAlignToleranceDegrees);
 
-        // Setup Odometry Controller (Previously in RobotContainer)
-        // TODO: Move these PID constants to VisionProfile in Constants.java
         m_odometryAimController = new PIDController(5.0, 0.0, 0.1); 
         m_odometryAimController.enableContinuousInput(-Math.PI, Math.PI);
         m_odometryAimController.setTolerance(Units.degreesToRadians(2.0));
@@ -53,41 +50,32 @@ public class Vision extends SubsystemBase {
     /* POSE-BASED SCORING (PRIMARY METHOD)                       */
     /* ========================================================= */
 
-    /** Helper: Which Hub are we shooting at? */
     public Translation2d getTargetHub() {
         boolean isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
         return isRed ? FieldConstants.kRedHub : FieldConstants.kBlueHub;
     }
 
-    /** Helper: Calculate distance from Robot Pose to the Hub */
     public double getOdometryDistanceMeters() {
         Translation2d robotPos = m_swerve.getPose().getTranslation();
         return robotPos.getDistance(getTargetHub());
     }
 
-    /** Helper: Calculate the rotational speed needed to face the Hub */
     public double getOdometryAimRate() {
         Translation2d robotPos = m_swerve.getPose().getTranslation();
         Translation2d target = getTargetHub();
         
-        // Calculate the angle from the robot to the target
         Rotation2d targetHeading = target.minus(robotPos).getAngle();
-        
-        // BACKWARDS OFFSET: Because your shooter is on the BACK
         targetHeading = targetHeading.plus(Rotation2d.fromDegrees(180));
 
-        // Calculate the PID output based on our current rotation vs target rotation
         return m_odometryAimController.calculate(
             m_swerve.getPose().getRotation().getRadians(), 
             targetHeading.getRadians()
         );
     }
 
-    /** Checks if Odometry rotation is locked onto the target */
     public boolean isOdometryAligned() {
         return m_odometryAimController.atSetpoint();
     }
-
 
     /* ========================================================= */
     /* RAW LIMELIGHT DATA & FALLBACKS                            */
@@ -114,7 +102,6 @@ public class Vision extends SubsystemBase {
         return -m_limelightAimController.calculate(getTx());
     }
 
-
     /* ========================================================= */
     /* MEGATAG ODOMETRY UPDATES                                  */
     /* ========================================================= */
@@ -122,34 +109,46 @@ public class Vision extends SubsystemBase {
     private void updateOdometry() {
         if (!hasTarget()) return;
 
-        double[] botpose = m_limelightTable.getEntry("botpose_wpiblue").getDoubleArray(new double[7]);
+        // Pull the array, defaulting to an empty array so we don't get null pointer crashes
+        double[] botpose = m_limelightTable.getEntry("botpose_wpiblue").getDoubleArray(new double[0]);
         
-        if (botpose.length == 7) {
+        // FIX: Check for >= 7 so it works with the 11-element arrays in modern Limelight firmware!
+        if (botpose.length >= 7) {
             Pose2d visionPose = new Pose2d(botpose[0], botpose[1], Rotation2d.fromDegrees(botpose[5]));
-            double latencySeconds = botpose[6] / 1000.0;
+            
+            // FIX: Pull exact latency directly from network tables (Pipeline + Capture latency)
+            double tl = m_limelightTable.getEntry("tl").getDouble(0.0);
+            double cl = m_limelightTable.getEntry("cl").getDouble(0.0);
+            double latencySeconds = (tl + cl) / 1000.0;
             double timestamp = Timer.getFPGATimestamp() - latencySeconds;
 
-            m_swerve.addVisionMeasurement(visionPose, timestamp);
+            // Seed Odometry on first detection
+            if (!m_hasSeededOdometry) {
+                m_swerve.resetPose(visionPose);
+                m_hasSeededOdometry = true;
+                System.out.println("SUCCESS: Odometry Seeded from Limelight!");
+            } else {
+                // Now this actually runs!
+                m_swerve.addVisionMeasurement(visionPose, timestamp);
+            }
         }
     }
 
     @Override
     public void periodic() {
-        // Tell Limelight our current Alliance for MegaTag filtering
+        // 'botpose_wpiblue' is permanently locked to the Blue Alliance origin.
+        // It complies natively with PathPlanner and CTRE for the 2026 field.
         Optional<Alliance> alliance = DriverStation.getAlliance();
         if (alliance.isPresent()) {
             double allianceValue = (alliance.get() == Alliance.Red) ? 0.0 : 1.0;
             m_limelightTable.getEntry("alliance").setDouble(allianceValue);
         }
 
-        // Continually update our Swerve Odometry
         updateOdometry();
 
-        // TELEMETRY (Use these for your Tuning!)
         SmartDashboard.putNumber("Shooting/Odometry Distance", getOdometryDistanceMeters());
         SmartDashboard.putBoolean("Shooting/Is Aligned", isOdometryAligned());
         
-        // Fallback telemetry
         SmartDashboard.putBoolean("Vision/Has Target", hasTarget());
         SmartDashboard.putNumber("Vision/Fallback Distance", getDistanceMeters_Fallback());
     }

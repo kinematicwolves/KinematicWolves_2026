@@ -48,7 +48,7 @@ public class RobotContainer {
 
         // Build the auto chooser from PathPlanner
         m_autoChooser = AutoBuilder.buildAutoChooser();
-        SmartDashboard.putData("Blue Middle", m_autoChooser);
+        SmartDashboard.putData("Auto Mode", m_autoChooser);
     }
 
     /**
@@ -72,9 +72,9 @@ public class RobotContainer {
     private void configureDefaultCommands() {
         // DRIVER: Standard Field-Centric Swerve Drive
         m_swerve.setDefaultCommand(m_swerve.applyDrive(
-            () -> -m_driver.getLeftY() * SwerveProfile.kMaxSpeed,
-            () -> -m_driver.getLeftX() * SwerveProfile.kMaxSpeed,
-            () -> -m_driver.getRightX() * SwerveProfile.kMaxAngularRate
+            () -> -m_driver.getLeftY() * SwerveProfile.kMaxSpeed,  // <-- ADD NEGATIVE BACK
+            () -> -m_driver.getLeftX() * SwerveProfile.kMaxSpeed,  // <-- ADD NEGATIVE BACK
+            () -> -m_driver.getRightX() * SwerveProfile.kMaxAngularRate 
         ));
 
         // OPERATOR: Manual Climber Winch Override (Right Stick Y)
@@ -103,7 +103,7 @@ public class RobotContainer {
         /* OPERATOR CONTROLS                         */
         /* ========================================= */
 
-        // LEFT TRIGGER: Intake Deploy Sequence (Now encapsulated in Intake.java!)
+        // LEFT TRIGGER: Intake Deploy Sequence
         m_operator.leftTrigger().whileTrue(m_intake.deploySequenceCommand());
 
         // RIGHT BUMPER: Intake Retract (Stop rollers, pivot up)
@@ -114,12 +114,12 @@ public class RobotContainer {
             m_intake.exhaustCommand().alongWith(m_indexer.reverseIndexerCommand())
         );
 
-        // RIGHT TRIGGER: Shoot (Aim & Shoot) - Uses our dedicated Teleop Command!
+        // RIGHT TRIGGER: Shoot (Aim & Shoot) - Uses our dedicated Teleop Command
         m_operator.rightTrigger().whileTrue(
             AimAndShoot.teleopAimAndShoot(
                 m_swerve, m_vision, m_launcher, m_indexer,
-                () -> -m_driver.getLeftY() * SwerveProfile.kMaxSpeed,
-                () -> -m_driver.getLeftX() * SwerveProfile.kMaxSpeed
+                () -> -m_driver.getLeftY() * SwerveProfile.kMaxSpeed, 
+                () -> -m_driver.getLeftX() * SwerveProfile.kMaxSpeed 
             )
         );
 
@@ -131,11 +131,19 @@ public class RobotContainer {
         // m_operator.a().onTrue(m_climber.climbCommand());
 
         /* ========================================= */
-        /* Technician CONTROLS                         */
+        /* Technician CONTROLS                       */
         /* ========================================= */
 
-        // While the technician holds the A button, the shooter uses the dashboard values
-        m_technician.a().whileTrue(m_launcher.technicianTuningCommand());
+        // While the technician holds the A button, rev the shooter to the tuning targets
+        m_technician.a().whileTrue(m_launcher.tuningCommand());
+
+        // D-Pad UP/DOWN: Adjust RPS by 1.0
+        m_technician.povUp().onTrue(m_launcher.bumpRPSCommand(1.0));
+        m_technician.povDown().onTrue(m_launcher.bumpRPSCommand(-1.0));
+
+        // D-Pad RIGHT/LEFT: Adjust Hood Angle by 0.3 rotations
+        m_technician.povRight().onTrue(m_launcher.bumpHoodCommand(0.3));
+        m_technician.povLeft().onTrue(m_launcher.bumpHoodCommand(-0.3));
     }
 
     public Command getAutonomousCommand() {

@@ -35,8 +35,8 @@ public class TowerTrajectory {
 
             // Define the safe driving speeds for the auto-align
             PathConstraints constraints = new PathConstraints(
-                3.0, // Max Velocity (m/s)
-                2.0, // Max Acceleration (m/s^2)
+                1.5, // Max Velocity (m/s)
+                0.7, // Max Acceleration (m/s^2)
                 Units.degreesToRadians(360), // Max Angular Velocity (rad/s)
                 Units.degreesToRadians(540)  // Max Angular Acceleration (rad/s^2)
             );

@@ -39,6 +39,11 @@ public class Launcher extends SubsystemBase {
     private double m_currentTargetRPS = 0.0;
     private double m_currentTargetHood = 0.0;
 
+    // --- TUNING VARIABLES ---
+    // Set these to a safe starting point (e.g., a short shot)
+    private double m_tuningRPS = 50.0; 
+    private double m_tuningHood = 10.0; 
+
     public Launcher() {
         m_leftFlywheel = new TalonFX(LauncherProfile.kFlywheelLeftID, TunerConstants.kCANBus);
         m_rightFlywheel = new TalonFX(LauncherProfile.kFlywheelRightID, TunerConstants.kCANBus);
@@ -157,16 +162,29 @@ public class Launcher extends SubsystemBase {
         ).withName("FenderShotSequence");
     }
 
-    /**
-     * Reads RPS and Hood setpoints directly from the SmartDashboard.
-     * Great for finding the "Goldilocks" settings at a new distance.
-     */
-    public Command technicianTuningCommand() {
-        return run(() -> {
-            double rps = SmartDashboard.getNumber("Tech/Target RPS", 0.0);
-            double hood = SmartDashboard.getNumber("Tech/Target Hood", 0.0);
-            runShooter(rps, hood);
-        }).finallyDo(this::stop).withName("TechnicianTuning");
+    /* ========================================================= */
+    /* TUNING COMMANDS                                           */
+    /* ========================================================= */
+
+    /** Runs the shooter at the internal tuning setpoints */
+    public Command tuningCommand() {
+        return run(() -> runShooter(m_tuningRPS, m_tuningHood))
+               .finallyDo(this::stop)
+               .withName("DpadTuning");
+    }
+
+    /** Bumps the RPS up or down by a set amount */
+    public Command bumpRPSCommand(double delta) {
+        return Commands.runOnce(() -> {
+            m_tuningRPS += delta;
+        }).ignoringDisable(true).withName("BumpRPS"); // ignoringDisable allows tuning while disabled!
+    }
+
+    /** Bumps the Hood up or down by a set amount */
+    public Command bumpHoodCommand(double delta) {
+        return Commands.runOnce(() -> {
+            m_tuningHood += delta;
+        }).ignoringDisable(true).withName("BumpHood");
     }
 
     @Override
@@ -176,9 +194,8 @@ public class Launcher extends SubsystemBase {
         SmartDashboard.putNumber("Launcher/Hood Pos", m_hood.getEncoder().getPosition());
         SmartDashboard.putBoolean("Launcher/ReadyToFire", isReadyToFire());
 
-        // --- TECHNICIAN INPUTS ---
-        // setDefaultNumber only sets the value if the key doesn't exist yet (preserves what the tech typed)
-        SmartDashboard.setDefaultNumber("Technician/Target RPS", 0.0);
-        SmartDashboard.setDefaultNumber("Technician/Target Hood", 0.0);
+        // Display the live tuning variables so the Tech knows what to write down
+        SmartDashboard.putNumber("Tech/Current Tuning RPS", m_tuningRPS);
+        SmartDashboard.putNumber("Tech/Current Tuning Hood", m_tuningHood);
     }
 }
