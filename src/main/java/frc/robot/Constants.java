@@ -47,13 +47,13 @@ public final class Constants {
         public static final int kRollerID = 33; 
 
         // Pivot Positions (Motor Rotations, NOT ticks)
-        public static final double kPivotUpPosition = 0.0;
-        public static final double kPivotDownPosition = -4.73; // TODO: TUNE THIS: Motor rotations to lower intake
-        public static final double kPivotTolerance = 0.5; // Rotations
+        public static final double kPivotUpPosition = -4.72;
+        public static final double kPivotDownPosition = 0; //
+        public static final double kPivotTolerance = 0.2;
 
         // Motor Speeds
-        public static final double kRollerVoltage = 10.0; 
-        public static final double kExhaustVoltage = 0; // Set voltage if needed
+        public static final double kRollerVoltage = 11; 
+        public static final double kExhaustVoltage = 0; // TODO: Set voltage if needed
 
         // Current Limits
         public static final double kPivotCurrentLimit = 20; // Amps
