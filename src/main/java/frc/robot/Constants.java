@@ -88,10 +88,10 @@ public final class Constants {
         // --- INTERPOLATING TABLE DATA ---
         // Key: Distance (meters), Value: {Flywheel RPS, Hood Rotations}
         public static final double[][] kShootingData = { //TODO: Tune
-            {1.0, 40.0, 5.0},   // Close (Front of hub)
-            {2.5, 55.0, 15.0},  // Mid Range
-            {4.0, 75.0, 28.0},  // Long Range
-            {5.5, 90.0, 40.0}   // Maximum Distance
+            {1.0, 20, 0.1},   // Close (Front of hub)
+            {2.7, 55, 0.9},  // Mid Range
+            {4.0, 75, 1.2},  // Long Range
+            {5.5, 90, 2}   // Maximum Distance
         };
     }
 

@@ -48,7 +48,7 @@ public class RobotContainer {
 
         // Build the auto chooser from PathPlanner
         m_autoChooser = AutoBuilder.buildAutoChooser();
-        SmartDashboard.putData("Auto Mode", m_autoChooser);
+        SmartDashboard.putData("Blue Middle", m_autoChooser);
     }
 
     /**
@@ -131,7 +131,7 @@ public class RobotContainer {
         // m_operator.a().onTrue(m_climber.climbCommand());
 
         /* ========================================= */
-        /* OPERATOR CONTROLS                         */
+        /* Technician CONTROLS                         */
         /* ========================================= */
 
         // While the technician holds the A button, the shooter uses the dashboard values

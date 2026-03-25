@@ -78,12 +78,28 @@ public class Intake extends SubsystemBase {
         return run(() -> setRollerVoltage(volts)).finallyDo(() -> setRollerVoltage(0));
     }
 
+    /**
+     * A unified sequence that safely handles the pivot and rollers 
+     * without conflicting subsystem requirements.
+     */
     public Command deploySequenceCommand() {
-        return this.setPivotCommand(IntakeProfile.kPivotDownPosition)
-            .alongWith(
-                Commands.waitUntil(this::isIntakeDown)
-                .andThen(this.runRollersCommand(IntakeProfile.kRollerVoltage))
-            ).withName("IntakeDeploySequence");
+        return run(() -> {
+            // 1. Always command the pivot to move to the down position
+            // (Note: Replace 'setPivotPosition' with whatever your internal method is actually called)
+            setPivotPosition(IntakeProfile.kPivotDownPosition);
+
+            // 2. Only apply voltage to the rollers IF the intake has physically reached the bottom
+            if (isIntakeDown()) {
+                setRollerVoltage(IntakeProfile.kRollerVoltage);
+            } else {
+                setRollerVoltage(0.0); // Keep them off while traveling
+            }
+        })
+        .finallyDo(() -> {
+            // Safety stop for the rollers when the driver lets go of the trigger
+            setRollerVoltage(0.0);
+        })
+        .withName("IntakeDeploySequence");
     }
 
     // Separate Exhaust Command
