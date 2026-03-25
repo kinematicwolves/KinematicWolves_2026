@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 2.2503756708407865,
+        "y": 2.0798389982110903
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.4760510262910236,
+        "y": 3.444637576410143
+      },
+      "isLocked": false,
+      "linkedName": "RIght Corner"
+    },
+    {
+      "anchor": {
+        "x": 1.2231573275862075,
+        "y": 5.960420258620689
+      },
+      "prevControl": {
+        "x": 2.093619412894265,
+        "y": 6.078631159094623
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Blue Depot"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 1.5,
+    "maxAcceleration": 2.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 180.0
+  },
+  "reversed": false,
+  "folder": null,
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -138.91824886406746
+  },
+  "useDefaultConstraints": true
+}

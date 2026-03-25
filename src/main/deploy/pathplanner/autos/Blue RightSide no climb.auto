@@ -1,0 +1,43 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Blue Right Trench to Oupost"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.0
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Blue Outpost to rShootPos"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "rShootPos to Depot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Blue Depot Through Center to rShootPos"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "Not for comp atp",
+  "choreoAuto": false
+}

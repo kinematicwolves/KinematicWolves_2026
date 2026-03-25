@@ -1,0 +1,127 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 4.223685344827587,
+        "y": 7.328739224137931
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 5.223685344827587,
+        "y": 7.328739224137931
+      },
+      "isLocked": false,
+      "linkedName": "Blue Left Trench"
+    },
+    {
+      "anchor": {
+        "x": 7.067834051724138,
+        "y": 6.859601293103449
+      },
+      "prevControl": {
+        "x": 6.569375,
+        "y": 7.377607758620689
+      },
+      "nextControl": {
+        "x": 7.705330767796784,
+        "y": 6.197104705812269
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.24908767772512,
+        "y": 3.992014218009478
+      },
+      "prevControl": {
+        "x": 7.427015257536704,
+        "y": 4.7037245372558125
+      },
+      "nextControl": {
+        "x": 7.053613539794085,
+        "y": 3.2101176662853406
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.496836492890996,
+        "y": 0.7788270142180078
+      },
+      "prevControl": {
+        "x": 7.0330399726812525,
+        "y": 1.1809796240607002
+      },
+      "nextControl": {
+        "x": 6.0239928909952605,
+        "y": 0.42419431279620645
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 4.497997630331754,
+        "y": 0.617630331753553
+      },
+      "prevControl": {
+        "x": 5.357713270142179,
+        "y": 0.5853909952606613
+      },
+      "nextControl": {
+        "x": 3.5466824542467994,
+        "y": 0.6533046508567395
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 1.7216163793103454,
+        "y": 2.080258620689656
+      },
+      "prevControl": {
+        "x": 1.9713585143629202,
+        "y": 2.0689067054599937
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "right side shoot"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.1367924528301887,
+      "rotationDegrees": -43.62178004022272
+    },
+    {
+      "waypointRelativePos": 3.987566607460045,
+      "rotationDegrees": 0.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 2.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -148.10920819815425
+  },
+  "reversed": false,
+  "folder": "Blue Left",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -174.47245984834385
+  },
+  "useDefaultConstraints": true
+}

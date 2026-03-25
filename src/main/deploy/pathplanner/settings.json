@@ -14,7 +14,9 @@
     "Red Outpost",
     "Red Right"
   ],
-  "autoFolders": [],
+  "autoFolders": [
+    "Not for comp atp"
+  ],
   "defaultMaxVel": 1.5,
   "defaultMaxAccel": 2.0,
   "defaultMaxAngVel": 540.0,

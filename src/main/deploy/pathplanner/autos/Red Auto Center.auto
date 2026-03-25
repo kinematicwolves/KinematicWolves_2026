@@ -1,0 +1,43 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Red Center Start to Depot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Red Depot to Red Outpost"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 3.0
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Red outpost to ShootPos"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Left ShootPos Thru Center to ShootPos"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "Not for comp atp",
+  "choreoAuto": false
+}
