@@ -3,14 +3,15 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.IntakeProfile;
 import frc.robot.Constants.SwerveProfile;
 import frc.robot.commands.AimAndShoot;
-import frc.robot.commands.GoToTower;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Intake;
@@ -52,6 +53,12 @@ public class RobotContainer {
 
         m_autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Auto Mode", m_autoChooser);
+
+        // --- ADDED: BACKGROUND MATCH TIMER ---
+        // Schedules a command that runs forever in the background, updating the dashboard.
+        Commands.run(() -> {
+            SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
+        }).ignoringDisable(true).withName("MatchTimerTelemetry").schedule();
     }
 
     /** Maps PathPlanner strings to Java commands for autonomous routines. */
