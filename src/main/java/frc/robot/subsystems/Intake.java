@@ -52,7 +52,7 @@ public class Intake extends SubsystemBase {
 
         m_roller.configFactoryDefault();
         m_roller.setNeutralMode(NeutralMode.Coast);
-        m_roller.setInverted(false);
+        m_roller.setInverted(true);
     }
 
     public boolean isIntakeDown() {

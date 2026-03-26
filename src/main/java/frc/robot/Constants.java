@@ -60,7 +60,7 @@ public final class Constants {
         public static final int kRollerCurrentLimit = 40; // Amps
 
         // PID & Motion Magic for Kraken Pivot
-        public static final double kPivotP = 0.7; //TODO: Tune
+        public static final double kPivotP = 0.8; //TODO: Tune
         public static final double kPivotI = 0.0;
         public static final double kPivotD = 0.01;
         public static final double kPivotMaxVelocity = 5; // Rotations per second
@@ -74,24 +74,24 @@ public final class Constants {
 
         // Thresholds
         public static final double kRPSTolerance = 10; //TODO: Tune
-        public static final double kHoodTolerance = 0.25; // TODO: Tune (Rotations)
+        public static final double kHoodTolerance = 0.05; // TODO: Tune (Rotations)
 
         // Hood Config
-        public static final double kHoodP = 0.3; // TODO: Tune
+        public static final double kHoodP = 2; // TODO: Tune
         public static final double kHoodMinPosition = 0.0;
         public static final double kHoodMaxPosition = 5; // Total travel rotations
 
         // Flywheel PID
-        public static final double kFlywheelP = 0.8; //TODO: Tune both p and feedfoward
-        public static final double kFlywheelV = 0.2; // Feedforward is key for flywheels
+        public static final double kFlywheelP = 0.45; //TODO: Tune both p and feedfoward
+        public static final double kFlywheelV = 0.13; // Feedforward is key for flywheels
 
         // --- INTERPOLATING TABLE DATA ---
         // Key: Distance (meters), Value: {Flywheel RPS, Hood Rotations}
         public static final double[][] kShootingData = { //TODO: Tune
-            {1.0, 20, 0.1},   // Close (Front of hub)
-            {2.7, 55, 0.9},  // Mid Range
-            {4.0, 75, 1.2},  // Long Range
-            {5.5, 90, 2}   // Maximum Distance
+            {1.5, 49, 0},   // Close (Front of hub)
+            {2.7, 55, 0},  // Mid Range
+            {4.0, 75, 0},  // Long Range
+            {5.5, 90, 0}   // Maximum Distance
         };
 
         // Timer for auto shoot command for pathplanner

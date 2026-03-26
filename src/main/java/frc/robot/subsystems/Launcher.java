@@ -15,6 +15,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -38,6 +39,8 @@ public class Launcher extends SubsystemBase {
 
     private double m_currentTargetRPS = 0.0;
     private double m_currentTargetHood = 0.0;
+
+    Debouncer debouncer = new Debouncer(1.0); 
 
     // --- TUNING VARIABLES ---
     // Set these to a safe starting point (e.g., a short shot)
@@ -120,7 +123,7 @@ public class Launcher extends SubsystemBase {
 
         double leftErr = Math.abs(m_leftFlywheel.getVelocity().getValueAsDouble() - m_currentTargetRPS);
         double hoodErr = Math.abs(m_hood.getEncoder().getPosition() - m_currentTargetHood);
-        return (leftErr < LauncherProfile.kRPSTolerance) && (hoodErr < LauncherProfile.kHoodTolerance);
+        return debouncer.calculate ((leftErr < LauncherProfile.kRPSTolerance) && (hoodErr < LauncherProfile.kHoodTolerance));
     }
 
     /* ========================================================= */

@@ -32,13 +32,13 @@ public class Indexer extends SubsystemBase {
         m_hopper.setNeutralMode(NeutralMode.Coast); // Coast allows balls to settle
         m_hopper.configContinuousCurrentLimit(IndexerProfile.kHopperCurrentLimit);
         m_hopper.enableCurrentLimit(true);
-        m_hopper.setInverted(false); // Change to true if the motor spins the wrong way
+        m_hopper.setInverted(true); // Change to true if the motor spins the wrong way
 
         /* --- KICKER CONFIGURATION --- */
         SparkMaxConfig kickerConfig = new SparkMaxConfig();
         
         kickerConfig
-            .inverted(false)
+            .inverted(true)
             .idleMode(IdleMode.kBrake)
             .smartCurrentLimit(IndexerProfile.kKickerCurrentLimit);
 
