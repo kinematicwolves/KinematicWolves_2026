@@ -7,8 +7,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 public final class Constants {
 
     public static final class SwerveProfile {
-    public static final double kMaxSpeed = 1.2; 
-    public static final double kMaxAngularRate = 0.6 * Math.PI;
+    public static final double kMaxSpeed = 1.; 
+    public static final double kMaxAngularRate = 0.4 * Math.PI;
     public static final double kSlowTranslationScalar = 0.2; // Shoot while moving speed
 
     // PathPlanner PID Constants
@@ -57,7 +57,7 @@ public final class Constants {
 
         // Current Limits
         public static final double kPivotCurrentLimit = 20; // Amps
-        public static final int kRollerCurrentLimit = 25; // Amps
+        public static final int kRollerCurrentLimit = 35; // Amps
 
         // PID & Motion Magic for Kraken Pivot
         public static final double kPivotP = 0.9; //TODO: Tune
@@ -73,7 +73,7 @@ public final class Constants {
         public static final int kHoodID = 44;
 
         // Thresholds
-        public static final double kRPSTolerance = 1.8; //TODO: Tune
+        public static final double kRPSTolerance = 2.5; //TODO: Tune
         public static final double kHoodTolerance = 0.1; // TODO: Tune (Rotations)
 
         // Hood Config
@@ -88,10 +88,10 @@ public final class Constants {
         // --- INTERPOLATING TABLE DATA ---
         // Key: Distance (meters), Value: {Flywheel RPS, Hood Rotations}
         public static final double[][] kShootingData = { //TODO: Tune
-            {1.5, 49, 0},   // Close (Front of hub)
-            {2.6, 54.5, 0},  // Mid Range
-            {3.55, 66, 0},  // Long Range
-            {4, 81, 0}   // Maximum Distance
+            {2, 44, 0},   // Close (Front of hub)
+            {2.8, 52, 0},  // Mid Range
+            {3.7, 67, 0},  // Long Range
+           // {4.1, 73, 0}   // Maximum Distance
         };
 
         // Timer for auto shoot command for pathplanner
@@ -139,7 +139,7 @@ public final class Constants {
         public static final int kCandleID = 5;
         
         /* LED Strip Sizing */
-        public static final int kNumLeds = 65;   // Number of external LEDs
+        public static final int kNumLeds = 150;   // Number of external LEDs
         public static final int kStartIndex = 8; // Skips the 8 CANdle LEDs
         
         /* Disabled Animation Settings */

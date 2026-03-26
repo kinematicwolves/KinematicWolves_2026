@@ -16,6 +16,7 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -41,7 +42,8 @@ public class Launcher extends SubsystemBase {
     private double m_currentTargetRPS = 0.0;
     private double m_currentTargetHood = 0.0;
 
-    Debouncer debouncer = new Debouncer(0.5); 
+    Debouncer debouncer = new Debouncer(0.5);
+    LinearFilter averageVelocity = LinearFilter.movingAverage(20);
 
     // --- TUNING VARIABLES ---
     // Set these to a safe starting point (e.g., a short shot)
@@ -116,15 +118,15 @@ public class Launcher extends SubsystemBase {
         m_currentTargetHood = 0.0;
     }
 
-    /**
+    /**isReadyToFire
      * Checks if the shooter is rev'd up and the hood is in position based on the LIVE target.
      */
     public boolean isReadyToFire() {
         if (m_currentTargetRPS == 0.0) return false; // Not trying to shoot
 
-        double leftErr = Math.abs(m_leftFlywheel.getVelocity().getValueAsDouble() - m_currentTargetRPS);
+        double leftErr = averageVelocity.calculate(Math.abs(m_leftFlywheel.getVelocity().getValueAsDouble() - m_currentTargetRPS));
         double hoodErr = Math.abs(m_hood.getEncoder().getPosition() - m_currentTargetHood);
-        return debouncer.calculate ((leftErr < LauncherProfile.kRPSTolerance) && (hoodErr < LauncherProfile.kHoodTolerance));
+        return debouncer.calculate (leftErr < LauncherProfile.kRPSTolerance); // && (hoodErr < LauncherProfile.kHoodTolerance));
     }
 
     /* ========================================================= */
