@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType; // <-- ADDED IMPORT
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -52,16 +53,25 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     /* Red alliance sees forward as 180 degrees (toward blue alliance wall) */
     private static final Rotation2d kRedAlliancePerspectiveRotation = Rotation2d.k180deg;
     
-    // <-- FIX #1: Track the actual alliance, not just a boolean
     private Alliance m_lastAlliance = null;
 
+    // --- THE FIX: DEDICATED PATHPLANNER VELOCITY CONTROL ---
     /** Swerve request to apply during robot-centric path following */
-    private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
+    private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds()
+            .withDriveRequestType(DriveRequestType.Velocity); // <-- FORCES ACTIVE BRAKING AT WAYPOINTS
 
     /** Standard Teleop Drive Request */
     private final SwerveRequest.FieldCentric m_driveRequest = new SwerveRequest.FieldCentric()
             .withDeadband(0.1) 
             .withRotationalDeadband(0.1);
+
+    /** Dedicated request for auto-aiming. Rotational Deadband is REMOVED so small PID corrections are not ignored. */
+    private final SwerveRequest.FieldCentric m_aimRequest = new SwerveRequest.FieldCentric()
+            .withDeadband(0.1) 
+            .withRotationalDeadband(0.0);
+
+    /** Locks the wheels into an X shape to prevent being pushed */
+    public final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -150,12 +160,17 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     }
 
     public Command applySlowDrive(DoubleSupplier velocityX, DoubleSupplier velocityY, DoubleSupplier visionRotationalRate) {
-        return run(() -> this.setControl(
-            m_driveRequest
-                .withVelocityX(velocityX.getAsDouble() * SwerveProfile.kSlowTranslationScalar)
-                .withVelocityY(velocityY.getAsDouble() * SwerveProfile.kSlowTranslationScalar)
-                .withRotationalRate(visionRotationalRate.getAsDouble())
-        )).withName("SlowDrive");
+        return run(() -> {
+            double aimRate = visionRotationalRate.getAsDouble();
+            SmartDashboard.putNumber("Vision/Aim Rate Sent to Swerve", aimRate);
+
+            this.setControl(
+                m_aimRequest
+                    .withVelocityX(velocityX.getAsDouble() * SwerveProfile.kSlowTranslationScalar)
+                    .withVelocityY(velocityY.getAsDouble() * SwerveProfile.kSlowTranslationScalar)
+                    .withRotationalRate(aimRate)
+            );
+        }).withName("SlowDrive");
     }
 
     public Command resetHeading() {
@@ -164,6 +179,10 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
 
     public Command applyRequest(Supplier<SwerveRequest> request) {
         return run(() -> this.setControl(request.get()));
+    }
+
+    public Command applyBrake() {
+        return run(() -> this.setControl(brake)).withName("Brake");
     }
 
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
@@ -176,7 +195,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
 
     @Override
     public void periodic() {
-        // <-- FIX #1: Only apply the operator perspective when the alliance ACTUALLY changes
         Optional<Alliance> currentAlliance = DriverStation.getAlliance();
         if (currentAlliance.isPresent() && currentAlliance.get() != m_lastAlliance) {
             m_lastAlliance = currentAlliance.get();
@@ -204,7 +222,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
 
     @Override
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
-        // <-- FIX #2: Trust Vision X/Y (0.7), but completely IGNORE Vision Rotation (9999999)
         super.addVisionMeasurement(
             visionRobotPoseMeters, 
             Utils.fpgaToCurrentTime(timestampSeconds),

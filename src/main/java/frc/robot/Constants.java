@@ -13,14 +13,14 @@ public final class Constants {
 
     // PathPlanner PID Constants
     public static final PIDConstants kTranslationPID = new PIDConstants(2.5, 0.0, 0.0);
-    public static final PIDConstants kRotationPID = new PIDConstants(2.0, 0.0, 0.0);
+    public static final PIDConstants kRotationPID = new PIDConstants(2, 0.0, 0.0);
     }
 
     public static final class VisionProfile {
         public static final String kLimelightName = "limelight";
         
         // PID for Auto-Aiming (Rotation)
-        public static final double kP_Align = 0.05; 
+        public static final double kP_Align = 0.03; 
         public static final double kI_Align = 0.0;
         public static final double kD_Align = 0.001;
         
@@ -60,7 +60,7 @@ public final class Constants {
         public static final int kRollerCurrentLimit = 40; // Amps
 
         // PID & Motion Magic for Kraken Pivot
-        public static final double kPivotP = 0.8; //TODO: Tune
+        public static final double kPivotP = 0.9; //TODO: Tune
         public static final double kPivotI = 0.0;
         public static final double kPivotD = 0.01;
         public static final double kPivotMaxVelocity = 5; // Rotations per second
