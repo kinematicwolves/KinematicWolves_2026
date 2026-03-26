@@ -1,6 +1,6 @@
 package frc.robot.subsystems;
 
-import java.util.function.DoubleSupplier; // Added for continuous aiming
+import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -31,22 +31,18 @@ public class Launcher extends SubsystemBase {
     private final TalonFX m_rightFlywheel;
     private final SparkMax m_hood;
 
-    // CTRE Velocity Request
+    // CTRE closed-loop velocity control object
     private final VelocityVoltage m_velocityRequest = new VelocityVoltage(0).withSlot(0);
 
-    // Interpolating Maps
+    // Dynamic Look-up Tables: [Distance] -> [RPS or Hood Angle]
     private final InterpolatingDoubleTreeMap m_rpmMap = new InterpolatingDoubleTreeMap();
     private final InterpolatingDoubleTreeMap m_hoodMap = new InterpolatingDoubleTreeMap();
 
     private double m_currentTargetRPS = 0.0;
     private double m_currentTargetHood = 0.0;
 
-    Debouncer debouncer = new Debouncer(0.5); 
-
-    // --- TUNING VARIABLES ---
-    // Set these to a safe starting point (e.g., a short shot)
-    private double m_tuningRPS = 50.0; 
-    private double m_tuningHood = 10.0; 
+    // Prevents "flickering" ready state; must stay in tolerance for 0.5s to be "ready"
+    Debouncer debouncer = new Debouncer(0.5);
 
     public Launcher() {
         m_leftFlywheel = new TalonFX(LauncherProfile.kFlywheelLeftID, TunerConstants.kCANBus);
@@ -57,6 +53,7 @@ public class Launcher extends SubsystemBase {
         configureHardware();
     }
 
+    /** Loads data points from Constants.java into the interpolation maps */
     private void setupInterpolation() {
         for (double[] data : LauncherProfile.kShootingData) {
             m_rpmMap.put(data[0], data[1]);
@@ -64,38 +61,33 @@ public class Launcher extends SubsystemBase {
         }
     }
 
+    /** Sets up PID, Inversions, and Brake modes */
     private void configureHardware() {
-        /* --- KRAKEN FLYWHEELS --- */
         TalonFXConfiguration flyConfig = new TalonFXConfiguration();
         flyConfig.Slot0.kP = LauncherProfile.kFlywheelP;
         flyConfig.Slot0.kV = LauncherProfile.kFlywheelV;
-        flyConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        flyConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast; // Let flywheels spin down naturally
         
+        // Motors spin opposite directions to launch the ball
         flyConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         m_leftFlywheel.getConfigurator().apply(flyConfig);
 
         flyConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         m_rightFlywheel.getConfigurator().apply(flyConfig);
 
-        /* --- HOOD --- */
         SparkMaxConfig hoodConfig = new SparkMaxConfig();
         hoodConfig
-            .idleMode(IdleMode.kBrake)
+            .idleMode(IdleMode.kBrake) // Hold position when not moving
             .smartCurrentLimit(30); 
         
-        // Use the imported FeedbackSensor enum directly
         hoodConfig.closedLoop
             .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
             .p(LauncherProfile.kHoodP);
 
-        // Apply and Persist
         m_hood.configure(hoodConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
-    /* ========================================================= */
-    /* LOGIC METHODS                                             */
-    /* ========================================================= */
-
+    /** Sends velocity and position targets to motor controllers */
     public void runShooter(double targetRPS, double targetHoodRotations) {
         m_currentTargetRPS = targetRPS;
         m_currentTargetHood = targetHoodRotations;
@@ -106,117 +98,60 @@ public class Launcher extends SubsystemBase {
         m_hood.getClosedLoopController().setSetpoint(targetHoodRotations, SparkMax.ControlType.kPosition);
     }
 
+    /** Zeroes all motor outputs */
     public void stop() {
         m_leftFlywheel.stopMotor();
         m_rightFlywheel.stopMotor();
         m_hood.stopMotor();
-
-        // Reset targets when stopped so isReadyToFire doesn't return true accidentally
         m_currentTargetRPS = 0.0; 
         m_currentTargetHood = 0.0;
     }
 
-    /**
-     * Checks if the shooter is rev'd up and the hood is in position based on the LIVE target.
-     */
+    /** Returns true if current RPS and Hood Angle match targets (with debounce) */
     public boolean isReadyToFire() {
-        if (m_currentTargetRPS == 0.0) return false; // Not trying to shoot
+        if (m_currentTargetRPS == 0.0) return false; 
 
         double leftErr = Math.abs(m_leftFlywheel.getVelocity().getValueAsDouble() - m_currentTargetRPS);
         double hoodErr = Math.abs(m_hood.getEncoder().getPosition() - m_currentTargetHood);
-        return debouncer.calculate ((leftErr < LauncherProfile.kRPSTolerance) && (hoodErr < LauncherProfile.kHoodTolerance));
+        
+        return debouncer.calculate((leftErr < LauncherProfile.kRPSTolerance) && (hoodErr < LauncherProfile.kHoodTolerance));
     }
 
     /* ========================================================= */
     /* COMMAND FACTORIES                                         */
     /* ========================================================= */
 
-    /**
-     * Takes a distance supplier so the RPS and Angle update LIVE as the robot drives.
-     */
+    /** Automatically adjusts shooter speed/angle based on live distance */
     public Command continuousAimCommand(DoubleSupplier distanceMetersSupplier) {
         return run(() -> {
             double distance = distanceMetersSupplier.getAsDouble();
-            if (distance > 0.1) { // If we have a valid target
-                double rps = m_rpmMap.get(distance);
-                double hood = m_hoodMap.get(distance);
-                runShooter(rps, hood);
+            if (distance > 0.1) {
+                runShooter(m_rpmMap.get(distance), m_hoodMap.get(distance));
             } else {
-                // Default to a known safe shot if vision drops
-                runShooter(m_rpmMap.get(1.0), m_hoodMap.get(1.0));
+                runShooter(m_rpmMap.get(1.0), m_hoodMap.get(1.0)); // Default safe shot
             }
         }).finallyDo(this::stop).withName("ContinuousAim");
     }
 
-    /**
-     * Fallback "Hub Shot" manually forced by the driver.
-     */
-    public Command hubShotCommand() {
-        // Pulls the 1.0 meter mapped values
-        return run(() -> runShooter(m_rpmMap.get(1.0), m_hoodMap.get(1.0)))
-               .finallyDo(this::stop)
-               .withName("HubShot");
-    }
-
-    /**
-     * Fallback "Hub Shot" manually forced by the driver.
-     * Now includes the Gated Feeder and Intake Rollers!
-     */
+    /** Fires from against the goal using hardcoded distance values */
     public static Command closeShotCommand(Launcher launcher, Indexer indexer, Intake intake) {
         return Commands.parallel(
-            launcher.hubShotCommand(),
+            launcher.run(() -> launcher.runShooter(launcher.m_rpmMap.get(1.0), launcher.m_hoodMap.get(1.0))),
             
-            // The Gated Feeder logic adapted for the close shot
+            // Wait for spool, then feed; pauses feed if RPS drops
             Commands.sequence(
                 Commands.waitUntil(launcher::isReadyToFire),
                 indexer.feedShooterCommand()
                        .alongWith(intake.runRollersCommand(IntakeProfile.kRollerVoltage))
-                       .onlyWhile(launcher::isReadyToFire) // Check continuously while feeding to avoid spitting out a ball if we lose the shot
+                       .onlyWhile(launcher::isReadyToFire) 
             ).repeatedly()
-        ).withName("FenderShotSequence");
-
-        /* Incase the new feed logic does not work */
-            // Commands.sequence(
-            //     Commands.waitUntil(() -> launcher.isReadyToFire() && vision.isOdometryAligned()),
-            //     indexer.feedShooterCommand()
-            //         .alongWith(intake.runRollersCommand(IntakeProfile.kRollerVoltage))
-            // )
-    }
-
-    /* ========================================================= */
-    /* TUNING COMMANDS                                           */
-    /* ========================================================= */
-
-    /** Runs the shooter at the internal tuning setpoints */
-    public Command tuningCommand() {
-        return run(() -> runShooter(m_tuningRPS, m_tuningHood))
-               .finallyDo(this::stop)
-               .withName("DpadTuning");
-    }
-
-    /** Bumps the RPS up or down by a set amount */
-    public Command bumpRPSCommand(double delta) {
-        return Commands.runOnce(() -> {
-            m_tuningRPS += delta;
-        }).ignoringDisable(true).withName("BumpRPS"); // ignoringDisable allows tuning while disabled!
-    }
-
-    /** Bumps the Hood up or down by a set amount */
-    public Command bumpHoodCommand(double delta) {
-        return Commands.runOnce(() -> {
-            m_tuningHood += delta;
-        }).ignoringDisable(true).withName("BumpHood");
+        ).finallyDo(launcher::stop).withName("FenderShotSequence");
     }
 
     @Override
     public void periodic() {
-        // Standard Telemetry
         SmartDashboard.putNumber("Launcher/Left RPS", m_leftFlywheel.getVelocity().getValueAsDouble());
         SmartDashboard.putNumber("Launcher/Hood Pos", m_hood.getEncoder().getPosition());
         SmartDashboard.putBoolean("Launcher/ReadyToFire", isReadyToFire());
-
-        // Display the live tuning variables so the Tech knows what to write down
-        SmartDashboard.putNumber("Tech/Current Tuning RPS", m_tuningRPS);
-        SmartDashboard.putNumber("Tech/Current Tuning Hood", m_tuningHood);
     }
 }

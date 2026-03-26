@@ -6,7 +6,6 @@ import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.IntakeProfile;
 import frc.robot.Constants.SwerveProfile;
@@ -20,9 +19,13 @@ import frc.robot.subsystems.Lighting;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.Vision;
 
+/**
+ * This class is where the bulk of the robot content is declared. 
+ * It connects subsystems, controllers, and commands.
+ */
 public class RobotContainer {
 
-    // --- SUBSYSTEMS ---
+    /* --- SUBSYSTEMS --- */
     private final Swerve m_swerve = new Swerve(
         TunerConstants.DrivetrainConstants, 
         TunerConstants.FrontLeft, TunerConstants.FrontRight, 
@@ -32,135 +35,72 @@ public class RobotContainer {
     private final Intake m_intake = new Intake();
     private final Indexer m_indexer = new Indexer();
     private final Launcher m_launcher = new Launcher();
-    private final Lighting m_lighting = new Lighting();
-    //private final Climber m_climber = new Climber();
+    private final Lighting m_lighting = new Lighting(); 
+    // private final Climber m_climber = new Climber();
 
-    // --- CONTROLLERS ---
+    /* --- CONTROLLERS --- */
     private final CommandXboxController m_driver = new CommandXboxController(0);
     private final CommandXboxController m_operator = new CommandXboxController(1);
-    private final CommandXboxController m_technician = new CommandXboxController(2);
 
-    // --- AUTONOMOUS CHOOSER ---
+    /* --- AUTONOMOUS CHOOSER --- */
     private final SendableChooser<Command> m_autoChooser;
 
     public RobotContainer() {
-        registerPathPlannerCommands();
-        configureDefaultCommands();
-        configureBindings();
+        registerPathPlannerCommands(); 
+        configureDefaultCommands();    
+        configureBindings();           
 
-        // Build the auto chooser from PathPlanner
         m_autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Auto Mode", m_autoChooser);
     }
 
-    /**
-     * Registers named commands for use in PathPlanner's GUI.
-     */
+    /** Maps PathPlanner strings to Java commands for autonomous routines. */
     private void registerPathPlannerCommands() {
-        // Basic subsystem commands
         NamedCommands.registerCommand("DeployIntake", m_intake.setPivotCommand(IntakeProfile.kPivotDownPosition));
         NamedCommands.registerCommand("RunRollers", m_intake.runRollersCommand(IntakeProfile.kRollerVoltage));
-        
-        // Sourced directly from our Launcher subsystem
-        NamedCommands.registerCommand("CloseHubShot", Launcher.closeShotCommand(m_launcher, m_indexer, m_intake)); // <-- Added m_intake
-        
-        // Complex auto sequences sourced from our dedicated command classes
+        NamedCommands.registerCommand("CloseHubShot", Launcher.closeShotCommand(m_launcher, m_indexer, m_intake));
         NamedCommands.registerCommand("AutoShoot", AimAndShoot.autoAimAndShoot(m_swerve, m_vision, m_launcher, m_indexer, m_intake));
     }
 
-    /**
-     * Sets up the default commands that run when no buttons are being pressed.
-     */
+    /** Default commands run continuously when no other command is scheduled. */
     private void configureDefaultCommands() {
-        // DRIVER: Standard Field-Centric Swerve Drive
+        // DRIVER: Joysticks drive the robot (Negatives corrected for field orientation)
         m_swerve.setDefaultCommand(m_swerve.applyDrive(
-            () -> -m_driver.getLeftY() * SwerveProfile.kMaxSpeed,  // <-- ADD NEGATIVE BACK
-            () -> -m_driver.getLeftX() * SwerveProfile.kMaxSpeed,  // <-- ADD NEGATIVE BACK
+            () -> -m_driver.getLeftY() * SwerveProfile.kMaxSpeed,
+            () -> -m_driver.getLeftX() * SwerveProfile.kMaxSpeed,
             () -> -m_driver.getRightX() * SwerveProfile.kMaxAngularRate 
         ));
 
-        // OPERATOR: Manual Climber Winch Override (Right Stick Y)
         // m_climber.setDefaultCommand(m_climber.manualOverrideCommand(
         //     () -> Math.abs(m_operator.getRightY()) > 0.1 ? -m_operator.getRightY() * 12.0 : 0.0
         // ));
-
-        m_lighting.setDefaultCommand(
-            Commands.run(() -> {
-                if (m_launcher.isReadyToFire() && m_vision.isOdometryAligned()) {
-                    // Highest Priority: We are lined up and spun up
-                    m_lighting.setState(Lighting.LEDState.READY_TO_FIRE);
-                } else if (m_vision.hasTarget()) {
-                    // Medium Priority: We see the target but aren't ready to shoot
-                    m_lighting.setState(Lighting.LEDState.HAS_TARGET);
-                } else {
-                    // Lowest Priority: Just driving around
-                    m_lighting.setState(Lighting.LEDState.IDLE);
-                }
-            }, m_lighting).ignoringDisable(true)
-        );
     }
 
-    /**
-     * Wires the Xbox controller buttons to our command factories.
-     */
+    /** Wires the Xbox controller buttons to our command factories. */
     private void configureBindings() {
 
-        /* ========================================= */
-        /* DRIVER CONTROLS                           */
-        /* ========================================= */
-
-        // Start/Back: Reset Gyro
-        m_driver.start().onTrue(m_swerve.resetHeading());
-
-        // X Button: Auto-Align to Climbing Tower using our dedicated Pathfinding class
-        m_driver.x().whileTrue(GoToTower.autoClimbCommand(m_swerve));
-
-
-        /* ========================================= */
-        /* OPERATOR CONTROLS                         */
-        /* ========================================= */
-
-        // LEFT TRIGGER: Intake Deploy Sequence
-        m_operator.leftTrigger().whileTrue(m_intake.deploySequenceCommand());
-
-        // RIGHT BUMPER: Intake Retract (Stop rollers, pivot up)
-        m_operator.rightBumper().onTrue(m_intake.setPivotCommand(IntakeProfile.kPivotUpPosition));
-
-        // LEFT BUMPER: Exhaust / Clear Jam (Reverse Intake + Reverse Indexer)
-        m_operator.leftBumper().whileTrue(
-            m_intake.exhaustCommand().alongWith(m_indexer.reverseIndexerCommand())
-        );
-
-        // RIGHT TRIGGER: Shoot (Aim & Shoot) - Uses our dedicated Teleop Command
-        m_operator.rightTrigger().whileTrue(
+        /* --- DRIVER CONTROLS --- */
+        m_driver.a().whileTrue(m_swerve.applyBrake());
+        m_driver.y().onTrue(m_swerve.resetHeading()); 
+        m_driver.leftTrigger().whileTrue(m_intake.deploySequenceCommand());
+        m_driver.leftBumper().onTrue(m_intake.setPivotCommand(IntakeProfile.kPivotUpPosition));
+        //m_driver.x().whileTrue(GoToTower.autoClimbCommand(m_swerve)); 
+        m_driver.rightTrigger().whileTrue(
             AimAndShoot.teleopAimAndShoot(
-                m_swerve, m_vision, m_launcher, m_indexer, m_intake, // <-- ADDED m_intake HERE
+                m_swerve, m_vision, m_launcher, m_indexer, m_intake,
                 () -> -m_driver.getLeftY() * SwerveProfile.kMaxSpeed, 
                 () -> -m_driver.getLeftX() * SwerveProfile.kMaxSpeed 
             )
         );
 
-        // B BUTTON: Close/Home Shot Fallback
-        m_operator.b().whileTrue(Launcher.closeShotCommand(m_launcher, m_indexer, m_intake)); // <-- Added m_intake
 
-        // CLIMBER CONTROLS (Y = Extend, A = Retract/Climb)
-        // m_operator.y().onTrue(m_climber.extendCommand());
-        // m_operator.a().onTrue(m_climber.climbCommand());
-
-        /* ========================================= */
-        /* Technician CONTROLS                       */
-        /* ========================================= */
-
-        // While the technician holds the A button, rev the shooter to the tuning targets
-        m_technician.a().whileTrue(m_launcher.tuningCommand());
-
-        // D-Pad UP/DOWN: Adjust RPS by 1.0
-        m_technician.povUp().onTrue(m_launcher.bumpRPSCommand(1.0));
-        m_technician.povDown().onTrue(m_launcher.bumpRPSCommand(-1.0));
-
-        // D-Pad RIGHT/LEFT: Adjust Hood Angle by 0.3 rotations
-        m_technician.povRight().onTrue(m_launcher.bumpHoodCommand(0.3));
-        m_technician.povLeft().onTrue(m_launcher.bumpHoodCommand(-0.3));
+        /* --- OPERATOR CONTROLS --- */
+        m_operator.a().whileTrue(Launcher.closeShotCommand(m_launcher, m_indexer, m_intake));
+        // m_operator.rightTrigger().onTrue(m_climber.extendCommand());
+        // m_operator.leftTrigger().onTrue(m_climber.climbCommand());
+        m_operator.leftBumper().whileTrue(
+            m_intake.exhaustCommand().alongWith(m_indexer.reverseIndexerCommand())
+            );
     }
 
     public Command getAutonomousCommand() {

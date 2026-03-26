@@ -23,16 +23,18 @@ public class Vision extends SubsystemBase {
     private final NetworkTable m_limelightTable;
     private final Swerve m_swerve;
 
-    private final PIDController m_limelightAimController;
-    private final PIDController m_odometryAimController;
+    // Controllers for turning toward the target
+    private final PIDController m_limelightAimController; // Raw Tx backup
+    private final PIDController m_odometryAimController;  // Pose-based primary
 
-    // Track if we have synced the gyro to the field yet
+    // Flag to ensure we only hard-reset gyro once on boot
     private boolean m_hasSeededOdometry = false;
 
     public Vision(Swerve swerve) {
         m_swerve = swerve;
         m_limelightTable = NetworkTableInstance.getDefault().getTable(VisionProfile.kLimelightName);
         
+        // Setup raw vision backup controller
         m_limelightAimController = new PIDController(
             VisionProfile.kP_Align, 
             VisionProfile.kI_Align, 
@@ -41,8 +43,9 @@ public class Vision extends SubsystemBase {
         m_limelightAimController.setSetpoint(0.0);
         m_limelightAimController.setTolerance(VisionProfile.kAlignToleranceDegrees);
 
-        m_odometryAimController = new PIDController(5.0, 0.0, 0.1); 
-        m_odometryAimController.enableContinuousInput(-Math.PI, Math.PI);
+        // Setup odometry-based aiming (rotation)
+        m_odometryAimController = new PIDController(0.05, 0.0, 0.1); 
+        m_odometryAimController.enableContinuousInput(-Math.PI, Math.PI); // Logic for -180 to 180 wrap
         m_odometryAimController.setTolerance(Units.degreesToRadians(2.0));
     }
 
@@ -50,21 +53,27 @@ public class Vision extends SubsystemBase {
     /* POSE-BASED SCORING (PRIMARY METHOD)                       */
     /* ========================================================= */
 
+    /** Returns the XY coordinates of the goal based on alliance color */
     public Translation2d getTargetHub() {
         boolean isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
         return isRed ? FieldConstants.kRedHub : FieldConstants.kBlueHub;
     }
 
+    /** Calculates 2D distance between robot and the target hub */
     public double getOdometryDistanceMeters() {
         Translation2d robotPos = m_swerve.getPose().getTranslation();
         return robotPos.getDistance(getTargetHub());
     }
 
+    /** Returns rotation speed to face the hub; adds 180 because shooter is on the back */
     public double getOdometryAimRate() {
         Translation2d robotPos = m_swerve.getPose().getTranslation();
         Translation2d target = getTargetHub();
         
+        // Vector math to find the angle to target
         Rotation2d targetHeading = target.minus(robotPos).getAngle();
+        
+        // Offset for back-mounted shooter
         targetHeading = targetHeading.plus(Rotation2d.fromDegrees(180));
 
         return m_odometryAimController.calculate(
@@ -73,6 +82,7 @@ public class Vision extends SubsystemBase {
         );
     }
 
+    /** Returns true if robot rotation is within tolerance of the target */
     public boolean isOdometryAligned() {
         return m_odometryAimController.atSetpoint();
     }
@@ -81,22 +91,28 @@ public class Vision extends SubsystemBase {
     /* RAW LIMELIGHT DATA & FALLBACKS                            */
     /* ========================================================= */
 
+    /** tv: returns true if Limelight sees ANY valid target */
     public boolean hasTarget() {
         return m_limelightTable.getEntry("tv").getDouble(0.0) == 1.0;
     }
 
+    /** tx: horizontal offset from crosshair to target */
     public double getTx() {
         return m_limelightTable.getEntry("tx").getDouble(0.0);
     }
 
+    /** Trig-based distance: uses fixed camera height/angle vs target height */
     public double getDistanceMeters_Fallback() {
         if (!hasTarget()) return 0.0;
         double targetOffsetAngle_Vertical = m_limelightTable.getEntry("ty").getDouble(0.0);
         double angleToGoalRadians = Math.toRadians(FieldConstants.kLimelightMountAngleDegrees + targetOffsetAngle_Vertical);
         double heightDifference = FieldConstants.kTargetCenterHeightMeters - FieldConstants.kLimelightMountHeightMeters;
+        
+        // d = h / tan(a)
         return heightDifference / Math.tan(angleToGoalRadians);
     }
 
+    /** Uses PID to turn based on tx alone (ignores robot position) */
     public double getSteeringFeedback_Fallback() {
         if (!hasTarget()) return 0.0; 
         return -m_limelightAimController.calculate(getTx());
@@ -106,29 +122,30 @@ public class Vision extends SubsystemBase {
     /* MEGATAG ODOMETRY UPDATES                                  */
     /* ========================================================= */
 
+    /** Pulls MegaTag pose from Limelight and injects it into Swerve PoseEstimator */
     private void updateOdometry() {
         if (!hasTarget()) return;
 
-        // Pull the array, defaulting to an empty array so we don't get null pointer crashes
+        // botpose_wpiblue is the 2026 standard for field-relative position
         double[] botpose = m_limelightTable.getEntry("botpose_wpiblue").getDoubleArray(new double[0]);
         
-        // FIX: Check for >= 7 so it works with the 11-element arrays in modern Limelight firmware!
+        // Limelight firmware update uses index >= 7 for MegaTag2 data
         if (botpose.length >= 7) {
             Pose2d visionPose = new Pose2d(botpose[0], botpose[1], Rotation2d.fromDegrees(botpose[5]));
             
-            // FIX: Pull exact latency directly from network tables (Pipeline + Capture latency)
+            // Subtract camera processing time from current timestamp to align data history
             double tl = m_limelightTable.getEntry("tl").getDouble(0.0);
             double cl = m_limelightTable.getEntry("cl").getDouble(0.0);
             double latencySeconds = (tl + cl) / 1000.0;
             double timestamp = Timer.getFPGATimestamp() - latencySeconds;
 
-            // Seed Odometry on first detection
+            // First-time seed: Snap odometry to vision to fix gyro startup errors
             if (!m_hasSeededOdometry) {
                 m_swerve.resetPose(visionPose);
                 m_hasSeededOdometry = true;
                 System.out.println("SUCCESS: Odometry Seeded from Limelight!");
             } else {
-                // Now this actually runs!
+                // Regular update: Merge vision with wheel encoders
                 m_swerve.addVisionMeasurement(visionPose, timestamp);
             }
         }
@@ -136,8 +153,7 @@ public class Vision extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // 'botpose_wpiblue' is permanently locked to the Blue Alliance origin.
-        // It complies natively with PathPlanner and CTRE for the 2026 field.
+        // Send alliance color to Limelight so it knows which tags to prioritize
         Optional<Alliance> alliance = DriverStation.getAlliance();
         if (alliance.isPresent()) {
             double allianceValue = (alliance.get() == Alliance.Red) ? 0.0 : 1.0;
@@ -146,10 +162,9 @@ public class Vision extends SubsystemBase {
 
         updateOdometry();
 
+        // Debugging values
         SmartDashboard.putNumber("Shooting/Odometry Distance", getOdometryDistanceMeters());
         SmartDashboard.putBoolean("Shooting/Is Aligned", isOdometryAligned());
-        
         SmartDashboard.putBoolean("Vision/Has Target", hasTarget());
-        SmartDashboard.putNumber("Vision/Fallback Distance", getDistanceMeters_Fallback());
     }
 }
