@@ -57,7 +57,7 @@ public final class Constants {
 
         // Current Limits
         public static final double kPivotCurrentLimit = 20; // Amps
-        public static final int kRollerCurrentLimit = 40; // Amps
+        public static final int kRollerCurrentLimit = 25; // Amps
 
         // PID & Motion Magic for Kraken Pivot
         public static final double kPivotP = 0.9; //TODO: Tune
@@ -114,7 +114,7 @@ public final class Constants {
         public static final double kReverseVoltage = -8.0;
 
         // Current Limits (Prevents brownouts when rapidly firing)
-        public static final int kHopperCurrentLimit = 30; // Amps
+        public static final int kHopperCurrentLimit = 20; // Amps
         public static final int kKickerCurrentLimit = 40; // Amps
     }
 
@@ -133,5 +133,21 @@ public final class Constants {
         
         public static final double kMaxVelocity = 60.0; // Rotations per second
         public static final double kMaxAcceleration = 120.0; // Rotations per sec^2
+    }
+
+    public static final class LightingProfile {
+        public static final int kCandleID = 5;
+        
+        /* LED Strip Sizing */
+        public static final int kNumLeds = 65;   // Number of external LEDs
+        public static final int kStartIndex = 8; // Skips the 8 CANdle LEDs
+        
+        /* Disabled Animation Settings */
+        public static final double kRainbowBrightness = 0.1; 
+        public static final int kRainbowFrameRate = 10; // Animation speed
+
+        /* Predictive Hub Timings (Seconds) */
+        public static final double kHubActivateWarningSec = 5.0;   // Show green 5s before active
+        public static final double kHubDeactivateWarningSec = 3.0; // Revert to alliance 3s before hub becomes inactive
     }
 }
