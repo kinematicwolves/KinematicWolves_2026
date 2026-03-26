@@ -11,7 +11,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.IntakeProfile;
 import frc.robot.Constants.SwerveProfile;
 import frc.robot.commands.AimAndShoot;
-import frc.robot.commands.autoCommands.TowerTrajectory;
+import frc.robot.commands.GoToTower;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Intake;
@@ -62,10 +62,10 @@ public class RobotContainer {
         NamedCommands.registerCommand("RunRollers", m_intake.runRollersCommand(IntakeProfile.kRollerVoltage));
         
         // Sourced directly from our Launcher subsystem
-        NamedCommands.registerCommand("CloseHubShot", Launcher.closeShotCommand(m_launcher, m_indexer));
+        NamedCommands.registerCommand("CloseHubShot", Launcher.closeShotCommand(m_launcher, m_indexer, m_intake)); // <-- Added m_intake
         
         // Complex auto sequences sourced from our dedicated command classes
-        NamedCommands.registerCommand("AutoShoot", AimAndShoot.autoAimAndShoot(m_swerve, m_vision, m_launcher, m_indexer));
+        NamedCommands.registerCommand("AutoShoot", AimAndShoot.autoAimAndShoot(m_swerve, m_vision, m_launcher, m_indexer, m_intake));
     }
 
     /**
@@ -113,7 +113,7 @@ public class RobotContainer {
         m_driver.start().onTrue(m_swerve.resetHeading());
 
         // X Button: Auto-Align to Climbing Tower using our dedicated Pathfinding class
-        m_driver.x().whileTrue(TowerTrajectory.autoClimbCommand(m_swerve));
+        m_driver.x().whileTrue(GoToTower.autoClimbCommand(m_swerve));
 
 
         /* ========================================= */
@@ -134,14 +134,14 @@ public class RobotContainer {
         // RIGHT TRIGGER: Shoot (Aim & Shoot) - Uses our dedicated Teleop Command
         m_operator.rightTrigger().whileTrue(
             AimAndShoot.teleopAimAndShoot(
-                m_swerve, m_vision, m_launcher, m_indexer,
+                m_swerve, m_vision, m_launcher, m_indexer, m_intake, // <-- ADDED m_intake HERE
                 () -> -m_driver.getLeftY() * SwerveProfile.kMaxSpeed, 
                 () -> -m_driver.getLeftX() * SwerveProfile.kMaxSpeed 
             )
         );
 
         // B BUTTON: Close/Home Shot Fallback
-        m_operator.b().whileTrue(Launcher.closeShotCommand(m_launcher, m_indexer));
+        m_operator.b().whileTrue(Launcher.closeShotCommand(m_launcher, m_indexer, m_intake)); // <-- Added m_intake
 
         // CLIMBER CONTROLS (Y = Extend, A = Retract/Climb)
         // m_operator.y().onTrue(m_climber.extendCommand());

@@ -96,6 +96,10 @@ public final class Constants {
 
         // Timer for auto shoot command for pathplanner
         public static final double kAutoShootTimerSec = 3.0;
+
+        // If true, the indexer will only feed balls when the flywheel is at the target speed. If false, it will feed continuously.
+        // REMEMBER: If you disable this, make sure to also disable in the closeShotCommand in the Launcher subsystem.
+        public static final boolean kShootBallsAtTargetSpeedOnly = true;
     }
 
     public static final class IndexerProfile {

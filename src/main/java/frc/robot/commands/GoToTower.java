@@ -1,4 +1,4 @@
-package frc.robot.commands.autoCommands;
+package frc.robot.commands;
 
 import java.util.Set;
 
@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 
 import frc.robot.subsystems.Swerve;
 
-public class TowerTrajectory {
+public class GoToTower {
 
     /**
      * Generates a live PathPlanner trajectory to the correct alliance's climbing tower.

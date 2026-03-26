@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.IntakeProfile;
 import frc.robot.Constants.LauncherProfile;
 import frc.robot.generated.TunerConstants;
 
@@ -157,12 +158,29 @@ public class Launcher extends SubsystemBase {
                .withName("HubShot");
     }
 
-    public static Command closeShotCommand(Launcher launcher, Indexer indexer) {
+    /**
+     * Fallback "Hub Shot" manually forced by the driver.
+     * Now includes the Gated Feeder and Intake Rollers!
+     */
+    public static Command closeShotCommand(Launcher launcher, Indexer indexer, Intake intake) {
         return Commands.parallel(
             launcher.hubShotCommand(),
-            Commands.waitUntil(launcher::isReadyToFire)
-                    .andThen(indexer.feedShooterCommand())
+            
+            // The Gated Feeder logic adapted for the close shot
+            Commands.sequence(
+                Commands.waitUntil(launcher::isReadyToFire),
+                indexer.feedShooterCommand()
+                       .alongWith(intake.runRollersCommand(IntakeProfile.kRollerVoltage))
+                       .onlyWhile(launcher::isReadyToFire) // Check continuously while feeding to avoid spitting out a ball if we lose the shot
+            ).repeatedly()
         ).withName("FenderShotSequence");
+
+        /* Incase the new feed logic does not work */
+            // Commands.sequence(
+            //     Commands.waitUntil(() -> launcher.isReadyToFire() && vision.isOdometryAligned()),
+            //     indexer.feedShooterCommand()
+            //         .alongWith(intake.runRollersCommand(IntakeProfile.kRollerVoltage))
+            // )
     }
 
     /* ========================================================= */
