@@ -40,7 +40,7 @@ public class Launcher extends SubsystemBase {
     private double m_currentTargetRPS = 0.0;
     private double m_currentTargetHood = 0.0;
 
-    Debouncer debouncer = new Debouncer(1.0); 
+    Debouncer debouncer = new Debouncer(0.5); 
 
     // --- TUNING VARIABLES ---
     // Set these to a safe starting point (e.g., a short shot)

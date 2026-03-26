@@ -9,7 +9,7 @@ public final class Constants {
     public static final class SwerveProfile {
     public static final double kMaxSpeed = 1.2; 
     public static final double kMaxAngularRate = 0.6 * Math.PI;
-    public static final double kSlowTranslationScalar = 0.25; // Shoot while moving speed
+    public static final double kSlowTranslationScalar = 0.2; // Shoot while moving speed
 
     // PathPlanner PID Constants
     public static final PIDConstants kTranslationPID = new PIDConstants(2.5, 0.0, 0.0);
@@ -25,7 +25,7 @@ public final class Constants {
         public static final double kD_Align = 0.001;
         
         // Tolerance for "Locked On" status
-        public static final double kAlignToleranceDegrees = 2.0;
+        public static final double kAlignToleranceDegrees = 2.5;
 
         // "Home Shot" Fallback Constants (Fender shot)
         public static final double kFallbackRPM = 3500;
@@ -73,8 +73,8 @@ public final class Constants {
         public static final int kHoodID = 44;
 
         // Thresholds
-        public static final double kRPSTolerance = 10; //TODO: Tune
-        public static final double kHoodTolerance = 0.05; // TODO: Tune (Rotations)
+        public static final double kRPSTolerance = 1.8; //TODO: Tune
+        public static final double kHoodTolerance = 0.1; // TODO: Tune (Rotations)
 
         // Hood Config
         public static final double kHoodP = 2; // TODO: Tune
@@ -89,9 +89,9 @@ public final class Constants {
         // Key: Distance (meters), Value: {Flywheel RPS, Hood Rotations}
         public static final double[][] kShootingData = { //TODO: Tune
             {1.5, 49, 0},   // Close (Front of hub)
-            {2.7, 55, 0},  // Mid Range
-            {4.0, 75, 0},  // Long Range
-            {5.5, 90, 0}   // Maximum Distance
+            {2.6, 54.5, 0},  // Mid Range
+            {3.55, 66, 0},  // Long Range
+            {4, 81, 0}   // Maximum Distance
         };
 
         // Timer for auto shoot command for pathplanner
