@@ -12,63 +12,57 @@ import frc.robot.subsystems.Launcher;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.Vision;
 
-/**
- * Command factory for complex aiming and shooting sequences.
- * This class coordinates Swerve, Vision, Launcher, Indexer, and Intake.
- */
 public class AimAndShoot {
 
-    // Toggle for "Machine Gun" mode (checks RPM constantly) vs "Send It" mode (checks once)
+    // --- TOGGLE THIS TO FALSE TO DISABLE SHOOTER GATE LOGIC ---
     public static final boolean USE_GATED_FEEDER = LauncherProfile.kShootBallsAtTargetSpeedOnly;
 
     /**
-     * TELEOP: Automatic aiming while allowing driver translation (dodging).
-     * @param vX/vY Driver joystick inputs for movement.
+     * Allows the driver to dodge while the robot automatically aims and spools.
      */
     public static Command teleopAimAndShoot(
         Swerve swerve, Vision vision, Launcher launcher, Indexer indexer, Intake intake, 
         DoubleSupplier vX, DoubleSupplier vY
     ) {
-        // Base action: Run indexer and intake rollers together to move ball into flywheels
+        // Base feed action (used in both gated and ungated)
         Command feedAction = indexer.feedShooterCommand()
             .alongWith(intake.runRollersCommand(IntakeProfile.kRollerVoltage));
 
-        // Build the firing logic based on the USE_GATED_FEEDER flag
+        // Dynamically build the firing sequence based on our feature flag
         Command fireSequence = USE_GATED_FEEDER 
             ? Commands.sequence(
-                // GATED: Wait for speed/align -> Feed -> Pause if speed drops -> Repeat
                 Commands.waitUntil(() -> launcher.isReadyToFire() && vision.isOdometryAligned()),
                 feedAction.onlyWhile(() -> launcher.isReadyToFire() && vision.isOdometryAligned())
               ).repeatedly()
             : Commands.sequence(
-                // UNGATED: Wait for speed/align once -> Feed continuously
                 Commands.waitUntil(() -> launcher.isReadyToFire() && vision.isOdometryAligned()),
-                feedAction 
+                feedAction // Ungated: Just waits once, then runs continuously
               );
 
         return Commands.parallel(
-            // 1. Move the robot (Hijack rotation for auto-aiming)
+            // 1. SWERVE: Translate normally, but hijack rotation for Odometry Aiming
             swerve.applySlowDrive(vX, vY, vision::getOdometryAimRate),
 
-            // 2. Adjust flywheels and hood angle based on live distance
+            // 2. LAUNCHER: Spool based on real-time Odometry distance
             launcher.continuousAimCommand(vision::getOdometryDistanceMeters),
 
-            // 3. Run the selected firing sequence
+            // 3. THE FEEDER: Runs whichever sequence we built above
             fireSequence
         ).withName("TeleopAimAndShoot");
     }
 
     /**
-     * AUTO: Complete "Stop, Aim, and Fire" sequence for PathPlanner.
-     * Command ends after kAutoShootTimerSec so the next auto path can start.
+     * AUTO: "Shoot Anywhere"
+     * Stops the robot, aims, spools, fires, and safely ends the command so PathPlanner can continue.
      */
     public static Command autoAimAndShoot(
         Swerve swerve, Vision vision, Launcher launcher, Indexer indexer, Intake intake
     ) {
+        // Base feed action
         Command feedAction = indexer.feedShooterCommand()
             .alongWith(intake.runRollersCommand(IntakeProfile.kRollerVoltage));
 
-        // Build the auto-specific firing sequence with a hard timeout
+        // Dynamically build the auto firing sequence
         Command fireSequence = USE_GATED_FEEDER
             ? Commands.sequence(
                 Commands.waitUntil(() -> launcher.isReadyToFire() && vision.isOdometryAligned()),
@@ -79,13 +73,13 @@ public class AimAndShoot {
                 feedAction 
               ).withTimeout(LauncherProfile.kAutoShootTimerSec);
 
-        // DEADLINE: The entire command ends as soon as the fireSequence (timeout) is finished
+        // Background Tasks (Aiming and Spooling via Odometry)
         return Commands.deadline(
             fireSequence, 
-            swerve.applySlowDrive(() -> 0.0, () -> 0.0, vision::getOdometryAimRate), // Hold still while aiming
-            launcher.continuousAimCommand(vision::getOdometryDistanceMeters)        // Keep spooled
+            swerve.applySlowDrive(() -> 0.0, () -> 0.0, vision::getOdometryAimRate), 
+            launcher.continuousAimCommand(vision::getOdometryDistanceMeters)        
         )
-        // Clean up: Ensure motors stop so we don't carry momentum into the next path
+        // Safety Stop: Ensure everything shuts off before PathPlanner takes over
         .andThen(Commands.runOnce(() -> {
             indexer.stop();
             launcher.stop();
