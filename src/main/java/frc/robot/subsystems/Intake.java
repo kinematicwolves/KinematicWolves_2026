@@ -70,7 +70,7 @@ public class Intake extends SubsystemBase {
 
     // Simple position setting
     public Command setPivotCommand(double rotations) {
-        return run(() -> setPivotPosition(rotations));
+        return run(() -> setPivotPosition(rotations)).until(() -> isIntakeDown() == true);
     }
 
     // Factory for roller control
