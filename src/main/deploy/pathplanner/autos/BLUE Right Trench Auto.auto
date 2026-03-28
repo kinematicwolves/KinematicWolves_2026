@@ -13,20 +13,8 @@
                 "data": {
                   "pathName": "Right BlueTrench to outpost"
                 }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "deployIntake"
-                }
               }
             ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "timedintake2s"
           }
         },
         {
@@ -38,12 +26,6 @@
                 "data": {
                   "pathName": "Outpost to ShootPos"
                 }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "BlueLaunchFromCenter"
-                }
               }
             ]
           }
@@ -52,6 +34,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Not for comp atp",
+  "folder": null,
   "choreoAuto": false
 }

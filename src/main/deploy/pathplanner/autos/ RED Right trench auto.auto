@@ -52,6 +52,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Not for comp atp",
+  "folder": null,
   "choreoAuto": false
 }

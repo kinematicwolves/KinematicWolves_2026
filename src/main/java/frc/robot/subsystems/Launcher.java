@@ -43,7 +43,7 @@ public class Launcher extends SubsystemBase {
     private double m_currentTargetHood = 0.0;
 
     Debouncer debouncer = new Debouncer(0.5);
-    LinearFilter averageVelocity = LinearFilter.movingAverage(20);
+    LinearFilter averageVelocity = LinearFilter.movingAverage(40);
 
     // --- TUNING VARIABLES ---
     // Set these to a safe starting point (e.g., a short shot)

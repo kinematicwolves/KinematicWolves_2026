@@ -144,9 +144,16 @@
   ],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "RunRollers",
+      "waypointRelativePos": 2.086175942549374,
+      "endWaypointRelativePos": 4.348294434470382,
+      "command": null
+    }
+  ],
   "globalConstraints": {
-    "maxVelocity": 1.5,
+    "maxVelocity": 2.5,
     "maxAcceleration": 2.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,

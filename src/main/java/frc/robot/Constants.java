@@ -53,11 +53,11 @@ public final class Constants {
 
         // Motor Speeds
         public static final double kRollerVoltage = 11; 
-        public static final double kExhaustVoltage = 0; // TODO: Set voltage if needed
+        public static final double kExhaustVoltage = -11; // TODO: Set voltage if needed
 
         // Current Limits
         public static final double kPivotCurrentLimit = 20; // Amps
-        public static final int kRollerCurrentLimit = 35; // Amps
+        public static final int kRollerCurrentLimit = 30; // Amps
 
         // PID & Motion Magic for Kraken Pivot
         public static final double kPivotP = 0.9; //TODO: Tune
@@ -95,7 +95,7 @@ public final class Constants {
         };
 
         // Timer for auto shoot command for pathplanner
-        public static final double kAutoShootTimerSec = 3.0;
+        public static final double kAutoShootTimerSec = 5.0;
 
         // If true, the indexer will only feed balls when the flywheel is at the target speed. If false, it will feed continuously.
         // REMEMBER: If you disable this, make sure to also disable in the closeShotCommand in the Launcher subsystem.
@@ -114,8 +114,8 @@ public final class Constants {
         public static final double kReverseVoltage = -8.0;
 
         // Current Limits (Prevents brownouts when rapidly firing)
-        public static final int kHopperCurrentLimit = 20; // Amps
-        public static final int kKickerCurrentLimit = 40; // Amps
+        public static final int kHopperCurrentLimit = 15; // Amps
+        public static final int kKickerCurrentLimit = 30; // Amps
     }
 
     public static final class ClimberProfile {
