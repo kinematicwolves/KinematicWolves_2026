@@ -7,7 +7,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 public final class Constants {
 
     public static final class SwerveProfile {
-    public static final double kMaxSpeed = 1.; 
+    // public static final double kMaxSpeed = 1.; 
     public static final double kMaxAngularRate = 0.4 * Math.PI;
     public static final double kSlowTranslationScalar = 0.2; // Shoot while moving speed
 

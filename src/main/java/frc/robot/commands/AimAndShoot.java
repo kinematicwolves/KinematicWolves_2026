@@ -2,6 +2,7 @@ package frc.robot.commands;
 
 import java.util.function.DoubleSupplier;
 
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.IntakeProfile;
@@ -21,7 +22,7 @@ public class AimAndShoot {
      * Allows the driver to dodge while the robot automatically aims and spools.
      */
     public static Command teleopAimAndShoot(
-        Swerve swerve, Vision vision, Launcher launcher, Indexer indexer, Intake intake, 
+        Swerve swerve, Vision vision, Launcher launcher, Indexer indexer, Intake intake, XboxController driverController,
         DoubleSupplier vX, DoubleSupplier vY
     ) {
         // Base feed action (used in both gated and ungated)
@@ -31,11 +32,11 @@ public class AimAndShoot {
         // Dynamically build the firing sequence based on our feature flag
         Command fireSequence = USE_GATED_FEEDER 
             ? Commands.sequence(
-                Commands.waitUntil(() -> launcher.isReadyToFire() && vision.isOdometryAligned()),
-                feedAction.onlyWhile(() -> launcher.isReadyToFire() && vision.isOdometryAligned())
+                Commands.waitUntil(() -> launcher.isReadyToFire() && (vision.isOdometryAligned() || driverController.getPOV() == 270)),
+                feedAction.onlyWhile(() -> launcher.isReadyToFire() && (vision.isOdometryAligned() || driverController.getPOV() == 270))
               ).repeatedly()
             : Commands.sequence(
-                Commands.waitUntil(() -> launcher.isReadyToFire() && vision.isOdometryAligned()),
+                Commands.waitUntil(() -> launcher.isReadyToFire() && (vision.isOdometryAligned() || driverController.getPOV() == 270)),
                 feedAction // Ungated: Just waits once, then runs continuously
               );
 

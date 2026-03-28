@@ -16,15 +16,15 @@
     },
     {
       "anchor": {
-        "x": 3.0019719827586213,
-        "y": 3.947036637931035
+        "x": 2.806497844827587,
+        "y": 3.9327876631079484
       },
       "prevControl": {
-        "x": 3.349207016368742,
-        "y": 3.9367255268199237
+        "x": 3.1537328784377077,
+        "y": 3.922476551996837
       },
       "nextControl": null,
-      "isLocked": true,
+      "isLocked": false,
       "linkedName": "Blue Backout"
     }
   ],
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.5,
+    "maxVelocity": 2.8,
     "maxAcceleration": 2.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,

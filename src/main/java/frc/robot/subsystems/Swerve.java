@@ -35,6 +35,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import frc.robot.Constants.SwerveProfile;
 import frc.robot.Telemetry;
+import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
 /**
@@ -46,7 +47,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
 
-    private final Telemetry m_logger = new Telemetry(SwerveProfile.kMaxSpeed);
+    private final Telemetry m_logger = new Telemetry(TunerConstants.kSpeedAt12Volts.baseUnitMagnitude());
 
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;

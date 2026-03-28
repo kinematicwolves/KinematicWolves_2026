@@ -73,9 +73,9 @@ public class RobotContainer {
     private void configureDefaultCommands() {
         // DRIVER: Joysticks drive the robot (Negatives corrected for field orientation)
         m_swerve.setDefaultCommand(m_swerve.applyDrive(
-            () -> -m_driver.getLeftY() * SwerveProfile.kMaxSpeed,
-            () -> -m_driver.getLeftX() * SwerveProfile.kMaxSpeed,
-            () -> -m_driver.getRightX() * SwerveProfile.kMaxAngularRate 
+            () -> -m_driver.getLeftY() * TunerConstants.kSpeedAt12Volts.baseUnitMagnitude(),
+            () -> -m_driver.getLeftX() * TunerConstants.kSpeedAt12Volts.baseUnitMagnitude(),
+            () -> -m_driver.getRightX() * TunerConstants.kSpeedAt12Volts.baseUnitMagnitude() 
         ));
 
         // m_climber.setDefaultCommand(m_climber.manualOverrideCommand(
@@ -94,9 +94,9 @@ public class RobotContainer {
         //m_driver.x().whileTrue(GoToTower.autoClimbCommand(m_swerve)); 
         m_driver.rightTrigger().whileTrue(
             AimAndShoot.teleopAimAndShoot(
-                m_swerve, m_vision, m_launcher, m_indexer, m_intake,
-                () -> -m_driver.getLeftY() * SwerveProfile.kMaxSpeed, 
-                () -> -m_driver.getLeftX() * SwerveProfile.kMaxSpeed 
+                m_swerve, m_vision, m_launcher, m_indexer, m_intake, m_driver.getHID(),
+                () -> -m_driver.getLeftY() * TunerConstants.kSpeedAt12Volts.baseUnitMagnitude(), 
+                () -> -m_driver.getLeftX() * TunerConstants.kSpeedAt12Volts.baseUnitMagnitude() 
             )
         );
 

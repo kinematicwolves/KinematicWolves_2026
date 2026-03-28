@@ -19,13 +19,13 @@
         {
           "type": "named",
           "data": {
-            "name": "AutoShoot"
+            "name": "CloseHubShot"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "red side",
   "choreoAuto": false
 }

@@ -15,9 +15,11 @@
     "Red Right"
   ],
   "autoFolders": [
-    "Not for comp atp"
+    "Blue side",
+    "Not for comp atp",
+    "red side"
   ],
-  "defaultMaxVel": 2.5,
+  "defaultMaxVel": 2.8,
   "defaultMaxAccel": 2.0,
   "defaultMaxAngVel": 540.0,
   "defaultMaxAngAccel": 720.0,

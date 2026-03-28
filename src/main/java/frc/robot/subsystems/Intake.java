@@ -46,6 +46,7 @@ public class Intake extends SubsystemBase {
 
         // Apply config to the Master
         m_pivotMaster.getConfigurator().apply(pivotConfig);
+        m_pivotMaster.setPosition(0.0);
         
         // The follower automatically spins the opposite way of the master
         m_pivotFollower.setControl(new Follower(m_pivotMaster.getDeviceID(), MotorAlignmentValue.Opposed));

@@ -5,6 +5,12 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "DeployIntake"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Blue Center Start _ Center Backup"
@@ -13,13 +19,13 @@
         {
           "type": "named",
           "data": {
-            "name": "AutoShoot"
+            "name": "CloseHubShot"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Blue side",
   "choreoAuto": false
 }

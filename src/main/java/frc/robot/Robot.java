@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.utils.LimelightHelpers;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -69,11 +70,19 @@ public class Robot extends TimedRobot {
     if (m_autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(m_autonomousCommand);
     }
+    LimelightHelpers.setRewindEnabled("limelight", true);
   }
 
   /** This function is called periodically during autonomous. */
   @Override
   public void autonomousPeriodic() {}
+
+  @Override
+  public void autonomousExit() {
+        LimelightHelpers.triggerRewindCapture("limelight", 30);
+        LimelightHelpers.setRewindEnabled("limelight", false);
+
+    }
 
   @Override
   public void teleopInit() {
