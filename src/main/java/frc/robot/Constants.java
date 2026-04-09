@@ -3,12 +3,13 @@ package frc.robot;
 import com.pathplanner.lib.config.PIDConstants;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import frc.robot.generated.TunerConstants;
 
 public final class Constants {
 
     public static final class SwerveProfile {
-    // public static final double kMaxSpeed = 1.; 
-    public static final double kMaxAngularRate = 0.4 * Math.PI;
+    public static final double kMaxSpeed = TunerConstants.kSpeedAt12Volts.baseUnitMagnitude(); 
+    public static final double kMaxAngularRate = 0.55 * Math.PI;
     public static final double kSlowTranslationScalar = 0.2; // Shoot while moving speed
 
     // PathPlanner PID Constants
@@ -48,7 +49,7 @@ public final class Constants {
 
         // Pivot Positions (Motor Rotations, NOT ticks)
         public static final double kPivotUpPosition = 0;
-        public static final double kPivotDownPosition = 5.1; //
+        public static final double kPivotDownPosition = 4.1; //
         public static final double kPivotTolerance = 0.5;
 
         // Motor Speeds
@@ -95,7 +96,7 @@ public final class Constants {
         };
 
         // Timer for auto shoot command for pathplanner
-        public static final double kAutoShootTimerSec = 5.0;
+        public static final double kAutoShootTimerSec = 7.5;
 
         // If true, the indexer will only feed balls when the flywheel is at the target speed. If false, it will feed continuously.
         // REMEMBER: If you disable this, make sure to also disable in the closeShotCommand in the Launcher subsystem.

@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.48035560344827655,
-        "y": 0.4969181034482756
+        "x": 0.23842576028622497,
+        "y": 0.5384257602862248
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.4803556034482763,
-        "y": 0.4969181034482756
+        "x": 1.2384257602862248,
+        "y": 0.5384257602862248
       },
       "isLocked": false,
       "linkedName": "Blue Outpost"
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.8,
+    "maxVelocity": 3.0,
     "maxAcceleration": 2.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,

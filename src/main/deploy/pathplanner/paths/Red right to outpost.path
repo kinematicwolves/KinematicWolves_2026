@@ -12,16 +12,16 @@
         "y": 7.387381465517242
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "red right Trench"
     },
     {
       "anchor": {
-        "x": 16.401724137931033,
-        "y": 7.450447227191413
+        "x": 16.334025044722722,
+        "y": 7.596475849731663
       },
       "prevControl": {
-        "x": 15.3559375,
-        "y": 7.377607758620689
+        "x": 15.288238406791688,
+        "y": 7.523636381160939
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.8,
+    "maxVelocity": 3.0,
     "maxAcceleration": 2.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,

@@ -58,8 +58,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
 
     // --- THE FIX: DEDICATED PATHPLANNER VELOCITY CONTROL ---
     /** Swerve request to apply during robot-centric path following */
-    private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds()
-            .withDriveRequestType(DriveRequestType.Velocity); // <-- FORCES ACTIVE BRAKING AT WAYPOINTS
+    private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
 
     /** Standard Teleop Drive Request */
     private final SwerveRequest.FieldCentric m_driveRequest = new SwerveRequest.FieldCentric()

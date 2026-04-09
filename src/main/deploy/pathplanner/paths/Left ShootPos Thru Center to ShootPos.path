@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 14.316666666666668,
-        "y": 5.578603286384978
+        "x": 14.257173524150268,
+        "y": 5.487173524150268
       },
       "prevControl": null,
       "nextControl": {
-        "x": 14.159052132701424,
-        "y": 6.409964454976302
+        "x": 14.099558990185024,
+        "y": 6.318534692741593
       },
       "isLocked": false,
       "linkedName": "Red Left ShootPos"
@@ -112,12 +112,12 @@
     },
     {
       "anchor": {
-        "x": 14.316666666666668,
-        "y": 5.578603286384978
+        "x": 14.257173524150268,
+        "y": 5.487173524150268
       },
       "prevControl": {
-        "x": 14.574581358609795,
-        "y": 6.277122243730951
+        "x": 14.515088216093394,
+        "y": 6.1856924814962415
       },
       "nextControl": null,
       "isLocked": false,
@@ -153,7 +153,7 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 2.8,
+    "maxVelocity": 3.0,
     "maxAcceleration": 2.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,

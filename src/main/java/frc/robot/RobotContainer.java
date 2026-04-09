@@ -89,6 +89,7 @@ public class RobotContainer {
         /* --- DRIVER CONTROLS --- */
         m_driver.a().whileTrue(m_swerve.applyBrake());
         m_driver.y().onTrue(m_swerve.resetHeading()); 
+        m_driver.b().whileTrue(m_intake.exhaustCommand());
         m_driver.leftTrigger().whileTrue(m_intake.deploySequenceCommand());
         m_driver.leftBumper().onTrue(m_intake.setPivotCommand(IntakeProfile.kPivotUpPosition));
         //m_driver.x().whileTrue(GoToTower.autoClimbCommand(m_swerve)); 

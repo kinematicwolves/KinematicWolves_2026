@@ -20,13 +20,13 @@ import frc.robot.generated.TunerConstants;
 public class Intake extends SubsystemBase {
     private final TalonFX m_pivotMaster;
     private final TalonFX m_pivotFollower;
-    private final WPI_TalonSRX m_roller;
+    private final TalonFX m_roller;
     private final MotionMagicVoltage m_pivotRequest = new MotionMagicVoltage(0).withSlot(0);
 
     public Intake() {
         m_pivotMaster = new TalonFX(IntakeProfile.kPivotMasterID, TunerConstants.kCANBus);
         m_pivotFollower = new TalonFX(IntakeProfile.kPivotFollowerID, TunerConstants.kCANBus);
-        m_roller = new WPI_TalonSRX(IntakeProfile.kRollerID);
+        m_roller = new TalonFX(IntakeProfile.kRollerID);
         configureHardware();
     }
 
@@ -51,9 +51,14 @@ public class Intake extends SubsystemBase {
         // The follower automatically spins the opposite way of the master
         m_pivotFollower.setControl(new Follower(m_pivotMaster.getDeviceID(), MotorAlignmentValue.Opposed));
 
-        m_roller.configFactoryDefault();
-        m_roller.setNeutralMode(NeutralMode.Coast);
-        m_roller.setInverted(true);
+        TalonFXConfiguration rollerConfig = new TalonFXConfiguration();
+        // m_roller.getConfigurator().apply(new TalonFXConfiguration());
+        rollerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        rollerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        m_roller.getConfigurator().apply(rollerConfig);
+        // m_roller.configFactoryDefault();
+        // m_roller.setNeutralMode(NeutralMode.Coast);
+        // m_roller.setInverted(true);
     }
 
     public boolean isIntakeDown() {

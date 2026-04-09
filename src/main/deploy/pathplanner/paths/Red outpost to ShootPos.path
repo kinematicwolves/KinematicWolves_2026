@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 16.401724137931033,
-        "y": 7.450447227191413
+        "x": 16.334025044722722,
+        "y": 7.596475849731663
       },
       "prevControl": null,
       "nextControl": {
-        "x": 15.648665708364687,
-        "y": 7.099093957494241
+        "x": 15.782361359570665,
+        "y": 6.720304114490161
       },
       "isLocked": false,
       "linkedName": "Red Outpost"
     },
     {
       "anchor": {
-        "x": 14.316666666666668,
-        "y": 5.578603286384978
+        "x": 14.257173524150268,
+        "y": 5.487173524150268
       },
       "prevControl": {
-        "x": 14.593450704225353,
-        "y": 5.961842723004697
+        "x": 14.533957561708952,
+        "y": 5.870412960769987
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.8,
+    "maxVelocity": 3.0,
     "maxAcceleration": 2.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
