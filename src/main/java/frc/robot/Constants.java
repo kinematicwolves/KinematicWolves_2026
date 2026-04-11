@@ -53,7 +53,7 @@ public final class Constants {
         public static final double kPivotTolerance = 0.5;
 
         // Motor Speeds
-        public static final double kRollerVoltage = 11; 
+        public static final double kRollerVoltage = 11.0; 
         public static final double kExhaustVoltage = -11; // TODO: Set voltage if needed
 
         // Current Limits

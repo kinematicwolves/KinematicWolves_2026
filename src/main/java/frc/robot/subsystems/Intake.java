@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Volts;
+
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -26,7 +28,7 @@ public class Intake extends SubsystemBase {
     public Intake() {
         m_pivotMaster = new TalonFX(IntakeProfile.kPivotMasterID, TunerConstants.kCANBus);
         m_pivotFollower = new TalonFX(IntakeProfile.kPivotFollowerID, TunerConstants.kCANBus);
-        m_roller = new TalonFX(IntakeProfile.kRollerID);
+        m_roller = new TalonFX(IntakeProfile.kRollerID, TunerConstants.kCANBus);
         configureHardware();
     }
 
@@ -73,6 +75,14 @@ public class Intake extends SubsystemBase {
     public void setRollerVoltage(double volts) {
         m_roller.setVoltage(volts);
     }
+    
+   /**
+    * sets the motor speed at a percent output
+    * @param speed between -1 and 1
+    */
+    public void setRollerSpeed(double speed) {
+    m_roller.set(speed);
+    }
 
     // Simple position setting
     public Command setPivotCommand(double rotations) {
@@ -93,12 +103,17 @@ public class Intake extends SubsystemBase {
             // 1. Always command the pivot to move to the down position
             // (Note: Replace 'setPivotPosition' with whatever your internal method is actually called)
             setPivotPosition(IntakeProfile.kPivotDownPosition);
+            setRollerVoltage(11);
 
             // 2. Only apply voltage to the rollers IF the intake has physically reached the bottom
             if (isIntakeDown()) {
                 setRollerVoltage(IntakeProfile.kRollerVoltage);
+                System.out.println("Intake is down");
+                System.out.println(IntakeProfile.kRollerVoltage);
             } else {
                 setRollerVoltage(0.0); // Keep them off while traveling
+                System.out.println("Intake is up");
+
             }
         })
         .finallyDo(() -> {
@@ -116,5 +131,9 @@ public class Intake extends SubsystemBase {
     @Override
     public void periodic() {
         SmartDashboard.putNumber("Pivot Pos", m_pivotMaster.getPosition().getValueAsDouble());
+        SmartDashboard.putBoolean("Pivot down?", isIntakeDown());
+        SmartDashboard.putNumber("Pivot Target", m_pivotMaster.getClosedLoopReference().getValueAsDouble());
+        SmartDashboard.putNumber("roller", m_roller.getClosedLoopReference().getValueAsDouble());
+
     }
 }

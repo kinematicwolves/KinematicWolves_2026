@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.IntakeProfile;
 import frc.robot.Constants.SwerveProfile;
@@ -91,7 +92,7 @@ public class RobotContainer {
         m_driver.y().onTrue(m_swerve.resetHeading()); 
         m_driver.b().whileTrue(m_intake.exhaustCommand());
         m_driver.leftTrigger().whileTrue(m_intake.deploySequenceCommand());
-        m_driver.leftBumper().onTrue(m_intake.setPivotCommand(IntakeProfile.kPivotUpPosition));
+        //m_driver.leftBumper().onTrue(m_intake.setPivotCommand(IntakeProfile.kPivotUpPosition));
         //m_driver.x().whileTrue(GoToTower.autoClimbCommand(m_swerve)); 
         m_driver.rightTrigger().whileTrue(
             AimAndShoot.teleopAimAndShoot(
@@ -109,6 +110,12 @@ public class RobotContainer {
         m_operator.leftBumper().whileTrue(
             m_intake.exhaustCommand().alongWith(m_indexer.reverseIndexerCommand())
             );
+        
+        m_operator.rightBumper().whileTrue(new InstantCommand(() -> m_intake.setRollerVoltage(IntakeProfile.kRollerVoltage)));
+        m_operator.b()
+            .onTrue(m_intake.setPivotCommand(IntakeProfile.kPivotUpPosition))
+            .onFalse(m_intake.setPivotCommand(IntakeProfile.kPivotDownPosition));
+
     }
 
     public Command getAutonomousCommand() {
