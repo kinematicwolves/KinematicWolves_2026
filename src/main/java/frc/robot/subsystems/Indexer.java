@@ -1,90 +1,94 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.PersistMode;
-import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkLowLevel;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IndexerProfile;
 
 public class Indexer extends SubsystemBase {
-    /** Creates a new Indexer. */
-    // Step one, create all the objects we need
-    private final SparkMax kickerMotor = new SparkMax(IndexerProfile.kickerMotorCanID, SparkLowLevel.MotorType.kBrushless);
-    private final TalonSRX roller      = new TalonSRX(IndexerProfile.rollerMotorCanID);
 
-    private RelativeEncoder kickerEncoder = kickerMotor.getEncoder();
-    
+    private final WPI_TalonSRX m_hopper;
+    private final SparkMax m_kicker;
+
     public Indexer() {
-        configureKickerMotor();
+        m_hopper = new WPI_TalonSRX(IndexerProfile.kHopperID);
+        m_kicker = new SparkMax(IndexerProfile.kKickerID, MotorType.kBrushless);
+
+        configureHardware();
     }
 
+    private void configureHardware() {
+        /* --- HOPPER CONFIGURATION (Talon SRX) --- */
+        m_hopper.configFactoryDefault();
+        m_hopper.setNeutralMode(NeutralMode.Coast); // Coast allows balls to settle
+        m_hopper.configContinuousCurrentLimit(IndexerProfile.kHopperCurrentLimit);
+        m_hopper.enableCurrentLimit(true);
+        m_hopper.setInverted(true); // Change to true if the motor spins the wrong way
 
-    private void configureKickerMotor() {
-        // https://docs.revrobotics.com/brushless/spark-max/parameters
-        // the spark max is configured differently than talon fx motors
-        SparkMaxConfig config = new SparkMaxConfig();
-
-        // first, we clear the current parameters
-        this.kickerMotor.configure(config, ResetMode.kResetSafeParameters, null);
-
-        // Current Limits
-        config.smartCurrentLimit(30);
-
-        //Neutral Mode    
-        config.idleMode(IdleMode.kCoast); 
+        /* --- KICKER CONFIGURATION --- */
+        SparkMaxConfig kickerConfig = new SparkMaxConfig();
         
-        // Setting the motor direction
-        config.inverted(true);
+        kickerConfig
+            .inverted(true)
+            .idleMode(IdleMode.kBrake)
+            .smartCurrentLimit(IndexerProfile.kKickerCurrentLimit);
 
-        //set the pid gains
-        config.closedLoop
-        .p(0.0001)
-        .i(0.00001)
-        .d(0.1);
-        
-        // finally, we apply our config to as persistent parameters
-        this.kickerMotor.configure(config, null, PersistMode.kPersistParameters);
+        m_kicker.configure(kickerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    }
+
+    /* ========================================================= */
+    /* METHODS                                            */
+    /* ========================================================= */
+
+    /**
+     * Directly sets the voltages of the hopper and kicker.
+     */
+    public void setVoltages(double hopperVolts, double kickerVolts) {
+        m_hopper.setVoltage(hopperVolts);
+        m_kicker.setVoltage(kickerVolts);
+    }
+
+    /**
+     * Safely stops all indexer motors.
+     */
+    public void stop() {
+        setVoltages(0.0, 0.0);
+    }
+
+    /* ========================================================= */
+    /* COMMANDS                                                  */
+    /* ========================================================= */
+
+    /**
+     * Runs both the hopper and the kicker forward to feed the shooter.
+     * Stops automatically when the command is interrupted.
+     */
+    public Command feedShooterCommand() {
+        return run(() -> setVoltages(IndexerProfile.kHopperVoltage, IndexerProfile.kKickerVoltage))
+               .finallyDo(this::stop)
+               .withName("IndexerFeed");
+    }
+
+    /**
+     * Runs both motors in reverse to clear a jam or eject a wrong piece.
+     */
+    public Command reverseIndexerCommand() {
+        return run(() -> setVoltages(IndexerProfile.kReverseVoltage, IndexerProfile.kReverseVoltage))
+               .finallyDo(this::stop)
+               .withName("IndexerReverse");
     }
 
     @Override
     public void periodic() {
-        // This method will be called once per scheduler run
-        SmartDashboard.putNumber("KickerVelocity[RPM]", kickerEncoder.getVelocity());
-    }
-
-    /**
-     * Sets the speeed of the motor in closed loop mode
-     * @param speed the speed for the motor, rpm
-     */
-    public void setKickerSpeed(double speed) {
-        kickerMotor.getClosedLoopController().setSetpoint(speed, SparkMax.ControlType.kVelocity);
-    }
-
-    /**
-     * sets the speed of the motor in open loop mode
-     * @param percent the speed for the motor, -1 to 1
-     */
-    public void setKickerPercent(double percent) {
-        kickerMotor.set(percent);
-    }  
-
-    /**
-     * Tets the speed of the roller in open-loop-mode
-     * @param percent the speed for the motor, -1 to 1
-     */
-    public void setRollerPercent(double percent) {
-        roller.set(TalonSRXControlMode.PercentOutput, percent);
+        SmartDashboard.putNumber("Kicker RPM", m_kicker.getEncoder().getVelocity());
     }
 }

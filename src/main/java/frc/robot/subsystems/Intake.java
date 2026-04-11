@@ -1,146 +1,134 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.ctre.phoenix.motorcontrol.can.TalonSRXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeProfile;
 import frc.robot.generated.TunerConstants;
 
 public class Intake extends SubsystemBase {
-    /** Creates a new Intake. */
-    // Here, we declare all the motors, sensors, and other objects that this subsystem needs
-    // Declaring all the motors for the intake
-    private final TalonFX  intakeMotor1 = new TalonFX(IntakeProfile.intakeMotorACanID, TunerConstants.kCANBus);
-    private final TalonFX  intakeMotor2 = new TalonFX(IntakeProfile.intakeMotorBCanID, TunerConstants.kCANBus);
-    private final TalonSRX roller       = new TalonSRX(IntakeProfile.rollerMotorCanID);
-    
+    private final TalonFX m_pivotMaster;
+    private final TalonFX m_pivotFollower;
+    private final TalonFX m_roller;
+    private final MotionMagicVoltage m_pivotRequest = new MotionMagicVoltage(0).withSlot(0);
+
     public Intake() {
-        // Here, we will configure all the motors, and to whatever other setup we need.
-        // I split this up into separate functions for readability
-
-        // Configure intakeMotor1
-        configureIntakeMotor1();
-
-        // Configure intakeMotor2
-        configureIntakeMotorB();
-
-        configureRollorMotor();
-
+        m_pivotMaster = new TalonFX(IntakeProfile.kPivotMasterID, TunerConstants.kCANBus);
+        m_pivotFollower = new TalonFX(IntakeProfile.kPivotFollowerID, TunerConstants.kCANBus);
+        m_roller = new TalonFX(IntakeProfile.kRollerID, TunerConstants.kCANBus);
+        configureHardware();
     }
 
-    /* Private, internal functions */
-    private void configureIntakeMotor1() {
-        TalonFXConfiguration config = new TalonFXConfiguration();
-        // PID
-        config.Slot0.kP = 0.3;
-        config.Slot0.kI = 0.0;
-        config.Slot0.kD = 0.0;
-
-        config.Slot1.kP = 0.6;
-        config.Slot1.kI = 0.0;
-        config.Slot1.kD = 0.0;
-
-        // Current Limits
-        config.CurrentLimits.SupplyCurrentLimit = 20.0;
-        config.CurrentLimits.SupplyCurrentLimitEnable = true;
-        config.CurrentLimits.StatorCurrentLimit = 60.0;
-        config.CurrentLimits.StatorCurrentLimitEnable = true;
-
-        // Soft limits
-        config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = IntakeProfile.deployedPose;
-        config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = IntakeProfile.retractedPose;
-
-        // Neutral mode
-        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-
-        // Setting the motor direction
-        // I suggest this be set such that when the intake moves outside the robot, that is positive
-        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    private void configureHardware() {
+        TalonFXConfiguration pivotConfig = new TalonFXConfiguration();
+        pivotConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         
-        // apply the config
-        this.intakeMotor1.getConfigurator().apply(config);
+        // Clockwise_Positive = Inverted
+        // CounterClockwise_Positive = Default
+        pivotConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        
+        pivotConfig.Slot0.kP = IntakeProfile.kPivotP;
+        pivotConfig.Slot0.kI = IntakeProfile.kPivotI;
+        pivotConfig.Slot0.kD = IntakeProfile.kPivotD;
+        pivotConfig.MotionMagic.MotionMagicCruiseVelocity = IntakeProfile.kPivotMaxVelocity;
+        pivotConfig.MotionMagic.MotionMagicAcceleration = IntakeProfile.kPivotMaxAcceleration;
 
-        // reset the sensor
-        this.intakeMotor1.setPosition(0.0);
+        // Apply config to the Master
+        m_pivotMaster.getConfigurator().apply(pivotConfig);
+        m_pivotMaster.setPosition(0.0);
+        
+        // The follower automatically spins the opposite way of the master
+        m_pivotFollower.setControl(new Follower(m_pivotMaster.getDeviceID(), MotorAlignmentValue.Opposed));
+
+        TalonFXConfiguration rollerConfig = new TalonFXConfiguration();
+        // m_roller.getConfigurator().apply(new TalonFXConfiguration());
+        rollerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        rollerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        m_roller.getConfigurator().apply(rollerConfig);
+        // m_roller.configFactoryDefault();
+        // m_roller.setNeutralMode(NeutralMode.Coast);
+        // m_roller.setInverted(true);
     }
 
-    private void configureIntakeMotorB() {
-        TalonFXConfiguration config = new TalonFXConfiguration();
-
-        // Neutral mode
-        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-
-        // Setting the motor direction
-        // I suggest this be set such that when the intake moves outside the robot, that is positive
-        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-
-        // apply the config
-        this.intakeMotor2.getConfigurator().apply(config);
-
-        // Tell this motor to follow whatever intakeMotor1 does
-        this.intakeMotor2.setControl(new Follower(this.intakeMotor1.getDeviceID(), MotorAlignmentValue.Opposed));
+    public boolean isIntakeDown() {
+        return Math.abs(m_pivotMaster.getPosition().getValueAsDouble() - IntakeProfile.kPivotDownPosition) 
+               < IntakeProfile.kPivotTolerance;
     }
 
-    private void configureRollorMotor() {
-        TalonSRXConfiguration config = new TalonSRXConfiguration();
-        config.continuousCurrentLimit = 5;
-        roller.configAllSettings(config);
+    public void setPivotPosition(double rotations) {
+        m_pivotMaster.setControl(m_pivotRequest.withPosition(rotations));
+    }
+
+    public void setRollerVoltage(double volts) {
+        m_roller.setVoltage(volts);
+    }
+    
+   /**
+    * sets the motor speed at a percent output
+    * @param speed between -1 and 1
+    */
+    public void setRollerSpeed(double speed) {
+    m_roller.set(speed);
+    }
+
+    // Simple position setting
+    public Command setPivotCommand(double rotations) {
+        return run(() -> setPivotPosition(rotations)).until(() -> isIntakeDown() == true);
+    }
+
+    // Factory for roller control
+    public Command runRollersCommand(double volts) {
+        return run(() -> setRollerVoltage(volts)).finallyDo(() -> setRollerVoltage(0));
+    }
+
+    /**
+     * A unified sequence that safely handles the pivot and rollers 
+     * without conflicting subsystem requirements.
+     */
+    public Command deploySequenceCommand() {
+        return run(() -> {
+            // 1. Always command the pivot to move to the down position
+            // (Note: Replace 'setPivotPosition' with whatever your internal method is actually called)
+            setPivotPosition(IntakeProfile.kPivotDownPosition);
+            setRollerVoltage(11);
+
+            // 2. Only apply voltage to the rollers IF the intake has physically reached the bottom
+            if (isIntakeDown()) {
+                setRollerVoltage(IntakeProfile.kRollerVoltage);
+                System.out.println("Intake is down");
+                System.out.println(IntakeProfile.kRollerVoltage);
+            } else {
+                setRollerVoltage(0.0); // Keep them off while traveling
+                System.out.println("Intake is up");
+
+            }
+        })
+        .finallyDo(() -> {
+            // Safety stop for the rollers when the driver lets go of the trigger
+            setRollerVoltage(0.0);
+        })
+        .withName("IntakeDeploySequence");
+    }
+
+    // Separate Exhaust Command
+    public Command exhaustCommand() {
+        return runRollersCommand(IntakeProfile.kExhaustVoltage);
     }
 
     @Override
     public void periodic() {
-        // This method will be called once per scheduler run
+        SmartDashboard.putNumber("Pivot Pos", m_pivotMaster.getPosition().getValueAsDouble());
+        SmartDashboard.putBoolean("Pivot down?", isIntakeDown());
+        SmartDashboard.putNumber("Pivot Target", m_pivotMaster.getClosedLoopReference().getValueAsDouble());
+        SmartDashboard.putNumber("roller", m_roller.getClosedLoopReference().getValueAsDouble());
 
-        // This is a good spot to put any state-monitoring, smart dashboard outputs, logging, etc
-        SmartDashboard.putNumber("Intake Pose", this.intakeMotor1.getPosition().getValueAsDouble()); // puts the intake position on the smart dashboard
-        SmartDashboard.putBoolean("IntakeAtPose", this.atSetpoint()); // puts the intake position on the smart dashboard
-    }
-
-    /* Public functions for commands */
-    /**
-     * Sets the target position of the intake in motor rotations
-     * @param rotations the position of the intake in motor rotations
-     */
-    public void setPosition(double rotations, int slot) {
-        this.intakeMotor1.setControl(new PositionVoltage(rotations).withSlot(slot));
-    }
-     
-    /**
-     * Returns if the intake is at its target position.
-     * @return True if the intake is at its set position, otherwise false
-     */
-    public boolean atSetpoint() {
-        return Math.abs(this.intakeMotor1.getClosedLoopError().getValue()) < IntakeProfile.poseTolerance;
-    }
-
-    /**
-     * Sets the speed percent of the roller in open-loop-mode.
-     * @param percet between -1 and 1
-     */
-    public void setRollerPercent(double percet) {
-        this.roller.set(TalonSRXControlMode.PercentOutput, percet);
-    }
-
-    /**
-     * Resests the intake zero as the current position of the intake
-     */
-    public void zeroIntake() {
-        this.intakeMotor1.setPosition(0.0);
     }
 }

@@ -1,224 +1,224 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsystems;
 
+import java.util.function.DoubleSupplier; // Added for continuous aiming
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkLowLevel;
+import com.revrobotics.spark.FeedbackSensor;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.IntakeProfile;
 import frc.robot.Constants.LauncherProfile;
 import frc.robot.generated.TunerConstants;
 
 public class Launcher extends SubsystemBase {
-    /** Creates a new Launcher. */
 
-    // Step one, create all the objects we need
-    private final TalonFX launcherMotor1 = new TalonFX(LauncherProfile.launcherMotor1CanID, TunerConstants.kCANBus); 
-    private final TalonFX launcherMotor2 = new TalonFX(LauncherProfile.launcherMotor2CanID, TunerConstants.kCANBus); 
+    private final TalonFX m_leftFlywheel;
+    private final TalonFX m_rightFlywheel;
+    private final SparkMax m_hood;
 
-    Debouncer debouncer = new Debouncer(0.1);
+    // CTRE Velocity Request
+    private final VelocityVoltage m_velocityRequest = new VelocityVoltage(0).withSlot(0);
 
-    // hood motor and controller objects
-    private final SparkMax hoodMotor = new SparkMax(LauncherProfile.hoodMotorCanID, SparkLowLevel.MotorType.kBrushless);
-    private final SparkClosedLoopController hoodPIDController = hoodMotor.getClosedLoopController();
+    // Interpolating Maps
+    private final InterpolatingDoubleTreeMap m_rpmMap = new InterpolatingDoubleTreeMap();
+    private final InterpolatingDoubleTreeMap m_hoodMap = new InterpolatingDoubleTreeMap();
+
+    private double m_currentTargetRPS = 0.0;
+    private double m_currentTargetHood = 0.0;
+
+    Debouncer debouncer = new Debouncer(0.5);
+    LinearFilter averageVelocity = LinearFilter.movingAverage(40);
+
+    // --- TUNING VARIABLES ---
+    // Set these to a safe starting point (e.g., a short shot)
+    private double m_tuningRPS = 50.0; 
+    private double m_tuningHood = 10.0; 
 
     public Launcher() {
-        // Step 2, apply whatever configs we need
-        // Here, we will configure all the motors, and to whatever other setup we need.
-        // I split this up into separate functions for readability
+        m_leftFlywheel = new TalonFX(LauncherProfile.kFlywheelLeftID, TunerConstants.kCANBus);
+        m_rightFlywheel = new TalonFX(LauncherProfile.kFlywheelRightID, TunerConstants.kCANBus);
+        m_hood = new SparkMax(LauncherProfile.kHoodID, MotorType.kBrushless);
 
-        // Configure LauncherMotorA
-        configureLauncherMotor1();
-
-        // Configure LauncherMotorB
-        configureLauncherMotor2();
-
-        configureHoodMotor();
+        setupInterpolation();
+        configureHardware();
     }
 
-    /* Private, internal functions */
-    private void configureLauncherMotor1() {
-        TalonFXConfiguration config = new TalonFXConfiguration();
-
-        // PID (Velocity)
-        // https://v6.docs.ctr-electronics.com/en/latest/docs/api-reference/device-specific/talonfx/basic-pid-control.html#velocity-control
-        config.Slot0.kS = 0.1; // Add 0.1 V output to overcome static friction
-        config.Slot0.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
-        config.Slot0.kP = 0.7; // An error of 1 rps results in 0.11 V output
-        config.Slot0.kI = 0.07;
-        // config.Slot0.kD = 0.0;
-
-        // Current Limits
-        config.CurrentLimits.SupplyCurrentLimit = 20.0;
-        config.CurrentLimits.SupplyCurrentLimitEnable = true;
-
-        config.CurrentLimits.StatorCurrentLimit = 20.0;
-        config.CurrentLimits.StatorCurrentLimitEnable = true;
-
-        // Neutral Mode
-        // We typically set flywheels to coast mode
-        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-
-        // Setting the motor direction
-        // I suggest this be set such that a positive number launcher the game piece
-        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-
-        // applying the config
-        this.launcherMotor1.getConfigurator().apply(config);
+    private void setupInterpolation() {
+        for (double[] data : LauncherProfile.kShootingData) {
+            m_rpmMap.put(data[0], data[1]);
+            m_hoodMap.put(data[0], data[2]);
+        }
     }
 
-    private void configureLauncherMotor2() {
-        TalonFXConfiguration config = new TalonFXConfiguration();
+    private void configureHardware() {
+        /* --- KRAKEN FLYWHEELS --- */
+        TalonFXConfiguration flyConfig = new TalonFXConfiguration();
+        flyConfig.Slot0.kP = LauncherProfile.kFlywheelP;
+        flyConfig.Slot0.kV = LauncherProfile.kFlywheelV;
+        flyConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        
+        flyConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        m_leftFlywheel.getConfigurator().apply(flyConfig);
 
-        // PID (Velocity)
-        // https://v6.docs.ctr-electronics.com/en/latest/docs/api-reference/device-specific/talonfx/basic-pid-control.html#velocity-control
-        config.Slot0.kS = 0.1; // Add 0.1 V output to overcome static friction
-        config.Slot0.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
-        config.Slot0.kP = 0.7; // An error of 1 rps results in 0.11 V output
-        config.Slot0.kI = 0.07;
-        // config.Slot0.kD = 0.0;
+        flyConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        m_rightFlywheel.getConfigurator().apply(flyConfig);
 
-        // Current Limits
-        config.CurrentLimits.SupplyCurrentLimit = 40.0;
-        config.CurrentLimits.SupplyCurrentLimitEnable = true;
+        /* --- HOOD --- */
+        SparkMaxConfig hoodConfig = new SparkMaxConfig();
+        hoodConfig
+            .idleMode(IdleMode.kBrake)
+            .smartCurrentLimit(30); 
+        
+        // Use the imported FeedbackSensor enum directly
+        hoodConfig.closedLoop
+            .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+            .p(LauncherProfile.kHoodP);
 
-        config.CurrentLimits.StatorCurrentLimit = 40.0;
-        config.CurrentLimits.StatorCurrentLimitEnable = true;
-
-        // Neutral Mode
-        // We typically set flywheels to coast mode
-        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-
-        // Setting the motor direction
-        // I suggest this be set such that a positive number launcher the game piece
-        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-
-        // applying the config
-        this.launcherMotor2.getConfigurator().apply(config);
+        // Apply and Persist
+        m_hood.configure(hoodConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
-    private void configureHoodMotor() {
-        // https://docs.revrobotics.com/brushless/spark-max/parameters
-        // the spark max is configured differently than talon fx motors
-        SparkMaxConfig config = new SparkMaxConfig();
+    /* ========================================================= */
+    /* LOGIC METHODS                                             */
+    /* ========================================================= */
 
-        // first, we clear the current parameters
-        this.hoodMotor.configure(config, ResetMode.kResetSafeParameters, null);
+    public void runShooter(double targetRPS, double targetHoodRotations) {
+        m_currentTargetRPS = targetRPS;
+        m_currentTargetHood = targetHoodRotations;
 
-        // Current Limits
-        config.smartCurrentLimit(20);
+        m_leftFlywheel.setControl(m_velocityRequest.withVelocity(targetRPS));
+        m_rightFlywheel.setControl(m_velocityRequest.withVelocity(targetRPS));
+        
+        m_hood.getClosedLoopController().setSetpoint(targetHoodRotations, SparkMax.ControlType.kPosition);
+    }
 
-        //Neutral Mode
-        // Set to coast fist so we can move the hood by hand.
-        // After we determine the range, we can change it back to brake mode
-        // we typically set hoods to break mode so key keep their position
-        config.idleMode(IdleMode.kBrake); 
-                
-        // Setting the motor direction
-        config.inverted(false);
+    public void stop() {
+        m_leftFlywheel.stopMotor();
+        m_rightFlywheel.stopMotor();
+        m_hood.stopMotor();
 
-        // setting the forward / reverse position limits so the hood doesn't rip itself apart... hopefully :)
-        config.softLimit.forwardSoftLimit(5);
-        config.softLimit.forwardSoftLimitEnabled(true);
-        config.softLimit.reverseSoftLimit(0);
-        config.softLimit.reverseSoftLimitEnabled(true);
-        // configuring the pid controller for the hood angle
-        config.closedLoop
-        .p(0.5)
-        .i(0.0)
-        .d(0.0);
+        // Reset targets when stopped so isReadyToFire doesn't return true accidentally
+        m_currentTargetRPS = 0.0; 
+        m_currentTargetHood = 0.0;
+    }
 
-        // finally, we apply our config to as persistent parameters
-        this.hoodMotor.configure(config, null, PersistMode.kPersistParameters);
+    /**isReadyToFire
+     * Checks if the shooter is rev'd up and the hood is in position based on the LIVE target.
+     */
+    public boolean isReadyToFire() {
+        if (m_currentTargetRPS == 0.0) return false; // Not trying to shoot
 
-        this.hoodMotor.getEncoder().setPosition(0);
+        double leftErr = averageVelocity.calculate(Math.abs(m_leftFlywheel.getVelocity().getValueAsDouble() - m_currentTargetRPS));
+        double hoodErr = Math.abs(m_hood.getEncoder().getPosition() - m_currentTargetHood);
+        return debouncer.calculate (leftErr < LauncherProfile.kRPSTolerance); // && (hoodErr < LauncherProfile.kHoodTolerance));
+    }
+
+    /* ========================================================= */
+    /* COMMAND FACTORIES                                         */
+    /* ========================================================= */
+
+    /**
+     * Takes a distance supplier so the RPS and Angle update LIVE as the robot drives.
+     */
+    public Command continuousAimCommand(DoubleSupplier distanceMetersSupplier) {
+        return run(() -> {
+            double distance = distanceMetersSupplier.getAsDouble();
+            if (distance > 0.1) { // If we have a valid target
+                double rps = m_rpmMap.get(distance);
+                double hood = m_hoodMap.get(distance);
+                runShooter(rps, hood);
+            } else {
+                // Default to a known safe shot if vision drops
+                runShooter(m_rpmMap.get(1.0), m_hoodMap.get(1.0));
+            }
+        }).finallyDo(this::stop).withName("ContinuousAim");
+    }
+
+    /**
+     * Fallback "Hub Shot" manually forced by the driver.
+     */
+    public Command hubShotCommand() {
+        // Pulls the 1.0 meter mapped values
+        return run(() -> runShooter(m_rpmMap.get(1.0), m_hoodMap.get(1.0)))
+               .finallyDo(this::stop)
+               .withName("HubShot");
+    }
+
+    /**
+     * Fallback "Hub Shot" manually forced by the driver.
+     * Now includes the Gated Feeder and Intake Rollers!
+     */
+    public static Command closeShotCommand(Launcher launcher, Indexer indexer, Intake intake) {
+        return Commands.parallel(
+            launcher.hubShotCommand(),
+            
+            // The Gated Feeder logic adapted for the close shot
+            Commands.sequence(
+                Commands.waitUntil(launcher::isReadyToFire),
+                indexer.feedShooterCommand()
+                       .alongWith(intake.runRollersCommand(IntakeProfile.kRollerVoltage))
+                       .onlyWhile(launcher::isReadyToFire) // Check continuously while feeding to avoid spitting out a ball if we lose the shot
+            ).repeatedly()
+        ).withName("FenderShotSequence");
+
+        /* Incase the new feed logic does not work */
+            // Commands.sequence(
+            //     Commands.waitUntil(() -> launcher.isReadyToFire() && vision.isOdometryAligned()),
+            //     indexer.feedShooterCommand()
+            //         .alongWith(intake.runRollersCommand(IntakeProfile.kRollerVoltage))
+            // )
+    }
+
+    /* ========================================================= */
+    /* TUNING COMMANDS                                           */
+    /* ========================================================= */
+
+    /** Runs the shooter at the internal tuning setpoints */
+    public Command tuningCommand() {
+        return run(() -> runShooter(m_tuningRPS, m_tuningHood))
+               .finallyDo(this::stop)
+               .withName("DpadTuning");
+    }
+
+    /** Bumps the RPS up or down by a set amount */
+    public Command bumpRPSCommand(double delta) {
+        return Commands.runOnce(() -> {
+            m_tuningRPS += delta;
+        }).ignoringDisable(true).withName("BumpRPS"); // ignoringDisable allows tuning while disabled!
+    }
+
+    /** Bumps the Hood up or down by a set amount */
+    public Command bumpHoodCommand(double delta) {
+        return Commands.runOnce(() -> {
+            m_tuningHood += delta;
+        }).ignoringDisable(true).withName("BumpHood");
     }
 
     @Override
     public void periodic() {
-        // This method will be called once per scheduler run
-        SmartDashboard.putNumber("HoodPose", hoodMotor.getEncoder().getPosition());
-        SmartDashboard.putBoolean("HoodAtSetPoint", hoodIsAtSetpoint());
-        SmartDashboard.putNumber("HoodTarget", hoodPIDController.getSetpoint());
-        SmartDashboard.putNumber("LauncherVelocity RPS", launcherMotor1.getVelocity().getValueAsDouble());
-        SmartDashboard.putBoolean("LauncherAtSpeed", this.flywheelAtSpeed());
-        SmartDashboard.putBoolean("Launcher1AtSpeed", this.launcherMotor1.getClosedLoopError().getValueAsDouble() < LauncherProfile.launcherTolerance);
-        SmartDashboard.putBoolean("Launcher2AtSpeed", this.launcherMotor2.getClosedLoopError().getValueAsDouble() < LauncherProfile.launcherTolerance);
-        SmartDashboard.putNumber("Launcher1Speed", this.launcherMotor1.getVelocity().getValueAsDouble());
-        SmartDashboard.putNumber("Launcher2Speed", this.launcherMotor2.getVelocity().getValueAsDouble());
-    }
+        // Standard Telemetry
+        SmartDashboard.putNumber("Launcher/Left RPS", m_leftFlywheel.getVelocity().getValueAsDouble());
+        SmartDashboard.putNumber("Launcher/Hood Pos", m_hood.getEncoder().getPosition());
+        SmartDashboard.putBoolean("Launcher/ReadyToFire", isReadyToFire());
 
-    /* Public functions for commands */
-    /**
-     * Sets the flywheel percentage in open-loop mode. Do not use for launching game pieces. This is to help with setup and testing.
-     * @param speedFraction between -1 and 1. -1 is full speed in reverse, 1 is full speed forward.
-     */
-    public void setFlywheelPercent(double speedFraction) {
-        this.launcherMotor1.set(speedFraction);
-        this.launcherMotor2.set(-speedFraction);
-
+        // Display the live tuning variables so the Tech knows what to write down
+        SmartDashboard.putNumber("Tech/Current Tuning RPS", m_tuningRPS);
+        SmartDashboard.putNumber("Tech/Current Tuning Hood", m_tuningHood);
     }
-
-    /**
-     * Sets the hood's target position
-     * @param rotations the position in the hood in rotations
-     */
-    public void setHoodPosition(double rotations) {
-        this.hoodPIDController.setSetpoint(rotations, SparkMax.ControlType.kPosition);
-    }
-
-    /**
-     * Sets the speed of the flywheel in closed-loop-mode.
-     * @param speed the speed of the flywheel in rotations/s [rps]
-     */
-    public void setFlywheelSpeed(double speed) {
-        this.launcherMotor1.setControl(new VelocityVoltage(speed).withEnableFOC(LauncherProfile.enableFOC));
-        this.launcherMotor2.setControl(new VelocityVoltage(speed).withEnableFOC(LauncherProfile.enableFOC));
-    }
-
-    /**
-     * Returns true of the flywheel is at its setpoint, otherwise false
-     * @return true if the flywheel is at speed, otherwise false.
-     */
-    public boolean flywheelAtSpeed() {
-        return debouncer.calculate(
-            Math.abs(this.launcherMotor1.getClosedLoopError().getValueAsDouble()) < LauncherProfile.launcherTolerance &&
-            Math.abs(this.launcherMotor2.getClosedLoopError().getValueAsDouble()) < LauncherProfile.launcherTolerance
-            );
-    }
-
-    /**
-     * Returns if the hood is at its set point or not.
-     * @return True if the hood is at its setpoint, false otherwise.
-     */
-    public boolean hoodIsAtSetpoint() {
-        // Unlike the TalonFX, the spark max doesn't have a function call for how close it is.
-        // Therefore, we will look at the the current position, and compare it to the stored setpoint
-        return Math.abs(this.hoodMotor.getEncoder().getPosition() - this.hoodPIDController.getSetpoint()) <= 0.2; // TODO: Determine reasonable tolerance and move to constants file
-    }
-
-    /**
-     * Sets the hood percentage in open-loop-mode. Do not use for launching. 
-     * @param percent between -1 and 1.
-     */
-    public void setHoodPercent(double percent) {
-        this.hoodMotor.set(percent);
-    }
-    
 }
