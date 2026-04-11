@@ -12,16 +12,16 @@
         "y": 6.067931034482758
       },
       "isLocked": false,
-      "linkedName": "Red Right start"
+      "linkedName": null
     },
     {
       "anchor": {
-        "x": 15.895939177101969,
-        "y": 7.450447227191413
+        "x": 16.334025044722722,
+        "y": 7.596475849731663
       },
       "prevControl": {
-        "x": 14.895939177101969,
-        "y": 7.450447227191413
+        "x": 15.334025044722722,
+        "y": 7.596475849731663
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.5,
+    "maxVelocity": 3.0,
     "maxAcceleration": 2.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -90.0
   },
   "reversed": false,
   "folder": "Red Right",

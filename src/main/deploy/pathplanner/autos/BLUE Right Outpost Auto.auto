@@ -13,7 +13,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Red Right Side"
+            "pathName": "Right BlueTrench to outpost"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.0
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Outpost to ShootPos"
           }
         },
         {
@@ -26,6 +38,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "red side",
+  "folder": "Blue side",
   "choreoAuto": false
 }

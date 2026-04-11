@@ -13,13 +13,13 @@
         {
           "type": "named",
           "data": {
-            "name": "LaunchFromCenter"
+            "name": "AutoShoot"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "red side",
   "choreoAuto": false
 }

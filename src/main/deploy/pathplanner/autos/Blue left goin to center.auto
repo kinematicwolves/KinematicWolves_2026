@@ -13,7 +13,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Red Right Side"
+            "pathName": "Blue left to shootPos"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AutoShoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": " Blue Depot Through Center to LshootPos"
           }
         },
         {
@@ -26,6 +38,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "red side",
+  "folder": "Blue side",
   "choreoAuto": false
 }

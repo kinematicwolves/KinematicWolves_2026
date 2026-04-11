@@ -5,6 +5,12 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "DeployIntake"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Blue left to shootPos"
@@ -13,13 +19,13 @@
         {
           "type": "named",
           "data": {
-            "name": "LaunchFromCenter"
+            "name": "AutoShoot"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Blue side",
   "choreoAuto": false
 }

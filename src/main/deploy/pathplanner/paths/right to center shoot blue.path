@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.571928879310345,
-        "y": 0.49691810344827586
+        "x": 2.513286637931035,
+        "y": 0.6532974137931037
       },
       "isLocked": false,
       "linkedName": "Blue Right Trench"
     },
     {
       "anchor": {
-        "x": 1.7216163793103454,
-        "y": 2.080258620689656
+        "x": 2.229849137931035,
+        "y": 2.168221982758621
       },
       "prevControl": {
-        "x": 2.506677583893654,
-        "y": 1.7169354913330461
+        "x": 2.3666810344827587,
+        "y": 1.6208943965517246
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.5,
+    "maxVelocity": 3.0,
     "maxAcceleration": 2.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -148.10920819815425
+    "rotation": -146.88865803962796
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 179.01223960036018
   },
   "useDefaultConstraints": true
 }

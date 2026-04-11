@@ -13,7 +13,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Red Right Side"
+            "pathName": "Red right to outpost"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.0
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Red outpost to ShootPos"
           }
         },
         {

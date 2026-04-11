@@ -5,21 +5,21 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "Red Center Start to Depot"
+            "name": "DeployIntake"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Red Depot to Red Outpost"
+            "pathName": "Red right to outpost"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 3.0
+            "waitTime": 2.0
           }
         },
         {
@@ -29,15 +29,27 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "AutoShoot"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Left ShootPos Thru Center to ShootPos"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "RunRollers"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Not for comp atp",
+  "folder": "red side",
   "choreoAuto": false
 }

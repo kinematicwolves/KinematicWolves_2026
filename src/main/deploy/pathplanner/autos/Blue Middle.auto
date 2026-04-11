@@ -5,21 +5,27 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "DeployIntake"
+          }
+        },
+        {
           "type": "path",
           "data": {
-            "pathName": "New Path"
+            "pathName": "Blue Center Start _ Center Backup"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "LaunchFromCenter"
+            "name": "CloseHubShot"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Blue side",
   "choreoAuto": false
 }

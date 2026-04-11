@@ -17,7 +17,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "deployIntake"
+                  "name": null
                 }
               }
             ]
@@ -26,7 +26,7 @@
         {
           "type": "named",
           "data": {
-            "name": "timedintake3s"
+            "name": null
           }
         },
         {
@@ -36,7 +36,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "LaunchFromCenter"
+                  "name": null
                 }
               },
               {
