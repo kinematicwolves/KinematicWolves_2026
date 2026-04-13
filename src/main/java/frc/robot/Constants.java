@@ -101,6 +101,7 @@ public final class Constants {
         // If true, the indexer will only feed balls when the flywheel is at the target speed. If false, it will feed continuously.
         // REMEMBER: If you disable this, make sure to also disable in the closeShotCommand in the Launcher subsystem.
         public static final boolean kShootBallsAtTargetSpeedOnly = true;
+        public static final boolean foc = true;
     }
 
     public static final class IndexerProfile {
