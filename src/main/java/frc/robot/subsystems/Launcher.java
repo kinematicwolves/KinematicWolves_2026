@@ -21,6 +21,7 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeProfile;
 import frc.robot.Constants.LauncherProfile;
@@ -44,6 +45,9 @@ public class Launcher extends SubsystemBase {
 
     Debouncer debouncer = new Debouncer(0.5);
     LinearFilter averageVelocity = LinearFilter.movingAverage(40);
+
+    SparkMaxConfig hoodConfig = new SparkMaxConfig();
+
 
     // --- TUNING VARIABLES ---
     // Set these to a safe starting point (e.g., a short shot)
@@ -80,9 +84,8 @@ public class Launcher extends SubsystemBase {
         m_rightFlywheel.getConfigurator().apply(flyConfig);
 
         /* --- HOOD --- */
-        SparkMaxConfig hoodConfig = new SparkMaxConfig();
         hoodConfig
-            .idleMode(IdleMode.kBrake)
+            .idleMode(IdleMode.kCoast)
             .smartCurrentLimit(30); 
         
         // Use the imported FeedbackSensor enum directly
@@ -102,8 +105,8 @@ public class Launcher extends SubsystemBase {
         m_currentTargetRPS = targetRPS;
         m_currentTargetHood = targetHoodRotations;
 
-        m_leftFlywheel.setControl(m_velocityRequest.withVelocity(targetRPS));
-        m_rightFlywheel.setControl(m_velocityRequest.withVelocity(targetRPS));
+        m_leftFlywheel.setControl(m_velocityRequest.withVelocity(targetRPS).withEnableFOC(LauncherProfile.enableFOC));
+        m_rightFlywheel.setControl(m_velocityRequest.withVelocity(targetRPS).withEnableFOC(LauncherProfile.enableFOC));
         
         m_hood.getClosedLoopController().setSetpoint(targetHoodRotations, SparkMax.ControlType.kPosition);
     }
@@ -126,7 +129,7 @@ public class Launcher extends SubsystemBase {
 
         double leftErr = averageVelocity.calculate(Math.abs(m_leftFlywheel.getVelocity().getValueAsDouble() - m_currentTargetRPS));
         double hoodErr = Math.abs(m_hood.getEncoder().getPosition() - m_currentTargetHood);
-        return debouncer.calculate (leftErr < LauncherProfile.kRPSTolerance); // && (hoodErr < LauncherProfile.kHoodTolerance));
+        return debouncer.calculate (leftErr < LauncherProfile.kRPSTolerance) && (hoodErr < LauncherProfile.kHoodTolerance);
     }
 
     /* ========================================================= */
@@ -155,7 +158,7 @@ public class Launcher extends SubsystemBase {
      */
     public Command hubShotCommand() {
         // Pulls the 1.0 meter mapped values
-        return run(() -> runShooter(m_rpmMap.get(1.0), m_hoodMap.get(1.0)))
+        return run(() -> runShooter(m_rpmMap.get(1.0), 0))
                .finallyDo(this::stop)
                .withName("HubShot");
     }
@@ -208,6 +211,15 @@ public class Launcher extends SubsystemBase {
         return Commands.runOnce(() -> {
             m_tuningHood += delta;
         }).ignoringDisable(true).withName("BumpHood");
+    }
+
+    public Command setHoodBreak() {
+        return new InstantCommand(() -> {
+            System.out.println("Hello World");
+            hoodConfig.idleMode(IdleMode.kBrake);
+            m_hood.getEncoder().setPosition(0);
+            m_hood.configure(hoodConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        }, this);
     }
 
     @Override

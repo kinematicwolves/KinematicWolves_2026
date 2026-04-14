@@ -64,7 +64,7 @@ public class RobotContainer {
 
     /** Maps PathPlanner strings to Java commands for autonomous routines. */
     private void registerPathPlannerCommands() {
-        NamedCommands.registerCommand("DeployIntake", m_intake.setPivotCommand(IntakeProfile.kPivotDownPosition));
+        NamedCommands.registerCommand("DeployIntake", m_intake.setPivotCommand(IntakeProfile.kPivotDownPosition).andThen(m_launcher.setHoodBreak()));
         NamedCommands.registerCommand("RunRollers", m_intake.runRollersCommand(IntakeProfile.kRollerVoltage));
         NamedCommands.registerCommand("CloseHubShot", Launcher.closeShotCommand(m_launcher, m_indexer, m_intake));
         NamedCommands.registerCommand("AutoShoot", AimAndShoot.autoAimAndShoot(m_swerve, m_vision, m_launcher, m_indexer, m_intake));
@@ -91,7 +91,9 @@ public class RobotContainer {
         m_driver.a().whileTrue(m_swerve.applyBrake());
         m_driver.y().onTrue(m_swerve.resetHeading()); 
         m_driver.b().whileTrue(m_intake.exhaustCommand());
-        m_driver.leftTrigger().whileTrue(m_intake.deploySequenceCommand());
+        m_driver.leftTrigger()
+            .whileTrue(m_intake.deploySequenceCommand())
+            .onFalse(m_launcher.setHoodBreak());
         //m_driver.leftBumper().onTrue(m_intake.setPivotCommand(IntakeProfile.kPivotUpPosition));
         //m_driver.x().whileTrue(GoToTower.autoClimbCommand(m_swerve)); 
         m_driver.rightTrigger().whileTrue(

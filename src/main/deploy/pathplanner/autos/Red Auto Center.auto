@@ -11,15 +11,22 @@
           }
         },
         {
-          "type": "path",
+          "type": "deadline",
           "data": {
-            "pathName": "Red right to outpost"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 2.0
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Red right to outpost"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "RunRollers"
+                }
+              }
+            ]
           }
         },
         {
@@ -35,15 +42,22 @@
           }
         },
         {
-          "type": "path",
+          "type": "deadline",
           "data": {
-            "pathName": "Left ShootPos Thru Center to ShootPos"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "RunRollers"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Left ShootPos Thru Center to ShootPos"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "RunRollers"
+                }
+              }
+            ]
           }
         }
       ]

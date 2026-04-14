@@ -89,9 +89,12 @@ public final class Constants {
         // --- INTERPOLATING TABLE DATA ---
         // Key: Distance (meters), Value: {Flywheel RPS, Hood Rotations}
         public static final double[][] kShootingData = { //TODO: Tune
-            {2, 44, 0},   // Close (Front of hub)
-            {2.8, 52, 0},  // Mid Range
-            {3.7, 67, 0},  // Long Range
+            // {2, 44, 0.2},   // Close (Front of hub)
+            // {2.8, 52, 0.5},  // Mid Range
+            // {3.7, 67, 0.8},  // Long Range
+            {2, 44, 0.0},   // Close (Front of hub)
+            {2.8, 52, 0.0},  // Mid Range
+            {3.7, 67, 0.0},  // Long Range
            // {4.1, 73, 0}   // Maximum Distance
         };
 
@@ -101,10 +104,11 @@ public final class Constants {
         // If true, the indexer will only feed balls when the flywheel is at the target speed. If false, it will feed continuously.
         // REMEMBER: If you disable this, make sure to also disable in the closeShotCommand in the Launcher subsystem.
         public static final boolean kShootBallsAtTargetSpeedOnly = true;
+        public static final boolean enableFOC = true;
     }
 
     public static final class IndexerProfile {
-        public static final int kHopperID = 34; // 775 / Talon SRX
+        public static final int kHopperID = 34; // 775 / Talon SRX  
         public static final int kKickerID = 43; // NEO / Spark Max
 
         // Forward/Feed Voltages
@@ -140,7 +144,7 @@ public final class Constants {
         public static final int kCandleID = 5;
         
         /* LED Strip Sizing */
-        public static final int kNumLeds = 150;   // Number of external LEDs
+        public static final int kNumLeds = 250;   // Number of external LEDs
         public static final int kStartIndex = 8; // Skips the 8 CANdle LEDs
         
         /* Disabled Animation Settings */

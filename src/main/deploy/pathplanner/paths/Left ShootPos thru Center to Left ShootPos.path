@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.2016994633273703,
-        "y": 6.2010912343470475
+        "x": 2.0881216457960643,
+        "y": 5.552075134168158
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.855750370338319,
-        "y": 6.856346484387903
+        "x": 2.742172552807013,
+        "y": 6.207330384209014
       },
       "isLocked": false,
       "linkedName": "Left ShootPos"
@@ -96,12 +96,12 @@
     },
     {
       "anchor": {
-        "x": 2.2016994633273703,
-        "y": 6.2010912343470475
+        "x": 2.0881216457960643,
+        "y": 5.552075134168158
       },
       "prevControl": {
-        "x": 2.5926477391864022,
-        "y": 6.533397268829721
+        "x": 2.479069921655096,
+        "y": 5.884381168650831
       },
       "nextControl": null,
       "isLocked": false,
@@ -131,13 +131,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 127.64847419623996
+    "rotation": 141.95295746817393
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 127.64847419623996
+    "rotation": 141.95295746817393
   },
   "useDefaultConstraints": true
 }

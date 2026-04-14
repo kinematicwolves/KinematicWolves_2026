@@ -103,17 +103,13 @@ public class Intake extends SubsystemBase {
             // 1. Always command the pivot to move to the down position
             // (Note: Replace 'setPivotPosition' with whatever your internal method is actually called)
             setPivotPosition(IntakeProfile.kPivotDownPosition);
-            setRollerVoltage(11);
+            // setRollerVoltage(11);
 
             // 2. Only apply voltage to the rollers IF the intake has physically reached the bottom
             if (isIntakeDown()) {
                 setRollerVoltage(IntakeProfile.kRollerVoltage);
-                System.out.println("Intake is down");
-                System.out.println(IntakeProfile.kRollerVoltage);
             } else {
                 setRollerVoltage(0.0); // Keep them off while traveling
-                System.out.println("Intake is up");
-
             }
         })
         .finallyDo(() -> {

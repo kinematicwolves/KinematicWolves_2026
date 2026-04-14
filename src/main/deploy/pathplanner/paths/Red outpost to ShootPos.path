@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 16.334025044722722,
-        "y": 7.596475849731663
+        "x": 15.991228448275862,
+        "y": 7.450447227191413
       },
       "prevControl": null,
       "nextControl": {
-        "x": 15.782361359570665,
-        "y": 6.720304114490161
+        "x": 15.439564763123805,
+        "y": 6.574275491949911
       },
       "isLocked": false,
       "linkedName": "Red Outpost"
@@ -48,7 +48,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": -0.46087018784333705
   },
   "useDefaultConstraints": true
 }
