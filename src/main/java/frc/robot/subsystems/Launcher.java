@@ -108,7 +108,7 @@ public class Launcher extends SubsystemBase {
         m_leftFlywheel.setControl(m_velocityRequest.withVelocity(targetRPS).withEnableFOC(LauncherProfile.enableFOC));
         m_rightFlywheel.setControl(m_velocityRequest.withVelocity(targetRPS).withEnableFOC(LauncherProfile.enableFOC));
         
-        m_hood.getClosedLoopController().setSetpoint(targetHoodRotations, SparkMax.ControlType.kPosition);
+        // m_hood.getClosedLoopController().setSetpoint(targetHoodRotations, SparkMax.ControlType.kPosition);
     }
 
     public void stop() {
@@ -128,8 +128,8 @@ public class Launcher extends SubsystemBase {
         if (m_currentTargetRPS == 0.0) return false; // Not trying to shoot
 
         double leftErr = averageVelocity.calculate(Math.abs(m_leftFlywheel.getVelocity().getValueAsDouble() - m_currentTargetRPS));
-        double hoodErr = Math.abs(m_hood.getEncoder().getPosition() - m_currentTargetHood);
-        return debouncer.calculate (leftErr < LauncherProfile.kRPSTolerance) && (hoodErr < LauncherProfile.kHoodTolerance);
+        // double hoodErr = Math.abs(m_hood.getEncoder().getPosition() - m_currentTargetHood);
+        return debouncer.calculate (leftErr < LauncherProfile.kRPSTolerance); //&& (hoodErr < LauncherProfile.kHoodTolerance);
     }
 
     /* ========================================================= */
@@ -221,6 +221,7 @@ public class Launcher extends SubsystemBase {
             m_hood.configure(hoodConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         }, this);
     }
+    
 
     @Override
     public void periodic() {

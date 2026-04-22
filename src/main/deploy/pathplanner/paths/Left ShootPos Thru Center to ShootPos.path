@@ -16,16 +16,16 @@
     },
     {
       "anchor": {
-        "x": 13.83531305903399,
-        "y": 7.937209302325581
+        "x": 13.705509838998212,
+        "y": 7.661377459749552
       },
       "prevControl": {
-        "x": 14.393389643541031,
-        "y": 7.927229108663608
+        "x": 14.263586423505254,
+        "y": 7.65139726608758
       },
       "nextControl": {
-        "x": 13.277236474526948,
-        "y": 7.947189495987553
+        "x": 13.14743325449117,
+        "y": 7.671357653411524
       },
       "isLocked": false,
       "linkedName": null
@@ -116,8 +116,8 @@
         "y": 7.028586762075134
       },
       "prevControl": {
-        "x": 13.963424530941339,
-        "y": 7.727105719421107
+        "x": 13.86555593891433,
+        "y": 6.836531442175789
       },
       "nextControl": null,
       "isLocked": false,
@@ -144,14 +144,7 @@
   ],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "RunRollers",
-      "waypointRelativePos": 2.086175942549374,
-      "endWaypointRelativePos": 4.348294434470382,
-      "command": null
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 2.0,

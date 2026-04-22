@@ -31,6 +31,12 @@
         {
           "type": "named",
           "data": {
+            "name": "DeployIntake"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
             "name": "AutoShoot"
           }
         }

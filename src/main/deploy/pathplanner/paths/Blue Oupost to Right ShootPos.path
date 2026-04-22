@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.23842576028622497,
-        "y": 0.5384257602862248
+        "x": 0.6367349137931042,
+        "y": 0.4969181034482756
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.238425760286225,
-        "y": 0.538425760286225
+        "x": 1.636734913793104,
+        "y": 0.4969181034482758
       },
       "isLocked": false,
       "linkedName": "Blue Outpost"
@@ -55,7 +55,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

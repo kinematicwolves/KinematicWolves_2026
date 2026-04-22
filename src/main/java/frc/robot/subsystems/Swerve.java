@@ -64,6 +64,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     private final SwerveRequest.FieldCentric m_driveRequest = new SwerveRequest.FieldCentric()
             .withDeadband(0.1) 
             .withRotationalDeadband(0.1);
+            // .withDriveRequestType(DriveRequestType.Velocity);
 
     /** Dedicated request for auto-aiming. Rotational Deadband is REMOVED so small PID corrections are not ignored. */
     private final SwerveRequest.FieldCentric m_aimRequest = new SwerveRequest.FieldCentric()

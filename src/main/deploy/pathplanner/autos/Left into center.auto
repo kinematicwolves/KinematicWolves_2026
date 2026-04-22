@@ -11,21 +11,22 @@
           }
         },
         {
-          "type": "path",
+          "type": "deadline",
           "data": {
-            "pathName": "Red right to outpost"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 2.0
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Red outpost to ShootPos"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Left to center to ShootPos"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "RunRollers"
+                }
+              }
+            ]
           }
         },
         {
@@ -44,6 +45,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "red side",
+  "folder": "Blue side",
   "choreoAuto": false
 }

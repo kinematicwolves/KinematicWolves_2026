@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.Constants.IndexerProfile;
 import frc.robot.Constants.IntakeProfile;
 import frc.robot.Constants.SwerveProfile;
 import frc.robot.commands.AimAndShoot;
@@ -117,6 +118,9 @@ public class RobotContainer {
         m_operator.b()
             .onTrue(m_intake.setPivotCommand(IntakeProfile.kPivotUpPosition))
             .onFalse(m_intake.setPivotCommand(IntakeProfile.kPivotDownPosition));
+
+        m_operator.y().whileTrue(new InstantCommand(() -> m_launcher.runShooter(67, 0))
+            .andThen(new InstantCommand(() -> m_indexer.setVoltages(IndexerProfile.kHopperVoltage, IndexerProfile.kKickerVoltage))));
 
     }
 

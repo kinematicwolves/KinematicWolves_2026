@@ -53,7 +53,7 @@ public final class Constants {
         public static final double kPivotTolerance = 0.5;
 
         // Motor Speeds
-        public static final double kRollerVoltage = 11.0; 
+        public static final double kRollerVoltage = 11; 
         public static final double kExhaustVoltage = -11; // TODO: Set voltage if needed
 
         // Current Limits
@@ -99,7 +99,7 @@ public final class Constants {
         };
 
         // Timer for auto shoot command for pathplanner
-        public static final double kAutoShootTimerSec = 7.5;
+        public static final double kAutoShootTimerSec = 5;
 
         // If true, the indexer will only feed balls when the flywheel is at the target speed. If false, it will feed continuously.
         // REMEMBER: If you disable this, make sure to also disable in the closeShotCommand in the Launcher subsystem.
@@ -120,7 +120,7 @@ public final class Constants {
 
         // Current Limits (Prevents brownouts when rapidly firing)
         public static final int kHopperCurrentLimit = 15; // Amps
-        public static final int kKickerCurrentLimit = 30; // Amps
+        public static final int kKickerCurrentLimit = 40; // Amps
     }
 
     public static final class ClimberProfile {
