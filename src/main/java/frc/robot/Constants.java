@@ -49,7 +49,7 @@ public final class Constants {
 
         // Pivot Positions (Motor Rotations, NOT ticks)
         public static final double kPivotUpPosition = 0;
-        public static final double kPivotDownPosition = 4.1; //
+        public static final double kPivotDownPosition = 3.5; //
         public static final double kPivotTolerance = 0.5;
 
         // Motor Speeds
@@ -105,6 +105,8 @@ public final class Constants {
         // REMEMBER: If you disable this, make sure to also disable in the closeShotCommand in the Launcher subsystem.
         public static final boolean kShootBallsAtTargetSpeedOnly = true;
         public static final boolean enableFOC = true;
+        public static final double  passRPS  = 67;
+        public static final double  passHood = 2;
     }
 
     public static final class IndexerProfile {
@@ -121,23 +123,6 @@ public final class Constants {
         // Current Limits (Prevents brownouts when rapidly firing)
         public static final int kHopperCurrentLimit = 15; // Amps
         public static final int kKickerCurrentLimit = 40; // Amps
-    }
-
-    public static final class ClimberProfile {
-        public static final int kClimberLeftID = 23; 
-        public static final int kClimberRightID = 24;
-
-        // TODO: Config Positions (USES ROTATIONS, NOT TICKS)
-        public static final double kMaxHeight = 50.0;
-        public static final double kHomePosition = 0;
-        public static final double kTolerance = 0.5; 
-        
-        // PID & Motion Magic
-        public static final double kClimberP = 2.0; //TODO: Tune
-        public static final double kClimberV = 0.12; 
-        
-        public static final double kMaxVelocity = 60.0; // Rotations per second
-        public static final double kMaxAcceleration = 120.0; // Rotations per sec^2
     }
 
     public static final class LightingProfile {

@@ -146,7 +146,7 @@ public class Vision extends SubsystemBase {
 
         updateOdometry();
 
-        SmartDashboard.putNumber("Shooting/Odometry Distance", getOdometryDistanceMeters());
+        SmartDashboard.putNumber("Shooting/Dist to goal", getOdometryDistanceMeters());
         SmartDashboard.putBoolean("Shooting/Is Aligned", isOdometryAligned());
         
         SmartDashboard.putBoolean("Vision/Has Target", hasTarget());

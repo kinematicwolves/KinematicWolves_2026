@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.IndexerProfile;
 import frc.robot.Constants.IntakeProfile;
+import frc.robot.Constants.LauncherProfile;
 import frc.robot.Constants.SwerveProfile;
 import frc.robot.commands.AimAndShoot;
 import frc.robot.generated.TunerConstants;
@@ -95,8 +96,7 @@ public class RobotContainer {
         m_driver.leftTrigger()
             .whileTrue(m_intake.deploySequenceCommand())
             .onFalse(m_launcher.setHoodBreak());
-        //m_driver.leftBumper().onTrue(m_intake.setPivotCommand(IntakeProfile.kPivotUpPosition));
-        //m_driver.x().whileTrue(GoToTower.autoClimbCommand(m_swerve)); 
+        m_driver.leftBumper().onTrue(m_intake.setPivotCommand(IntakeProfile.kPivotUpPosition));
         m_driver.rightTrigger().whileTrue(
             AimAndShoot.teleopAimAndShoot(
                 m_swerve, m_vision, m_launcher, m_indexer, m_intake, m_driver.getHID(),
@@ -108,20 +108,18 @@ public class RobotContainer {
 
         /* --- OPERATOR CONTROLS --- */
         m_operator.a().whileTrue(Launcher.closeShotCommand(m_launcher, m_indexer, m_intake));
-        // m_operator.rightTrigger().onTrue(m_climber.extendCommand());
-        // m_operator.leftTrigger().onTrue(m_climber.climbCommand());
         m_operator.leftBumper().whileTrue(
-            m_intake.exhaustCommand().alongWith(m_indexer.reverseIndexerCommand())
-            );
-        
-        m_operator.rightBumper().whileTrue(new InstantCommand(() -> m_intake.setRollerVoltage(IntakeProfile.kRollerVoltage)));
+            m_intake.exhaustCommand().alongWith(m_indexer.reverseIndexerCommand()));        
         m_operator.b()
             .onTrue(m_intake.setPivotCommand(IntakeProfile.kPivotUpPosition))
             .onFalse(m_intake.setPivotCommand(IntakeProfile.kPivotDownPosition));
-
-        m_operator.y().whileTrue(new InstantCommand(() -> m_launcher.runShooter(67, 0))
-            .andThen(new InstantCommand(() -> m_indexer.setVoltages(IndexerProfile.kHopperVoltage, IndexerProfile.kKickerVoltage))));
-
+        m_operator.y()
+            .whileTrue(
+                new InstantCommand(() -> m_launcher.runShooter(LauncherProfile.passRPS, LauncherProfile.passHood))
+                .andThen(new InstantCommand(() -> m_indexer.setVoltages(IndexerProfile.kHopperVoltage, IndexerProfile.kKickerVoltage))))
+            .onFalse(
+                new InstantCommand(() -> m_launcher.stop())
+                .andThen(new InstantCommand(() -> m_indexer.setVoltages(0, 0))));
     }
 
     public Command getAutonomousCommand() {

@@ -108,7 +108,7 @@ public class Launcher extends SubsystemBase {
         m_leftFlywheel.setControl(m_velocityRequest.withVelocity(targetRPS).withEnableFOC(LauncherProfile.enableFOC));
         m_rightFlywheel.setControl(m_velocityRequest.withVelocity(targetRPS).withEnableFOC(LauncherProfile.enableFOC));
         
-        // m_hood.getClosedLoopController().setSetpoint(targetHoodRotations, SparkMax.ControlType.kPosition);
+        m_hood.getClosedLoopController().setSetpoint(targetHoodRotations, SparkMax.ControlType.kPosition);
     }
 
     public void stop() {
