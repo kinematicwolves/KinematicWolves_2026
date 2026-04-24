@@ -52,6 +52,37 @@ public class AimAndShoot {
         ).withName("TeleopAimAndShoot");
     }
 
+    public static Command teleopAimAndPass(
+        Swerve swerve, Vision vision, Launcher launcher, Indexer indexer, Intake intake, XboxController driverController,
+        DoubleSupplier vX, DoubleSupplier vY
+    ) {
+        // Base feed action (used in both gated and ungated)
+        Command feedAction = indexer.feedShooterCommand()
+            .alongWith(intake.runRollersCommand(IntakeProfile.kRollerVoltage));
+
+        // Dynamically build the firing sequence based on our feature flag
+        Command fireSequence = USE_GATED_FEEDER 
+            ? Commands.sequence(
+                Commands.waitUntil(() -> launcher.isReadyToFire() && (driverController.getPOV() == 270)),
+                feedAction.onlyWhile(() -> launcher.isReadyToFire() && (driverController.getPOV() == 270))
+              ).repeatedly()
+            : Commands.sequence(
+                Commands.waitUntil(() -> launcher.isReadyToFire() && (driverController.getPOV() == 270)),
+                feedAction // Ungated: Just waits once, then runs continuously
+              );
+
+        return Commands.parallel(
+            // 1. SWERVE: Translate normally, but hijack rotation for Odometry Aiming
+            // swerve.applySlowDrive(vX, vY, vision::getOdometryAimRate),
+
+            // 2. LAUNCHER: Spool based on real-time Odometry distance
+            launcher.continuousPassCommand(vision::getOdometryDistanceMeters),
+
+            // 3. THE FEEDER: Runs whichever sequence we built above
+            fireSequence
+        ).withName("TeleopAimAndPass");
+    }
+
     /**
      * AUTO: "Shoot Anywhere"
      * Stops the robot, aims, spools, fires, and safely ends the command so PathPlanner can continue.

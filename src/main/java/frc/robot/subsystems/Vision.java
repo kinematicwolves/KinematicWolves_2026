@@ -5,6 +5,7 @@ import java.util.Optional;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
@@ -58,6 +59,11 @@ public class Vision extends SubsystemBase {
     public double getOdometryDistanceMeters() {
         Translation2d robotPos = m_swerve.getPose().getTranslation();
         return robotPos.getDistance(getTargetHub());
+    }
+
+    public double getOdometryDownrangeMeters() {
+        Translation2d robotPos = m_swerve.getPose().getTranslation();
+        return Math.abs(robotPos.getX() - getTargetHub().getX());
     }
 
     public double getOdometryAimRate() {
@@ -147,6 +153,7 @@ public class Vision extends SubsystemBase {
         updateOdometry();
 
         SmartDashboard.putNumber("Shooting/Dist to goal", getOdometryDistanceMeters());
+        SmartDashboard.putNumber("Shooting/Downrange to goal", getOdometryDownrangeMeters());
         SmartDashboard.putBoolean("Shooting/Is Aligned", isOdometryAligned());
         
         SmartDashboard.putBoolean("Vision/Has Target", hasTarget());

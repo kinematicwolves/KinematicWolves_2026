@@ -157,6 +157,8 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                 .withVelocityX(velocityX.getAsDouble())
                 .withVelocityY(velocityY.getAsDouble())
                 .withRotationalRate(rotationalRate.getAsDouble())
+                .withDeadband(0.3)
+                .withRotationalDeadband(0.3)
         )).withName("StandardDrive");
     }
 

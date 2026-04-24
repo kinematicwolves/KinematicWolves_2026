@@ -40,6 +40,9 @@ public class Launcher extends SubsystemBase {
     private final InterpolatingDoubleTreeMap m_rpmMap = new InterpolatingDoubleTreeMap();
     private final InterpolatingDoubleTreeMap m_hoodMap = new InterpolatingDoubleTreeMap();
 
+    private final InterpolatingDoubleTreeMap m_rpmMapPass = new InterpolatingDoubleTreeMap();
+    private final InterpolatingDoubleTreeMap m_hoodMapPass = new InterpolatingDoubleTreeMap();
+
     private double m_currentTargetRPS = 0.0;
     private double m_currentTargetHood = 0.0;
 
@@ -67,6 +70,11 @@ public class Launcher extends SubsystemBase {
         for (double[] data : LauncherProfile.kShootingData) {
             m_rpmMap.put(data[0], data[1]);
             m_hoodMap.put(data[0], data[2]);
+        }
+
+        for (double[] data : LauncherProfile.kPassingData) {
+            m_rpmMapPass.put(data[0], data[1]);
+            m_hoodMapPass.put(data[0], data[2]);
         }
     }
 
@@ -151,6 +159,23 @@ public class Launcher extends SubsystemBase {
                 runShooter(m_rpmMap.get(1.0), m_hoodMap.get(1.0));
             }
         }).finallyDo(this::stop).withName("ContinuousAim");
+    }
+
+    /**
+     * Takes a distance supplier so the RPS and Angle update LIVE as the robot drives.
+     */
+    public Command continuousPassCommand(DoubleSupplier distanceMetersSupplier) {
+        return run(() -> {
+            double distance = distanceMetersSupplier.getAsDouble();
+            if (distance > 0.1) { // If we have a valid target
+                double rps = m_rpmMapPass.get(distance);
+                double hood = m_hoodMapPass.get(distance);
+                runShooter(rps, hood);
+            } else {
+                // Default to a known safe shot if vision drops
+                runShooter(m_rpmMapPass.get(1.0), m_hoodMapPass.get(1.0));
+            }
+        }).finallyDo(this::stop).withName("ContinuousPass");
     }
 
     /**

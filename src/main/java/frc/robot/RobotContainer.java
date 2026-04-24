@@ -115,8 +115,11 @@ public class RobotContainer {
             .onFalse(m_intake.setPivotCommand(IntakeProfile.kPivotDownPosition));
         m_operator.y()
             .whileTrue(
-                new InstantCommand(() -> m_launcher.runShooter(LauncherProfile.passRPS, LauncherProfile.passHood))
-                .andThen(new InstantCommand(() -> m_indexer.setVoltages(IndexerProfile.kHopperVoltage, IndexerProfile.kKickerVoltage))))
+                AimAndShoot.teleopAimAndPass(
+                m_swerve, m_vision, m_launcher, m_indexer, m_intake, m_driver.getHID(),
+                () -> -m_driver.getLeftY() * TunerConstants.kSpeedAt12Volts.baseUnitMagnitude(), 
+                () -> -m_driver.getLeftX() * TunerConstants.kSpeedAt12Volts.baseUnitMagnitude() 
+            ))
             .onFalse(
                 new InstantCommand(() -> m_launcher.stop())
                 .andThen(new InstantCommand(() -> m_indexer.setVoltages(0, 0))));
