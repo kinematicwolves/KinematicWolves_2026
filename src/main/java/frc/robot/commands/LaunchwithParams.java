@@ -10,7 +10,7 @@ import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Launcher;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class LaunchwithParams extends Command {
+public class LaunchWithParams extends Command {
     /** Creates a new SetLaunchParametersFromPose. */
     private final Launcher launcherSubsystem;
     private final Indexer indexerSubsystem;
@@ -24,7 +24,7 @@ public class LaunchwithParams extends Command {
      * @param launcherSpeed the speed for the launcher [rotations / second]
      * @param hoodPose the angle for the hood [rotations]
      */
-    public LaunchwithParams(Launcher launcherSubsystem, Indexer indexerSubsystem, double launcherSpeed, double hoodPose) {
+    public LaunchWithParams(Launcher launcherSubsystem, Indexer indexerSubsystem, double launcherSpeed, double hoodPose) {
         this.launcherSubsystem = launcherSubsystem;
         this.indexerSubsystem = indexerSubsystem;
         this.launcherSpeed = launcherSpeed;
@@ -52,18 +52,15 @@ public class LaunchwithParams extends Command {
         }
         // otherwise, don't launch
         else {
-            this.indexerSubsystem.setRollerPercent(0);
-            this.indexerSubsystem.setKickerPercent(0);
+            this.indexerSubsystem.turnOff();
         }
     }
 
     // Called once the command ends or is interrupted.
     @Override
     public void end(boolean interrupted) {
-        this.launcherSubsystem.setHoodPosition(0);
-        this.launcherSubsystem.setFlywheelPercent(0);
-        this.indexerSubsystem.setKickerPercent(0);
-        this.indexerSubsystem.setRollerPercent(0);
+        this.launcherSubsystem.turnOff();
+        this.indexerSubsystem.turnOff();
     }
 
     // Returns true when the command should end.

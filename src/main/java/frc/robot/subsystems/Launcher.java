@@ -20,13 +20,8 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
-import edu.wpi.first.math.interpolation.InverseInterpolator;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.LauncherProfile;
@@ -41,21 +36,15 @@ public class Launcher extends SubsystemBase {
     private final TalonFX launcherMotor2 = new TalonFX(LauncherProfile.launcherMotor2CanID, TunerConstants.kCANBus);
 
     // debouncer for the launcher at speed check
-    private final Debouncer debouncer = new Debouncer(0.5);
+    // if the filter is called every 20 ms, then 25 taps is a 0.5s moving average filter 
+    private final LinearFilter velocityAverage = LinearFilter.movingAverage(25);
 
     // hood motor and controller objects
     private final SparkMax hoodMotor = new SparkMax(LauncherProfile.hoodMotorCanID, SparkLowLevel.MotorType.kBrushless);
     private final SparkClosedLoopController hoodPIDController = hoodMotor.getClosedLoopController();
 
-    private final InterpolatingTreeMap<Double, ShotParams> shotTable =
-        new InterpolatingTreeMap<>(InverseInterpolator.forDouble(),ShotParams::interpolate) {{
-            // distance [m] → (hood rotations, rps)
-            put(1.0, new ShotParams(1.0,  50));
-            put(1.2, new ShotParams(1.5, 100));
-            put(2.0, new ShotParams(2.0, 150));
-            put(2.5, new ShotParams(2.5, 200));
-            put(3.0, new ShotParams(3.0, 300));
-        }};
+    private double opLaunchAngle =  0.0;
+    private double opLaunchSpeed  = 65.0;
 
     public Launcher() {
         // Step 2, apply whatever configs we need
@@ -171,24 +160,6 @@ public class Launcher extends SubsystemBase {
         this.hoodMotor.getEncoder().setPosition(0);
     }
 
-    /**
-     * Computes the distance from the robot to the current alliance goal
-     * @param currentPose
-     * @return the distance to the goal [m]
-     */
-    private double getDistanceToGoal(Pose2d currentPose) {
-        Transform2d bot2goal;
-
-        if (DriverStation.getAlliance().equals(Alliance.Red)) {
-            bot2goal = new Transform2d(currentPose, LauncherProfile.redHub);
-        }
-        else {
-            bot2goal = new Transform2d(currentPose, LauncherProfile.blueHub);
-        }
-
-        return bot2goal.getTranslation().getNorm();
-    }
-
     @Override
     public void periodic() {
         // This method will be called once per scheduler run
@@ -199,6 +170,8 @@ public class Launcher extends SubsystemBase {
         SmartDashboard.putBoolean("LauncherAtSpeed",       this.flywheelAtSpeed());
         SmartDashboard.putNumber("LauncherMotor1Current",  this.launcherMotor1.getStatorCurrent().getValueAsDouble());
         SmartDashboard.putNumber("LauncherMotor2Current",  this.launcherMotor2.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("OpLaunchSpeed",          this.opLaunchSpeed);   
+        SmartDashboard.putNumber("OpLaunchAngle",          this.opLaunchAngle);    
     }
 
     /* Public functions for commands */
@@ -220,17 +193,18 @@ public class Launcher extends SubsystemBase {
     }
 
     /**
-     * Turns off the flywheel by allowing it to coast out to 0.
+     * Turns off the flywheel by allowing it to coast out to 0, and sets the hood back to 0.
      */
-    public void turnFlywheelOff() {
+    public void turnOff() {
         this.launcherMotor1.setControl(new CoastOut());
+        this.setHoodPosition(0);
     }
 
     /**
      * @return true if the flywheel is at its setpoint, false otherwise
      */
     public boolean flywheelAtSpeed() {
-        return Math.abs(this.launcherMotor1.getClosedLoopError().getValueAsDouble()) < LauncherProfile.launcherTolerance;
+        return Math.abs(this.velocityAverage.calculate(this.launcherMotor1.getClosedLoopError().getValueAsDouble())) < LauncherProfile.launcherTolerance;
     }
 
     /**
@@ -248,20 +222,36 @@ public class Launcher extends SubsystemBase {
     public boolean hoodIsAtSetpoint() {
         // Unlike the TalonFX, the spark max doesn't have a function call for how close it is.
         // Therefore, we will look at the the current position, and compare it to the stored setpoint
-        return this.debouncer.calculate(Math.abs(this.hoodMotor.getEncoder().getPosition() - this.hoodPIDController.getSetpoint()) <= 0.1);
+        return Math.abs(this.hoodMotor.getEncoder().getPosition() - this.hoodPIDController.getSetpoint()) <= 0.1;
     }
 
-    public void setHoodAndSpeedFromPose(Pose2d currentPose) {
-        // compute the distance the goal
-        double distanceToGoal = this.getDistanceToGoal(currentPose);
-        // TODO: Handle distances outside testing range
-        // TODO: Handle fudge factor
-
+    public void setParamsFromTable(double distance, InterpolatingTreeMap<Double, ShotParams> shotTable) {
         // use the lookup table to find our shot parameters
-        ShotParams params = this.shotTable.get(distanceToGoal);
+        ShotParams params = shotTable.get(distance);
 
         // apply the parameters to the hood, flywheel
         setHoodPosition(params.hoodRotations);
         setFlywheelSpeed(params.rps);
+    }
+
+    public void bumpOpLaunchSpeed(double increment) {
+        this.opLaunchSpeed += increment;
+    }
+
+    public void bumpOpLaunchAngle(double increment) {
+        this.opLaunchAngle += increment;
+    }
+
+    public void setOpLaunchSpeed(double launchSpeed) {
+        this.opLaunchSpeed = launchSpeed;
+    }
+
+    public void setOpLaunchAngle(double launchAngle) {
+        this.opLaunchAngle = launchAngle;
+    }
+
+    public void setFromOp() {
+        setFlywheelSpeed(this.opLaunchSpeed);
+        setHoodPosition(this.opLaunchAngle);
     }
 }

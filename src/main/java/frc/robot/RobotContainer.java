@@ -17,13 +17,8 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -31,47 +26,54 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.IndexerProfile;
 import frc.robot.Constants.IntakeProfile;
 import frc.robot.Constants.LauncherProfile;
+import frc.robot.commands.AlignToPose;
+import frc.robot.commands.FeedWithSpeeds;
 import frc.robot.commands.IntakeToPose;
 import frc.robot.commands.IntakeWithSpeeds;
-import frc.robot.commands.LaunchFromPose;
-import frc.robot.commands.LaunchFromSettings;
-import frc.robot.commands.LaunchwithParams;
+import frc.robot.commands.LaunchFromHubTable;
+import frc.robot.commands.LaunchWithParams;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Launcher;
 import frc.robot.subsystems.Lighting;
+import frc.robot.subsystems.Vision;
 
 public class RobotContainer {
     // this is swerve stuff
-    private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+    private double MaxSpeed = 0.5 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric fieldCentricDrive = new SwerveRequest.FieldCentric()
         .withDeadband(MaxSpeed * 0.1)
+        .withRotationalDeadband(0.1 * MaxAngularRate)
         .withDriveRequestType(DriveRequestType.Velocity);
 
     private final SwerveRequest.RobotCentric robotCentricDrive = new SwerveRequest.RobotCentric()
+        .withDeadband(MaxSpeed * 0.1)
         .withDriveRequestType(DriveRequestType.Velocity);
 
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
     // private final Telemetry logger = new Telemetry(MaxSpeed);
 
+    public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+
+    // contoller setup
     public final CommandXboxController driverController = new CommandXboxController(0);   
     public final CommandXboxController opController     = new CommandXboxController(1);
-
-    public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     // subsystems
     public final Launcher launcher = new Launcher();
     public final Intake   intake   = new Intake();
     public final Indexer  indexer  = new Indexer();
     public final Lighting lighting = new Lighting();
+    public final Vision   vision   = new Vision(drivetrain);
 
     /* Path follower */
     private final SendableChooser<Command> autoChooser;
@@ -79,10 +81,6 @@ public class RobotContainer {
     /* custom triggers */
     private Trigger hubActiveSoon = new Trigger(() -> isHubActive(5) == true); // true when the hub is active in 5 seconds
     private Trigger hubActive     = new Trigger(() -> isHubActive(0) == true); // true when the hub is active
-    
-    /* some variables */
-    public double launcherSpeed = 65;
-    public double launcherAngle = 1.5;
 
     public RobotContainer() {
         autoChooser = AutoBuilder.buildAutoChooser("New Auto"); // TODO: choose a default auto that actually exists plz
@@ -92,7 +90,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("deployIntake",     new IntakeToPose(intake, IntakeProfile.deployedPose, IntakeProfile.gentleSlot));
         NamedCommands.registerCommand("retractIntake",    new IntakeToPose(intake, IntakeProfile.retractedPose, IntakeProfile.aggressiveSlot));
         NamedCommands.registerCommand("intakeLemons",     new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0));
-        NamedCommands.registerCommand("LaunchFromCenter", new LaunchwithParams(launcher, indexer, 65, 1.5));
+        NamedCommands.registerCommand("LaunchFromCenter", new LaunchWithParams(launcher, indexer, 65, 1.5));
 
         configureBindings();
 
@@ -100,7 +98,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("deployIntake",   new IntakeToPose(intake, IntakeProfile.deployedPose,  IntakeProfile.gentleSlot));
         NamedCommands.registerCommand("retractIntake",  new IntakeToPose(intake, IntakeProfile.retractedPose, IntakeProfile.aggressiveSlot));
         NamedCommands.registerCommand("ingest",         new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0.6));
-        NamedCommands.registerCommand("launchFromPose", new LaunchFromPose(drivetrain, launcher, indexer, 0.6, 1));
+        NamedCommands.registerCommand("launchFromPose", new LaunchFromHubTable(vision, launcher, indexer));
 
         // Warmup PathPlanner to avoid Java pauses
         FollowPathCommand.warmupCommand().schedule();
@@ -118,58 +116,54 @@ public class RobotContainer {
                     .withVelocityX(-driverController.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
                     .withVelocityY(-driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
                     .withRotationalRate(-driverController.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-                    .withRotationalDeadband(0.1 * MaxAngularRate)
             )
         );
 
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
         final var idle = new SwerveRequest.Idle();
-        RobotModeTriggers.disabled().whileTrue(
-            drivetrain.applyRequest(() -> idle).ignoringDisable(true)
-        );
+        RobotModeTriggers.disabled().whileTrue(drivetrain.applyRequest(() -> idle).ignoringDisable(true));
 
+        // drivetrain.registerTelemetry(logger::telemeterize);
+        
+        /* Driver controls */
         driverController.a().whileTrue(drivetrain.applyRequest(() -> brake));
 
         driverController.y().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-        // drivetrain.registerTelemetry(logger::telemeterize);
-
-        /* Driver controls */
-        // launcher stuff
-        driverController.rightTrigger(0.5)
-            .onTrue(new LaunchFromSettings(launcher, indexer, this, driverController.getHID()))
-            .whileTrue(
-                drivetrain.applyRequest(() -> robotCentricDrive
-                    .withVelocityX(-(robot2goal().getTranslation().getNorm() - LauncherProfile.idealLaunchDist) * 2 * MaxSpeed)
-                    .withVelocityY(driverController.getLeftX() * MaxSpeed)
-                    .withRotationalRate((robot2goal().getRotation().getDegrees()) * 0.01 * MaxAngularRate)
-            ));
-
-        driverController.b()
-            .onTrue(new InstantCommand(() -> this.launcher.turnFlywheelOff()));
-        driverController.x()
-            .onTrue(new InstantCommand(() -> {this.launcherAngle=1.5; this.launcherSpeed=65;}));
-
-
-        // intake stuff
         driverController.leftTrigger(0.5)
             .onTrue(new IntakeToPose(intake, IntakeProfile.deployedPose, IntakeProfile.gentleSlot))
-            .whileTrue(new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0));
-        
+            .whileTrue(new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, IndexerProfile.indexPercent));
+
         driverController.leftBumper()
-            .onTrue(new IntakeToPose(intake, IntakeProfile.retractedPose, IntakeProfile.aggressiveSlot))
-            .whileTrue(new IntakeWithSpeeds(intake, indexer, IntakeProfile.retractPrecent, 0)); // helps the intake go up
+            .onTrue(new IntakeToPose(intake, IntakeProfile.retractedPose, IntakeProfile.aggressiveSlot));
+
+        driverController.rightTrigger(0.5)
+            .onTrue(
+                new AlignToPose(drivetrain, vision, LauncherProfile.blueHub, robotCentricDrive)
+                .andThen(drivetrain.applyRequest(() -> brake))
+            )
+            .whileTrue(new LaunchFromHubTable(vision, launcher, indexer));
         
         /* operator controls */
         opController.povUp()
-            .onTrue(new InstantCommand(() -> {BumpLauncherSpeed(10);}));
+            .onTrue(new InstantCommand(() -> launcher.bumpOpLaunchSpeed(5)));
+
         opController.povDown()
-            .onTrue(new InstantCommand(() -> {BumpLauncherSpeed(-1);}));
-         opController.y()
-            .onTrue(new InstantCommand(() -> {BumpLauncherAngle(1);}));
-        opController.a()
-            .onTrue(new InstantCommand(() -> {BumpLauncherAngle(-0.25);}));
+            .onTrue(new InstantCommand(() -> launcher.bumpOpLaunchSpeed(-1)));
+
+        opController.povLeft()
+            .onTrue(new InstantCommand(() -> launcher.bumpOpLaunchAngle(1)));
+
+        opController.povRight()
+            .onTrue(new InstantCommand(() -> launcher.bumpOpLaunchAngle(-0.1)));
+
+        opController.rightTrigger(0.5)
+            .onTrue(new InstantCommand(() -> launcher.setFromOp()))
+            .onFalse(new InstantCommand(() -> launcher.turnOff()));
+        
+        opController.rightBumper()
+            .whileTrue(new FeedWithSpeeds(indexer, IndexerProfile.indexPercent, IndexerProfile.feedPercent));
     }
 
     public Command getAutonomousCommand() {
@@ -177,32 +171,24 @@ public class RobotContainer {
         return autoChooser.getSelected();
     }
 
-    public void BumpLauncerSpeed(double percent) {
-        this.launcherSpeed += percent;
-    }
-    public void BumpLauncerAngle(double incrmenent) {
-        this.launcherAngle += incrmenent;
-    }
-
     private void setupPathplannerLogging() {
         // from https://pathplanner.dev/pplib-custom-logging.html
-        Field2d field = drivetrain.field2d;
+        // Field2d field = new Field2d();
 
-        // this portion is already setup in the command swerve drivetrain
-        // // Logging callback for current robot pose
-        // PathPlannerLogging.setLogCurrentPoseCallback((pose) -> {
-        //     // Do whatever you want with the pose here
-        //     field.setRobotPose(pose);
-        // });
+        // Logging callback for current robot pose
+        PathPlannerLogging.setLogCurrentPoseCallback((pose) -> {
+            // Do whatever you want with the pose here
+            vision.field.setRobotPose(pose);
+        });
 
         // Logging callback for target robot pose
         PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
-            field.getObject("target pose").setPose(pose);
+            vision.field.getObject("target pose").setPose(pose);
         });
 
         // Logging callback for the active path, this is sent as a list of poses
         PathPlannerLogging.setLogActivePathCallback((poses) -> {
-            field.getObject("path").setPoses(poses);
+            vision.field.getObject("path").setPoses(poses);
         });
     }
 
@@ -273,48 +259,5 @@ public class RobotContainer {
         else
             // End game, hub always active (also reached earlier if earlySeconds > 0).
             return true;
-    }
-
-    public void BumpLauncherSpeed(double increment) {
-        this.launcherSpeed += increment;
-    }
-    public void BumpLauncherAngle(double increment) {
-        this.launcherAngle += increment;
-    }
-    public double getLauncherSpeed() {
-        return launcherSpeed;
-    }
-    public double getLauncherAngle() {
-        return launcherAngle;
-    }
-
-    /**
-     * Computes the transform of the robot to the goal, depending on the alliance of the robot
-     * @return robot2goal transform. 
-     * robot2goal.getTranslation() is the xy offset between the robot center and the goal
-     * robot2goal.getRotation() is the angular offset between the robot's current direction and the line from the robot position to the goal.
-     * robot2goal.getTranslation().getNorm() is the distance to the goal.
-     */
-    public Transform2d robot2goal() {
-        // get the current robot position from the drivetrain
-        Pose2d robotPose = drivetrain.getState().Pose;
-        
-        // lookup the goal based on which alliance we are, compute the transform to that goal
-        Translation2d robot2goalTranslation;
-        if (DriverStation.getAlliance().orElse(Alliance.Blue) ==  Alliance.Blue)
-            robot2goalTranslation = new Transform2d(LauncherProfile.blueHub, robotPose).getTranslation();
-        else
-            robot2goalTranslation = new Transform2d(LauncherProfile.redHub, robotPose).getTranslation();
-
-        // the rotation of the goal is arbitrary, we want to find the angle from the robot's current direction to the goal
-
-        // This this gets us the angle of the vector from the robot to the goal, in field coordinates
-        double vectorToGoal = Math.atan2(robot2goalTranslation.getY(), robot2goalTranslation.getX());
-
-        // the value we care about is the difference between the current robot angle and the angle to the goal.
-        // That is how much the robot must rotate by
-        Rotation2d angleToGoal = new Rotation2d(vectorToGoal - robotPose.getRotation().getRadians());
-
-        return new Transform2d(robot2goalTranslation, angleToGoal);        
     }
 }

@@ -8,6 +8,8 @@ import com.ctre.phoenix6.signals.RGBWColor;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
+import edu.wpi.first.math.interpolation.InverseInterpolator;
 
 /** Add your docs here. */
 public class Constants {
@@ -34,6 +36,26 @@ public class Constants {
         public static final Pose2d redHub  = new Pose2d(11.981, 4.075, new Rotation2d());
 
         public static final double idealLaunchDist = 2.5; // meters
+
+        public static final InterpolatingTreeMap<Double, ShotParams> hubShotTable =
+            new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), ShotParams::interpolate) {{
+                // distance [m] → (hood rotations, rps)
+                put(1.0, new ShotParams(1.0, 50 ));
+                put(1.2, new ShotParams(1.5, 100));
+                put(2.0, new ShotParams(2.0, 150));
+                put(2.5, new ShotParams(2.5, 200));
+                put(3.0, new ShotParams(3.0, 300));
+            }};
+
+        public static final InterpolatingTreeMap<Double, ShotParams> passShotTable =
+            new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), ShotParams::interpolate) {{
+                // distance [m] → (hood rotations, rps)
+                put(1.0, new ShotParams(1.0, 50 ));
+                put(1.2, new ShotParams(1.5, 100));
+                put(2.0, new ShotParams(2.0, 150));
+                put(2.5, new ShotParams(2.5, 200));
+                put(3.0, new ShotParams(3.0, 300));
+            }};
     }
 
     public static class IntakeProfile {
@@ -58,10 +80,4 @@ public class Constants {
         public static final double indexPercent = 0.6; // percent
         public static final double feedPercent  = 1.0; // percent
     }
-
-    public class ElevatorProfile {
-        public static final int motor1ID = 21; // TODO: confirm CanID
-        public static final int motor2ID = 22; // TODO: confirm CanID
-    }
-
 }

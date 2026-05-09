@@ -72,6 +72,7 @@
     "Quasistatic",
     "RGBW",
     "rpms",
+    "Setpoint",
     "telemeterize",
     "teleop",
     "wpiblue"

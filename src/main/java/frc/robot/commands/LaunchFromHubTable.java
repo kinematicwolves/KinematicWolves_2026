@@ -4,33 +4,25 @@
 
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.RobotContainer;
 import frc.robot.Constants.IndexerProfile;
+import frc.robot.Constants.LauncherProfile;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Launcher;
+import frc.robot.subsystems.Vision;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class LaunchFromSettings extends Command {
+public class LaunchFromHubTable extends Command {
     /** Creates a new SetLaunchParametersFromPose. */
+    private final Vision   visionSubsystem;
     private final Launcher launcherSubsystem;
-    private final Indexer indexerSubsystem;
-    private final RobotContainer robotContainer;
-    private final XboxController driverController;
+    private final Indexer  indexerSubsystem;
 
-    /**
-     * This is for launching with settings set by the operator, with driver confirmation (basically for use in teleop)
-     * @param launcherSubsystem
-     * @param indexerSubsystem
-     * @param robotContainer
-     * @param driverController
-     */
-    public LaunchFromSettings(Launcher launcherSubsystem, Indexer indexerSubsystem, RobotContainer robotContainer, XboxController driverController) {
+    public LaunchFromHubTable(Vision visionSubsystem, Launcher launcherSubsystem, Indexer indexerSubsystem) {
+        this.visionSubsystem   = visionSubsystem;
         this.launcherSubsystem = launcherSubsystem;
-        this.indexerSubsystem = indexerSubsystem;
-        this.robotContainer = robotContainer;
-        this.driverController = driverController;
+        this.indexerSubsystem  = indexerSubsystem;
 
         // Use addRequirements() here to declare subsystem dependencies.
         addRequirements(launcherSubsystem, indexerSubsystem);
@@ -43,29 +35,29 @@ public class LaunchFromSettings extends Command {
     // Called every time the scheduler runs while the command is scheduled.
     @Override
     public void execute() {
-        // set the launcher from the current robot container settigns
-        this.launcherSubsystem.setFlywheelSpeed(this.robotContainer.getLauncherSpeed());
-        this.launcherSubsystem.setHoodPosition(this.robotContainer.getLauncherAngle());
+        // get the current distance from the robot to the goal from the vision subsystem
+        double dist2goal = visionSubsystem.dist2pose(this.visionSubsystem.getAllianceGoal());
+        Rotation2d rotation2gaol = visionSubsystem.rotation2Pose(this.visionSubsystem.getAllianceGoal());
+
+        // pass the pose to the launcher
+        this.launcherSubsystem.setParamsFromTable(dist2goal, LauncherProfile.hubShotTable);
 
         // if the launcher is good, launch
-        if (this.launcherSubsystem.flywheelAtSpeed() && this.driverController.getRightBumperButton()) {
+        if (this.launcherSubsystem.flywheelAtSpeed() && this.launcherSubsystem.hoodIsAtSetpoint() && Math.abs(rotation2gaol.getDegrees()) < 2) {
             this.indexerSubsystem.setRollerPercent(IndexerProfile.indexPercent);
             this.indexerSubsystem.setKickerPercent(IndexerProfile.feedPercent);
         }
         // otherwise, don't launch
         else {
-            this.indexerSubsystem.setRollerPercent(0);
-            this.indexerSubsystem.setKickerPercent(0);
+            this.indexerSubsystem.turnOff();
         }
     }
 
     // Called once the command ends or is interrupted.
     @Override
     public void end(boolean interrupted) {
-        this.launcherSubsystem.setHoodPosition(0);
-        this.launcherSubsystem.setFlywheelPercent(0);
-        this.indexerSubsystem.setKickerPercent(0);
-        this.indexerSubsystem.setRollerPercent(0);
+        this.launcherSubsystem.turnOff();
+        this.indexerSubsystem.turnOff();
     }
 
     // Returns true when the command should end.

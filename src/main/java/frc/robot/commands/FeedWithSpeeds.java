@@ -36,8 +36,7 @@ public class FeedWithSpeeds extends Command {
     // Called once the command ends or is interrupted.
     @Override
     public void end(boolean interrupted) {
-        this.indexer.setKickerPercent(0);
-        this.indexer.setRollerPercent(0);
+        this.indexer.turnOff();
     }
 
     // Returns true when the command should end.

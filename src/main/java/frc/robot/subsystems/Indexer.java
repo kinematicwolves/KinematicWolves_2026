@@ -83,4 +83,12 @@ public class Indexer extends SubsystemBase {
     public void setRollerPercent(double percent) {
         roller.set(TalonSRXControlMode.PercentOutput, percent);
     }
+
+    /**
+     * Turns off the indexer by setting the motors to 0 percent
+     */
+    public void turnOff() {
+        this.setKickerPercent(0);
+        this.setRollerPercent(0);
+    }
 }
