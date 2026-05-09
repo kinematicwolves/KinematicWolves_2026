@@ -4,6 +4,8 @@
 
 package frc.robot.commands;
 
+import java.util.function.DoubleSupplier;
+
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.controller.PIDController;
@@ -19,20 +21,27 @@ public class AlignToPose extends Command {
     private CommandSwerveDrivetrain drivetrain;
     private Vision visionSubsystem;
     private Pose2d alignmentPose;
+    private DoubleSupplier velocityX;
+    private DoubleSupplier velocityY;
 
     private PIDController rotationaLPidController;
     private SwerveRequest.RobotCentric robotCentricDrive;
 
-    public AlignToPose(CommandSwerveDrivetrain drivetrain, Vision vision, Pose2d alignmentPose, SwerveRequest.RobotCentric robotCentricDrive) {
+    public AlignToPose(CommandSwerveDrivetrain drivetrain, Vision vision, Pose2d alignmentPose, DoubleSupplier x, DoubleSupplier y, SwerveRequest.RobotCentric robotCentricDrive) {
         this.drivetrain = drivetrain;
         this.visionSubsystem = vision;
         this.alignmentPose = alignmentPose;
+        this.velocityX = x;
+        this.velocityY = y;
         this.robotCentricDrive = robotCentricDrive;
 
         this.rotationaLPidController = new PIDController(0.01, 0, 0);
-        
+        this.rotationaLPidController.setSetpoint(0); // degrees
+        this.rotationaLPidController.setTolerance(2); // degrees
+        this.rotationaLPidController.enableContinuousInput(-180, 180);
+
         // Use addRequirements() here to declare subsystem dependencies.
-        addRequirements(this.drivetrain, this.visionSubsystem);
+        addRequirements(this.drivetrain);
     }
 
     // Called when the command is initially scheduled.
@@ -46,10 +55,16 @@ public class AlignToPose extends Command {
         Rotation2d rotation2pose = this.visionSubsystem.rotation2Pose(alignmentPose);
 
         // compute a new rotational rate for the swerve drive
-        this.robotCentricDrive.withRotationalRate(this.rotationaLPidController.calculate(-rotation2pose.getDegrees()));
+        double rotationalRate = this.rotationaLPidController.calculate(rotation2pose.getDegrees());
 
-        // apply the drive request to the swerve drive
-        this.drivetrain.setControl(this.robotCentricDrive);
+        // and apply the drive request to the swerve drive
+        this.drivetrain.setControl(
+            this.robotCentricDrive
+                .withVelocityX(this.velocityX.getAsDouble())
+                .withVelocityY(this.velocityY.getAsDouble())
+                .withRotationalRate(rotationalRate)
+        );
+
     }
 
     // Called once the command ends or is interrupted.

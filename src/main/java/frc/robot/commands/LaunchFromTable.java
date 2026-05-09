@@ -4,25 +4,31 @@
 
 package frc.robot.commands;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.IndexerProfile;
-import frc.robot.Constants.LauncherProfile;
+import frc.robot.ShotParams;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Launcher;
 import frc.robot.subsystems.Vision;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class LaunchFromHubTable extends Command {
+public class LaunchFromTable extends Command {
     /** Creates a new SetLaunchParametersFromPose. */
     private final Vision   visionSubsystem;
     private final Launcher launcherSubsystem;
     private final Indexer  indexerSubsystem;
+    private final Pose2d   targetPose;
+    private final InterpolatingTreeMap<Double, ShotParams> shotTable;
 
-    public LaunchFromHubTable(Vision visionSubsystem, Launcher launcherSubsystem, Indexer indexerSubsystem) {
+    public LaunchFromTable(Vision visionSubsystem, Launcher launcherSubsystem, Indexer indexerSubsystem, Pose2d targetPose, InterpolatingTreeMap<Double, ShotParams> shotTable) {
         this.visionSubsystem   = visionSubsystem;
         this.launcherSubsystem = launcherSubsystem;
         this.indexerSubsystem  = indexerSubsystem;
+        this.targetPose        = targetPose;
+        this.shotTable         = shotTable;
 
         // Use addRequirements() here to declare subsystem dependencies.
         addRequirements(launcherSubsystem, indexerSubsystem);
@@ -36,11 +42,11 @@ public class LaunchFromHubTable extends Command {
     @Override
     public void execute() {
         // get the current distance from the robot to the goal from the vision subsystem
-        double dist2goal = visionSubsystem.dist2pose(this.visionSubsystem.getAllianceGoal());
-        Rotation2d rotation2gaol = visionSubsystem.rotation2Pose(this.visionSubsystem.getAllianceGoal());
+        double dist2goal = visionSubsystem.dist2pose(targetPose);
+        Rotation2d rotation2gaol = visionSubsystem.rotation2Pose(targetPose);
 
         // pass the pose to the launcher
-        this.launcherSubsystem.setParamsFromTable(dist2goal, LauncherProfile.hubShotTable);
+        this.launcherSubsystem.setParamsFromTable(dist2goal, shotTable);
 
         // if the launcher is good, launch
         if (this.launcherSubsystem.flywheelAtSpeed() && this.launcherSubsystem.hoodIsAtSetpoint() && Math.abs(rotation2gaol.getDegrees()) < 2) {

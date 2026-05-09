@@ -25,6 +25,7 @@ public class Constants {
         
         public static final CANdleSegment CANdleLeds = new CANdleSegment( 0,  7, 1);
     }
+
     public static class LauncherProfile {
         public static final int launcherMotor1CanID = 41;
         public static final int launcherMotor2CanID = 42;
@@ -40,21 +41,17 @@ public class Constants {
         public static final InterpolatingTreeMap<Double, ShotParams> hubShotTable =
             new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), ShotParams::interpolate) {{
                 // distance [m] → (hood rotations, rps)
-                put(1.0, new ShotParams(1.0, 50 ));
-                put(1.2, new ShotParams(1.5, 100));
-                put(2.0, new ShotParams(2.0, 150));
-                put(2.5, new ShotParams(2.5, 200));
-                put(3.0, new ShotParams(3.0, 300));
+                put(2.0, new ShotParams(0.0, 44));
+                put(2.8, new ShotParams(0.5, 52));
+                put(3.7, new ShotParams(0.0, 67));
             }};
 
         public static final InterpolatingTreeMap<Double, ShotParams> passShotTable =
             new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), ShotParams::interpolate) {{
                 // distance [m] → (hood rotations, rps)
-                put(1.0, new ShotParams(1.0, 50 ));
-                put(1.2, new ShotParams(1.5, 100));
-                put(2.0, new ShotParams(2.0, 150));
-                put(2.5, new ShotParams(2.5, 200));
-                put(3.0, new ShotParams(3.0, 300));
+                put(1.0, new ShotParams(1.0, 45 ));
+                put(3.0, new ShotParams(1.8, 65));
+                put(6.0, new ShotParams(2.0, 70));
             }};
     }
 

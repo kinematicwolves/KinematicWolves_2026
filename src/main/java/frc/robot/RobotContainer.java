@@ -30,17 +30,15 @@ import frc.robot.Constants.IndexerProfile;
 import frc.robot.Constants.IntakeProfile;
 import frc.robot.Constants.LauncherProfile;
 import frc.robot.commands.AlignToPose;
-import frc.robot.commands.FeedWithSpeeds;
 import frc.robot.commands.IntakeToPose;
 import frc.robot.commands.IntakeWithSpeeds;
-import frc.robot.commands.LaunchFromHubTable;
+import frc.robot.commands.LaunchFromTable;
 import frc.robot.commands.LaunchWithParams;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Launcher;
-import frc.robot.subsystems.Lighting;
 import frc.robot.subsystems.Vision;
 
 public class RobotContainer {
@@ -56,7 +54,7 @@ public class RobotContainer {
 
     private final SwerveRequest.RobotCentric robotCentricDrive = new SwerveRequest.RobotCentric()
         .withDeadband(MaxSpeed * 0.1)
-        .withDriveRequestType(DriveRequestType.Velocity);
+        .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
@@ -72,7 +70,6 @@ public class RobotContainer {
     public final Launcher launcher = new Launcher();
     public final Intake   intake   = new Intake();
     public final Indexer  indexer  = new Indexer();
-    public final Lighting lighting = new Lighting();
     public final Vision   vision   = new Vision(drivetrain);
 
     /* Path follower */
@@ -85,20 +82,19 @@ public class RobotContainer {
     public RobotContainer() {
         autoChooser = AutoBuilder.buildAutoChooser("New Auto"); // TODO: choose a default auto that actually exists plz
         SmartDashboard.putData("Auto Mode", autoChooser);
-
-        // create command for path planner
-        NamedCommands.registerCommand("deployIntake",     new IntakeToPose(intake, IntakeProfile.deployedPose, IntakeProfile.gentleSlot));
-        NamedCommands.registerCommand("retractIntake",    new IntakeToPose(intake, IntakeProfile.retractedPose, IntakeProfile.aggressiveSlot));
-        NamedCommands.registerCommand("intakeLemons",     new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0));
-        NamedCommands.registerCommand("LaunchFromCenter", new LaunchWithParams(launcher, indexer, 65, 1.5));
-
+        
         configureBindings();
 
         /* Named commands for path planner here */
-        NamedCommands.registerCommand("deployIntake",   new IntakeToPose(intake, IntakeProfile.deployedPose,  IntakeProfile.gentleSlot));
-        NamedCommands.registerCommand("retractIntake",  new IntakeToPose(intake, IntakeProfile.retractedPose, IntakeProfile.aggressiveSlot));
-        NamedCommands.registerCommand("ingest",         new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0.6));
-        NamedCommands.registerCommand("launchFromPose", new LaunchFromHubTable(vision, launcher, indexer));
+        NamedCommands.registerCommand("deployIntake",     new IntakeToPose(intake, IntakeProfile.deployedPose,  IntakeProfile.gentleSlot));
+        NamedCommands.registerCommand("retractIntake",    new IntakeToPose(intake, IntakeProfile.retractedPose, IntakeProfile.aggressiveSlot));
+        NamedCommands.registerCommand("ingest",           new IntakeWithSpeeds(intake, indexer, IntakeProfile.intakePercent, 0.6));
+        NamedCommands.registerCommand("LaunchFromCenter", new LaunchWithParams(launcher, indexer, 65, 1.5));
+        NamedCommands.registerCommand("launchFromPose",   new LaunchFromTable(
+            vision, launcher, indexer, 
+            vision.getAlliance() == DriverStation.Alliance.Red? LauncherProfile.redHub: LauncherProfile.blueHub, 
+            LauncherProfile.hubShotTable)
+        );
 
         // Warmup PathPlanner to avoid Java pauses
         FollowPathCommand.warmupCommand().schedule();
@@ -140,11 +136,29 @@ public class RobotContainer {
 
         driverController.rightTrigger(0.5)
             .onTrue(
-                new AlignToPose(drivetrain, vision, LauncherProfile.blueHub, robotCentricDrive)
-                .andThen(drivetrain.applyRequest(() -> brake))
-            )
-            .whileTrue(new LaunchFromHubTable(vision, launcher, indexer));
-        
+                new AlignToPose(
+                    drivetrain,
+                    vision,
+                    vision.getAlliance() == DriverStation.Alliance.Red
+                        ? LauncherProfile.redHub
+                        : LauncherProfile.blueHub,
+                    driverController::getLeftX,
+                    driverController::getLeftY,
+                    robotCentricDrive
+                )
+                .andThen(drivetrain.applyRequest(() -> brake)))
+            .whileTrue(
+                new LaunchFromTable(
+                    vision, 
+                    launcher, 
+                    indexer, 
+                    vision.getAlliance() == DriverStation.Alliance.Red
+                        ? LauncherProfile.redHub
+                        : LauncherProfile.blueHub, 
+                    LauncherProfile.hubShotTable
+                )
+            );
+
         /* operator controls */
         opController.povUp()
             .onTrue(new InstantCommand(() -> launcher.bumpOpLaunchSpeed(5)));
@@ -161,9 +175,6 @@ public class RobotContainer {
         opController.rightTrigger(0.5)
             .onTrue(new InstantCommand(() -> launcher.setFromOp()))
             .onFalse(new InstantCommand(() -> launcher.turnOff()));
-        
-        opController.rightBumper()
-            .whileTrue(new FeedWithSpeeds(indexer, IndexerProfile.indexPercent, IndexerProfile.feedPercent));
     }
 
     public Command getAutonomousCommand() {

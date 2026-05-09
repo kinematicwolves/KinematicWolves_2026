@@ -20,7 +20,7 @@ public class Vision extends SubsystemBase {
     /** Creates a new Vision. */
     private final CommandSwerveDrivetrain drivetrain;
     private final String limelight = "limelight";
-    public Field2d field = new Field2d();
+    public final Field2d field = new Field2d();
 
     public Vision(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
@@ -60,24 +60,7 @@ public class Vision extends SubsystemBase {
     }
 
     public Alliance getAlliance() {
-        // We are connected to the DS and red
-        if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().equals(Alliance.Red))
-            return Alliance.Red;
-
-        // We are connected to the DS and blue
-        else if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().equals(Alliance.Blue))
-            return Alliance.Blue;
-
-        // Something weird is happening, so we will assume blue
-        else 
-            return Alliance.Blue;
-    }
-
-    public Pose2d getAllianceGoal() {
-        if (this.getAlliance() == Alliance.Blue)
-            return LauncherProfile.blueHub;
-        else
-            return LauncherProfile.redHub;
+        return DriverStation.getAlliance().orElse(Alliance.Blue);
     }
 
     /* Generic Transform functions */
@@ -117,10 +100,10 @@ public class Vision extends SubsystemBase {
         Transform2d robot2pose = this.robot2Pose(otherPose);
 
         // Next, get the rotation of the robot
-        Rotation2d robotHeading = this.drivetrain.getState().Pose.getRotation();
+        Rotation2d targetAngle = new Rotation2d(robot2pose.getX(), robot2pose.getY());
 
         // We don't want the difference between the robot heading and the goal.
         // Instead, we want the difference between the robot heading and the vector (line) of the robot and the goal
-        return new Rotation2d(Math.atan2(robot2pose.getY(), robot2pose.getX()) - robotHeading.getRadians());
+        return targetAngle.minus(drivetrain.getState().Pose.getRotation());
     }
 }
